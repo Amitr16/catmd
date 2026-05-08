@@ -1,0 +1,51 @@
+name = "catmd-ai-proxy"
+main = "worker.ts"
+compatibility_date = "2025-04-21"
+compatibility_flags = ["nodejs_compat"]
+
+# Worker runs on the Cloudflare free tier (100k requests/day by default —
+# plenty for a small launch; upgrade to Workers Paid for more headroom).
+
+[observability]
+enabled = true
+
+# Static assets — hero images for /library articles plus any other public
+# files. Cloudflare serves these directly with edge caching, so the worker
+# doesn't have to handle binary bodies. Free tier covers up to 20 GB total
+# / 100 K files; we currently use < 1 MB.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "none"
+# Default precedence: assets are tried FIRST (so /library/foo.webp serves the
+# image directly without worker invocation), and any path that doesn't match
+# an asset falls through to the worker (so /library/foo still renders the
+# article HTML). This is what we want — keeps the worker out of the binary
+# image hot path.
+
+# Secrets are set via `wrangler secret put OPENAI_API_KEY` — never put
+# them here. Placeholders listed in [vars] below are NON-secret and show
+# what the worker expects at runtime.
+
+[vars]
+# Leave empty here; override with `wrangler secret put` for prod.
+# ALLOWED_ORIGINS = "https://catmd.pet,https://www.catmd.pet"
+
+# ── Audio-trends cron — REMOVED 2026-05-03 ───────────────────────────────────
+#
+# The trending-audio postcard feature was cut from the app per user
+# direction ("seems lots of efforts"). The Cloudflare Worker endpoint
+# /audio-trends.json + the scheduled() handler are kept in worker.ts as
+# disabled-but-intact code (cheap to re-enable if we ever revive the
+# feature) but the cron trigger + KV binding are removed here so the
+# weekly OpenAI call no longer fires. Annual cost dropped from ~$1.56
+# to $0; KV namespace can stay (cheap, useful for a future revival).
+#
+# To re-enable: restore [triggers] crons + [[kv_namespaces]] blocks
+# below + redeploy. The worker code still has the scheduled() export
+# and the readCurrentTrends() helper.
+# [triggers]
+# crons = ["0 16 * * 5"]
+# [[kv_namespaces]]
+# binding = "AUDIO_TRENDS_KV"
+# id = "2df84c87e4aa48d4a5c36b09413730c1"

@@ -1,0 +1,50 @@
+{
+  "baseline": {
+    "n": 15,
+    "recall_pct": 46.8,
+    "hallucinations": 0,
+    "by_tier_pct": {
+      "medical_recall": 33.3,
+      "current_state": 50.0,
+      "subjects_recall": 71.4,
+      "diary_recall": 40.0,
+      "mood_arc_recall": 28.6,
+      "anticipation_recall": 40.0,
+      "self_facts": 75.0,
+      "honesty_test": 20.0,
+      "combined_recall": 55.6
+    }
+  },
+  "keyword": {
+    "n": 15,
+    "recall_pct": 55.8,
+    "hallucinations": 1,
+    "by_tier_pct": {
+      "medical_recall": 50.0,
+      "current_state": 50.0,
+      "subjects_recall": 71.4,
+      "diary_recall": 40.0,
+      "mood_arc_recall": 57.1,
+      "anticipation_recall": 80.0,
+      "self_facts": 75.0,
+      "honesty_test": 20.0,
+      "combined_recall": 44.4
+    }
+  },
+  "embedding": {
+    "n": 15,
+    "recall_pct": 54.5,
+    "hallucinations": 0,
+    "by_tier_pct": {
+      "medical_recall": 33.3,
+      "current_state": 50.0,
+      "subjects_recall": 64.3,
+      "diary_recall": 40.0,
+      "mood_arc_recall": 57.1,
+      "anticipation_recall": 80.0,
+      "self_facts": 100.0,
+      "honesty_test": 20.0,
+      "combined_recall": 55.6
+    }
+  }
+}

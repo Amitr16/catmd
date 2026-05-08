@@ -1,0 +1,27 @@
+{
+  "recall": {
+    "n": 15,
+    "recall_pct": 67.5,
+    "hallucinations": 0,
+    "avg_len": 151.0,
+    "by_tier_pct": {
+      "medical_recall": 75.0,
+      "current_state": 50.0,
+      "subjects_recall": 64.3,
+      "diary_recall": 50.0,
+      "mood_arc_recall": 57.1,
+      "anticipation_recall": 80.0,
+      "self_facts": 100.0,
+      "honesty_test": 40.0,
+      "combined_recall": 88.9
+    }
+  },
+  "voice": {
+    "n": 25,
+    "avg_len": 82.2,
+    "clean_pass": 24,
+    "clean_pct": 96.0,
+    "forbidden_hits": 0,
+    "padding_hits": 1
+  }
+}

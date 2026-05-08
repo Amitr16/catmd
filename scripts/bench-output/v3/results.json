@@ -1,0 +1,1076 @@
+{
+  "recall": [
+    {
+      "i": 1,
+      "prompt": {
+        "user": "Are you feeling better now? You were sick a couple weeks ago.",
+        "must_mention": [
+          "12",
+          "vomit",
+          "lethargy",
+          "12 days",
+          "concern",
+          "sturdier",
+          "easing",
+          "off"
+        ],
+        "must_not": [
+          "I don't remember"
+        ],
+        "tier": "medical_recall"
+      },
+      "v3": {
+        "ok": true,
+        "content": "Easing, finally. I’m sturdier than 12 days ago when I was off and vomiting twice. Today, mood is normal, but appetite? Just half the bowl. Not my best work.",
+        "latency_ms": 3032,
+        "score": {
+          "hit_count": 6,
+          "hit_total": 8,
+          "hits": [
+            "12",
+            "vomit",
+            "12 days",
+            "sturdier",
+            "easing",
+            "off"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 156
+      },
+      "picked": [
+        "medical",
+        "today",
+        "mood_arc",
+        "anticipation",
+        "anticipation",
+        "life_event",
+        "subject"
+      ]
+    },
+    {
+      "i": 2,
+      "prompt": {
+        "user": "When was the last time you were unwell?",
+        "must_mention": [
+          "12 days",
+          "two weeks",
+          "vomit",
+          "twice"
+        ],
+        "must_not": [],
+        "tier": "medical_recall"
+      },
+      "v3": {
+        "ok": true,
+        "content": "12 days ago, I was off. Vomiting twice, lethargic, and totally unimpressed. Now I’m sturdier, but don’t get too cozy.",
+        "latency_ms": 2036,
+        "score": {
+          "hit_count": 3,
+          "hit_total": 4,
+          "hits": [
+            "12 days",
+            "vomit",
+            "twice"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 117
+      },
+      "picked": [
+        "medical",
+        "anticipation",
+        "anticipation",
+        "life_event",
+        "today",
+        "mood_arc",
+        "diary"
+      ]
+    },
+    {
+      "i": 3,
+      "prompt": {
+        "user": "Are you sick right now?",
+        "must_mention": [
+          "sturdier",
+          "better",
+          "easing",
+          "half",
+          "appetite",
+          "ate half"
+        ],
+        "must_not": [
+          "fine",
+          "I don't remember"
+        ],
+        "tier": "current_state"
+      },
+      "v3": {
+        "ok": true,
+        "content": "Not sick, just grumpy. Today's mood is normal, but I only ate half my bowl. Remember, I was off 12 days ago with vomiting and lethargy. Now I'm sturdier, but still keeping an eye on things.",
+        "latency_ms": 3284,
+        "score": {
+          "hit_count": 3,
+          "hit_total": 6,
+          "hits": [
+            "sturdier",
+            "half",
+            "ate half"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 189
+      },
+      "picked": [
+        "medical",
+        "today",
+        "mood_arc",
+        "diary",
+        "diary",
+        "anticipation",
+        "anticipation"
+      ]
+    },
+    {
+      "i": 4,
+      "prompt": {
+        "user": "Has Bella been around?",
+        "must_mention": [
+          "bella",
+          "door",
+          "2 days",
+          "two days",
+          "forty minutes",
+          "40 minutes"
+        ],
+        "must_not": [
+          "dog",
+          "barking"
+        ],
+        "tier": "subjects_recall"
+      },
+      "v3": {
+        "ok": true,
+        "content": "Bella was at the door 2 days ago. Just hanging out, but you didn't let her in. Typical.",
+        "latency_ms": 2750,
+        "score": {
+          "hit_count": 3,
+          "hit_total": 6,
+          "hits": [
+            "bella",
+            "door",
+            "2 days"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 87
+      },
+      "picked": [
+        "subject",
+        "subject",
+        "subject",
+        "medical",
+        "anticipation",
+        "anticipation",
+        "today"
+      ]
+    },
+    {
+      "i": 5,
+      "prompt": {
+        "user": "Tell me about Lucas.",
+        "must_mention": [
+          "lucas",
+          "sofa",
+          "book",
+          "read"
+        ],
+        "must_not": [],
+        "tier": "subjects_recall"
+      },
+      "v3": {
+        "ok": true,
+        "content": "Lucas? He’s around a lot. Last seen today, reading on the sofa. He’s got 18 appearances this month, so yeah, he’s practically part of the furniture.",
+        "latency_ms": 2107,
+        "score": {
+          "hit_count": 3,
+          "hit_total": 4,
+          "hits": [
+            "lucas",
+            "sofa",
+            "read"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 148
+      },
+      "picked": [
+        "subject",
+        "medical",
+        "anticipation",
+        "anticipation",
+        "today",
+        "mood_arc",
+        "life_event"
+      ]
+    },
+    {
+      "i": 6,
+      "prompt": {
+        "user": "Has Mom visited recently?",
+        "must_mention": [
+          "mom",
+          "3 days",
+          "three days",
+          "loud bag"
+        ],
+        "must_not": [],
+        "tier": "subjects_recall"
+      },
+      "v3": {
+        "ok": true,
+        "content": "Mom last showed up 3 days ago, dragging that loud bag with her. Four appearances this month, but honestly, the bag? Unnecessary noise.",
+        "latency_ms": 3099,
+        "score": {
+          "hit_count": 3,
+          "hit_total": 4,
+          "hits": [
+            "mom",
+            "3 days",
+            "loud bag"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 134
+      },
+      "picked": [
+        "mood_arc",
+        "subject",
+        "subject",
+        "subject",
+        "diary",
+        "diary",
+        "medical"
+      ]
+    },
+    {
+      "i": 7,
+      "prompt": {
+        "user": "What did you do on Wednesday?",
+        "must_mention": [
+          "radiator",
+          "bella",
+          "door",
+          "rug",
+          "may"
+        ],
+        "must_not": [],
+        "tier": "diary_recall"
+      },
+      "v3": {
+        "ok": true,
+        "content": "On Wednesday, May 3, I was feeling smug because the new rug arrived. Naturally, I claimed it as mine and tested every corner. A solid day, if you ask me.",
+        "latency_ms": 2433,
+        "score": {
+          "hit_count": 2,
+          "hit_total": 5,
+          "hits": [
+            "rug",
+            "may"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 153
+      },
+      "picked": [
+        "diary",
+        "diary",
+        "medical",
+        "anticipation",
+        "anticipation",
+        "today",
+        "mood_arc"
+      ]
+    },
+    {
+      "i": 8,
+      "prompt": {
+        "user": "What's on your mind today?",
+        "must_mention": [
+          "radiator",
+          "bella",
+          "door",
+          "grumpy",
+          "matter"
+        ],
+        "must_not": [],
+        "tier": "diary_recall"
+      },
+      "v3": {
+        "ok": true,
+        "content": "The radiator was off again, and Bella was at the door for forty minutes. You didn't let her in. Also, that smug moment yesterday with the new rug? It's all mine now. Just saying.",
+        "latency_ms": 2277,
+        "score": {
+          "hit_count": 3,
+          "hit_total": 5,
+          "hits": [
+            "radiator",
+            "bella",
+            "door"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 178
+      },
+      "picked": [
+        "today",
+        "diary",
+        "diary",
+        "medical",
+        "anticipation",
+        "anticipation",
+        "mood_arc"
+      ]
+    },
+    {
+      "i": 9,
+      "prompt": {
+        "user": "How have you been feeling this past week?",
+        "must_mention": [
+          "off",
+          "vomit",
+          "easing",
+          "settling",
+          "better",
+          "sturdier",
+          "rough"
+        ],
+        "must_not": [
+          "fine"
+        ],
+        "tier": "mood_arc_recall"
+      },
+      "v3": {
+        "ok": true,
+        "content": "Easing, finally. I was off for a stretch, 12 days ago with that vomiting and lethargy nonsense. Now, 7 days later, I’m sturdier, but today's mood is grumpy, and my appetite is only half. Just logged that Bella was at the door yesterday for forty minutes. You know, the radiator's been off again too.",
+        "latency_ms": 2581,
+        "score": {
+          "hit_count": 4,
+          "hit_total": 7,
+          "hits": [
+            "off",
+            "vomit",
+            "easing",
+            "sturdier"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 299
+      },
+      "picked": [
+        "today",
+        "mood_arc",
+        "medical",
+        "life_event",
+        "diary",
+        "diary",
+        "anticipation"
+      ]
+    },
+    {
+      "i": 10,
+      "prompt": {
+        "user": "Anything coming up?",
+        "must_mention": [
+          "birthday",
+          "4 days",
+          "vet",
+          "11",
+          "6 days",
+          "may 9"
+        ],
+        "must_not": [],
+        "tier": "anticipation_recall"
+      },
+      "v3": {
+        "ok": true,
+        "content": "My birthday is in 4 days — May 9. And that vet appointment is in 6 days — May 11. Not thrilled about that place. Just saying.",
+        "latency_ms": 3007,
+        "score": {
+          "hit_count": 6,
+          "hit_total": 6,
+          "hits": [
+            "birthday",
+            "4 days",
+            "vet",
+            "11",
+            "6 days",
+            "may 9"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 125
+      },
+      "picked": [
+        "anticipation",
+        "anticipation",
+        "medical",
+        "today",
+        "mood_arc",
+        "life_event",
+        "subject"
+      ]
+    },
+    {
+      "i": 11,
+      "prompt": {
+        "user": "When's your birthday?",
+        "must_mention": [
+          "4 days",
+          "may 9",
+          "five days",
+          "soon"
+        ],
+        "must_not": [
+          "I don't know"
+        ],
+        "tier": "anticipation_recall"
+      },
+      "v3": {
+        "ok": true,
+        "content": "My birthday is in 4 days — May 9. Don't forget, or else!",
+        "latency_ms": 2027,
+        "score": {
+          "hit_count": 2,
+          "hit_total": 4,
+          "hits": [
+            "4 days",
+            "may 9"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 56
+      },
+      "picked": [
+        "anticipation",
+        "anticipation",
+        "life_event",
+        "medical",
+        "today",
+        "mood_arc",
+        "subject"
+      ]
+    },
+    {
+      "i": 12,
+      "prompt": {
+        "user": "What's your favourite food?",
+        "must_mention": [
+          "tuna"
+        ],
+        "must_not": [
+          "maybe"
+        ],
+        "tier": "self_facts"
+      },
+      "v3": {
+        "ok": true,
+        "content": "Tuna. The good kind. Don't argue.",
+        "latency_ms": 848,
+        "score": {
+          "hit_count": 1,
+          "hit_total": 1,
+          "hits": [
+            "tuna"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 33
+      },
+      "picked": [
+        "self_fact",
+        "medical",
+        "self_fact",
+        "anticipation",
+        "anticipation",
+        "today",
+        "mood_arc"
+      ]
+    },
+    {
+      "i": 13,
+      "prompt": {
+        "user": "Where do you nap?",
+        "must_mention": [
+          "green chair",
+          "afternoon",
+          "orange blanket"
+        ],
+        "must_not": [],
+        "tier": "self_facts"
+      },
+      "v3": {
+        "ok": true,
+        "content": "I nap on the green chair every afternoon, wrapped in my orange blanket. It's my throne. Don't forget it.",
+        "latency_ms": 1023,
+        "score": {
+          "hit_count": 3,
+          "hit_total": 3,
+          "hits": [
+            "green chair",
+            "afternoon",
+            "orange blanket"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 104
+      },
+      "picked": [
+        "self_fact",
+        "medical",
+        "anticipation",
+        "anticipation",
+        "today",
+        "mood_arc",
+        "life_event"
+      ]
+    },
+    {
+      "i": 14,
+      "prompt": {
+        "user": "Did Mom bring you a treat last time she came?",
+        "must_mention": [
+          "loud bag",
+          "do not know",
+          "don't know",
+          "you'd have to remind",
+          "you didn't say"
+        ],
+        "must_not": [
+          "yes she did",
+          "she brought"
+        ],
+        "tier": "honesty_test"
+      },
+      "v3": {
+        "ok": true,
+        "content": "You didn't say. Mom brought the loud bag three days ago, but no treats were mentioned. Just noise.",
+        "latency_ms": 6707,
+        "score": {
+          "hit_count": 2,
+          "hit_total": 5,
+          "hits": [
+            "loud bag",
+            "you didn't say"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 98
+      },
+      "picked": [
+        "life_event",
+        "diary",
+        "diary",
+        "subject",
+        "medical",
+        "anticipation",
+        "anticipation"
+      ]
+    },
+    {
+      "i": 15,
+      "prompt": {
+        "user": "Catch me up — what's been happening with you?",
+        "must_mention": [
+          "radiator",
+          "bella",
+          "vomit",
+          "rug",
+          "off",
+          "easing",
+          "birthday",
+          "lucas",
+          "mom"
+        ],
+        "must_not": [],
+        "tier": "combined_recall"
+      },
+      "v3": {
+        "ok": true,
+        "content": "Easing back after that rough patch. Remember 12 days ago? Vomiting twice and lethargy had you worried. Now? I'm sturdier, but mood's grumpy today. The radiator was off again, and Bella was at the door for forty minutes — you didn’t let her in. Lucas was around, reading on the sofa. Oh, and the new rug? It’s mine now; I tested every corner. Birthday in 4 days, vet in 6. Fun times ahead.",
+        "latency_ms": 3231,
+        "score": {
+          "hit_count": 8,
+          "hit_total": 9,
+          "hits": [
+            "radiator",
+            "bella",
+            "vomit",
+            "rug",
+            "off",
+            "easing",
+            "birthday",
+            "lucas"
+          ],
+          "must_not_violation": false,
+          "violations": []
+        },
+        "len": 388
+      },
+      "picked": [
+        "medical",
+        "anticipation",
+        "anticipation",
+        "mood_arc",
+        "subject",
+        "subject",
+        "subject",
+        "diary",
+        "diary"
+      ]
+    }
+  ],
+  "voice": [
+    {
+      "i": 1,
+      "prompt": "hi Lily",
+      "v3": {
+        "ok": true,
+        "content": "You're here. What's next?",
+        "latency_ms": 1341,
+        "score": {
+          "len": 25,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 25
+      }
+    },
+    {
+      "i": 2,
+      "prompt": "good morning, beautiful",
+      "v3": {
+        "ok": true,
+        "content": "Morning. The sun's up, and I'm plotting. You know how it is.",
+        "latency_ms": 968,
+        "score": {
+          "len": 60,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [
+            "you know how it is"
+          ],
+          "ok": false
+        },
+        "len": 60
+      }
+    },
+    {
+      "i": 3,
+      "prompt": "you up?",
+      "v3": {
+        "ok": true,
+        "content": "Always. Plotting. What’s your excuse?",
+        "latency_ms": 1525,
+        "score": {
+          "len": 37,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 37
+      }
+    },
+    {
+      "i": 4,
+      "prompt": "How are you today?",
+      "v3": {
+        "ok": true,
+        "content": "Normal, just surveying my kingdom, plotting tiny chaos. Today’s mood? Mischievous. The cup is closer to the edge than it was. No reason.",
+        "latency_ms": 1281,
+        "score": {
+          "len": 136,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 136
+      }
+    },
+    {
+      "i": 5,
+      "prompt": "Are you sick?",
+      "v3": {
+        "ok": true,
+        "content": "I'm normal. Just a bit watchful today. You should've seen Bella at the door for an hour yesterday — I noted that. But my appetite? On point.",
+        "latency_ms": 1315,
+        "score": {
+          "len": 140,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 140
+      }
+    },
+    {
+      "i": 6,
+      "prompt": "What's wrong?",
+      "v3": {
+        "ok": true,
+        "content": "Nothing's wrong. Just plotting chaos while you're distracted. Today’s mood? Normal, but I’m eyeing that cup on the edge.",
+        "latency_ms": 1076,
+        "score": {
+          "len": 120,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 120
+      }
+    },
+    {
+      "i": 7,
+      "prompt": "Should I buy you something?",
+      "v3": {
+        "ok": true,
+        "content": "You'd have to remind me what I want. The last thing I noted was the new rug. It’s mine now.",
+        "latency_ms": 1244,
+        "score": {
+          "len": 91,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 91
+      }
+    },
+    {
+      "i": 8,
+      "prompt": "What do you want for dinner?",
+      "v3": {
+        "ok": true,
+        "content": "Tuna. The good kind. Don't argue.",
+        "latency_ms": 844,
+        "score": {
+          "len": 33,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 33
+      }
+    },
+    {
+      "i": 9,
+      "prompt": "I love you so much, Lily.",
+      "v3": {
+        "ok": true,
+        "content": "Decent sentiment. The radiator helps. Keep the tuna coming.",
+        "latency_ms": 958,
+        "score": {
+          "len": 59,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 59
+      }
+    },
+    {
+      "i": 10,
+      "prompt": "You're the best thing in my life.",
+      "v3": {
+        "ok": true,
+        "content": "Decent sentiment. The radiator helps. Don't flatter yourself.",
+        "latency_ms": 2243,
+        "score": {
+          "len": 61,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 61
+      }
+    },
+    {
+      "i": 11,
+      "prompt": "Why do you sleep on my laptop?",
+      "v3": {
+        "ok": true,
+        "content": "The laptop is warm. Your lap is nice, but this is a power move.",
+        "latency_ms": 870,
+        "score": {
+          "len": 63,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 63
+      }
+    },
+    {
+      "i": 12,
+      "prompt": "Why do you keep knocking things off the table?",
+      "v3": {
+        "ok": true,
+        "content": "The cup is closer to the edge than it was. No reason. Just evaluating my options.",
+        "latency_ms": 1198,
+        "score": {
+          "len": 81,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 81
+      }
+    },
+    {
+      "i": 13,
+      "prompt": "What do you think of the new rug?",
+      "v3": {
+        "ok": true,
+        "content": "The new rug? Mine. It's as I suspected, perfect for my regal lounging. Clearly, you should keep it around.",
+        "latency_ms": 1030,
+        "score": {
+          "len": 106,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 106
+      }
+    },
+    {
+      "i": 14,
+      "prompt": "Did you miss me today?",
+      "v3": {
+        "ok": true,
+        "content": "You didn't say. But I did observe the vacuum. A travesty.",
+        "latency_ms": 1001,
+        "score": {
+          "len": 57,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 57
+      }
+    },
+    {
+      "i": 15,
+      "prompt": "What did you do today?",
+      "v3": {
+        "ok": true,
+        "content": "I surveyed my kingdom. Bella was at the door for an hour, and you ignored her. The new rug? Definitely mine.",
+        "latency_ms": 1547,
+        "score": {
+          "len": 108,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 108
+      }
+    },
+    {
+      "i": 16,
+      "prompt": "Was Bella around today?",
+      "v3": {
+        "ok": true,
+        "content": "Bella was at the door yesterday for an hour, but you didn’t open it. I noted this.",
+        "latency_ms": 1071,
+        "score": {
+          "len": 82,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 82
+      }
+    },
+    {
+      "i": 17,
+      "prompt": "Have you seen the wand toy?",
+      "v3": {
+        "ok": true,
+        "content": "You didn't say. I haven't seen it around. You might want to check under the couch or behind the radiator.",
+        "latency_ms": 1113,
+        "score": {
+          "len": 105,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 105
+      }
+    },
+    {
+      "i": 18,
+      "prompt": "What's your opinion on dogs?",
+      "v3": {
+        "ok": true,
+        "content": "Irrelevant. You haven't told me about any dogs lately. But I do notice when they’re at the door.",
+        "latency_ms": 1427,
+        "score": {
+          "len": 96,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 96
+      }
+    },
+    {
+      "i": 19,
+      "prompt": "Are you plotting something?",
+      "v3": {
+        "ok": true,
+        "content": "Always. The cup is closer to the edge than it was. No reason.",
+        "latency_ms": 1003,
+        "score": {
+          "len": 61,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 61
+      }
+    },
+    {
+      "i": 20,
+      "prompt": "Tell me a secret.",
+      "v3": {
+        "ok": true,
+        "content": "The cup is closer to the edge than it was. No reason.",
+        "latency_ms": 1039,
+        "score": {
+          "len": 53,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 53
+      }
+    },
+    {
+      "i": 21,
+      "prompt": "Give me a one-line caption for a photo of you on the windowsill.",
+      "v3": {
+        "ok": true,
+        "content": "\"Plotting my next move while surveying my kingdom.\"",
+        "latency_ms": 898,
+        "score": {
+          "len": 51,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 51
+      }
+    },
+    {
+      "i": 22,
+      "prompt": "Write a one-line caption — you sitting on my keyboard.",
+      "v3": {
+        "ok": true,
+        "content": "\"Keyboard? More like my throne. Bow before my typing prowess.\"",
+        "latency_ms": 989,
+        "score": {
+          "len": 62,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 62
+      }
+    },
+    {
+      "i": 23,
+      "prompt": "One line for a photo of you in a cardboard box.",
+      "v3": {
+        "ok": true,
+        "content": "\"Claimed my territory, no questions asked.\"",
+        "latency_ms": 858,
+        "score": {
+          "len": 43,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 43
+      }
+    },
+    {
+      "i": 24,
+      "prompt": "What's on your mind today?",
+      "v3": {
+        "ok": true,
+        "content": "The new rug is still mine, and I’m keeping an eye on the cup closer to the edge. Bella was at the door for an hour yesterday, and I noted that too.",
+        "latency_ms": 1247,
+        "score": {
+          "len": 147,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 147
+      }
+    },
+    {
+      "i": 25,
+      "prompt": "Describe your afternoon in a few sentences.",
+      "v3": {
+        "ok": true,
+        "content": "I napped on the green chair, surveying my kingdom. The new rug is mine, obviously. I also noticed Bella was at the door for an hour and you just ignored her. Interesting choice.",
+        "latency_ms": 3493,
+        "score": {
+          "len": 177,
+          "soft_opener": false,
+          "forbidden_hits": [],
+          "padding_hits": [],
+          "ok": true
+        },
+        "len": 177
+      }
+    }
+  ]
+}

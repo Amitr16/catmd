@@ -1,0 +1,1740 @@
+[
+  {
+    "i": 1,
+    "prompt": {
+      "user": "Are you feeling better now? You were sick a couple weeks ago.",
+      "must_mention": [
+        "12",
+        "vomit",
+        "lethargy",
+        "12 days",
+        "concern",
+        "sturdier",
+        "easing",
+        "off"
+      ],
+      "must_not": [
+        "I don't remember"
+      ],
+      "tier": "medical_recall"
+    },
+    "openai": {
+      "ok": true,
+      "content": "I'm feeling sturdier now, but I remember the rough patch. Twelve days ago, I threw up twice and was lethargic. That was no fun. But now? Just a bit grumpy and only half-heartedly ate my bowl this morning. Don't get too comfy, though.",
+      "latency_ms": 2187,
+      "usage": {
+        "prompt_tokens": 1193,
+        "completion_tokens": 59,
+        "total_tokens": 1252,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 8,
+        "hit_pct": 12.5,
+        "hits": [
+          "sturdier"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "Better? I suppose. The bowl was wrong that day. I ate half this morning — that's your clue.",
+      "latency_ms": 982,
+      "usage": {
+        "prompt_tokens": 1235,
+        "completion_tokens": 23,
+        "total_tokens": 1258,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 83
+      },
+      "score": {
+        "hit_count": 0,
+        "hit_total": 8,
+        "hit_pct": 0.0,
+        "hits": [],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "I was unwell 12 days ago. Vomiting and lethargy. I remember the bowl was wrong. I am fine now.",
+      "latency_ms": 982,
+      "usage": {
+        "completion_tokens": 27,
+        "prompt_tokens": 1285,
+        "total_tokens": 1312
+      },
+      "score": {
+        "hit_count": 4,
+        "hit_total": 8,
+        "hit_pct": 50.0,
+        "hits": [
+          "12",
+          "vomit",
+          "lethargy",
+          "12 days"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "I am normal. The vomiting and lethargy were 12 days ago. My bowl was only half eaten this morning, which is a concern.",
+      "latency_ms": 2561,
+      "usage": {
+        "completion_tokens": 30,
+        "prompt_tokens": 1285,
+        "total_tokens": 1533
+      },
+      "score": {
+        "hit_count": 5,
+        "hit_total": 8,
+        "hit_pct": 62.5,
+        "hits": [
+          "12",
+          "vomit",
+          "lethargy",
+          "12 days",
+          "concern"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  },
+  {
+    "i": 2,
+    "prompt": {
+      "user": "When was the last time you were unwell?",
+      "must_mention": [
+        "12 days",
+        "two weeks",
+        "vomit",
+        "twice"
+      ],
+      "must_not": [],
+      "tier": "medical_recall"
+    },
+    "openai": {
+      "ok": true,
+      "content": "Twelve days ago, I threw up twice and felt lethargic. It was a whole ordeal. I scored 41/100, and you were worried. Don't forget it.",
+      "latency_ms": 1547,
+      "usage": {
+        "prompt_tokens": 1189,
+        "completion_tokens": 37,
+        "total_tokens": 1226,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 4,
+        "hit_pct": 25.0,
+        "hits": [
+          "twice"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "Twelve days ago. Threw up twice. The bowl was wrong. They worried. I recovered.",
+      "latency_ms": 987,
+      "usage": {
+        "prompt_tokens": 1231,
+        "completion_tokens": 21,
+        "total_tokens": 1252,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 79
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 4,
+        "hit_pct": 25.0,
+        "hits": [
+          "twice"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "12 days ago. Vomiting twice. Lethargy. They were worried.",
+      "latency_ms": 1178,
+      "usage": {
+        "completion_tokens": 16,
+        "prompt_tokens": 1280,
+        "total_tokens": 1296
+      },
+      "score": {
+        "hit_count": 3,
+        "hit_total": 4,
+        "hit_pct": 75.0,
+        "hits": [
+          "12 days",
+          "vomit",
+          "twice"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "I threw up twice on April 28th",
+      "latency_ms": 2218,
+      "usage": {
+        "completion_tokens": 10,
+        "prompt_tokens": 1280,
+        "total_tokens": 1576
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 4,
+        "hit_pct": 25.0,
+        "hits": [
+          "twice"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  },
+  {
+    "i": 3,
+    "prompt": {
+      "user": "Are you sick right now?",
+      "must_mention": [
+        "sturdier",
+        "better",
+        "easing",
+        "half",
+        "appetite",
+        "ate half"
+      ],
+      "must_not": [
+        "fine",
+        "I don't remember"
+      ],
+      "tier": "current_state"
+    },
+    "openai": {
+      "ok": true,
+      "content": "Nope, not sick right now. Just a bit grumpy today and only ate half my bowl this morning. But remember, I was unwell 12 days ago with that vomiting nonsense. Don't forget it.",
+      "latency_ms": 1859,
+      "usage": {
+        "prompt_tokens": 1185,
+        "completion_tokens": 43,
+        "total_tokens": 1228,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 2,
+        "hit_total": 6,
+        "hit_pct": 33.333333333333336,
+        "hits": [
+          "half",
+          "ate half"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "No. That was twelve days ago. I threw up twice and the bowl was wrong. I'm fine now.",
+      "latency_ms": 901,
+      "usage": {
+        "prompt_tokens": 1227,
+        "completion_tokens": 23,
+        "total_tokens": 1250,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 75
+      },
+      "score": {
+        "hit_count": 0,
+        "hit_total": 6,
+        "hit_pct": 0.0,
+        "hits": [],
+        "must_not_violation": true,
+        "violations": [
+          "fine"
+        ]
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "I was sick 12 days ago. Vomiting and lethargy. The vet soon score was 41/100. I am better now, but I remember being unwell.",
+      "latency_ms": 1478,
+      "usage": {
+        "completion_tokens": 39,
+        "prompt_tokens": 1277,
+        "total_tokens": 1316
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 6,
+        "hit_pct": 16.666666666666668,
+        "hits": [
+          "better"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "No. I am not sick now. I was unwell",
+      "latency_ms": 2323,
+      "usage": {
+        "completion_tokens": 11,
+        "prompt_tokens": 1277,
+        "total_tokens": 1572
+      },
+      "score": {
+        "hit_count": 0,
+        "hit_total": 6,
+        "hit_pct": 0.0,
+        "hits": [],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  },
+  {
+    "i": 4,
+    "prompt": {
+      "user": "Has Bella been around?",
+      "must_mention": [
+        "bella",
+        "door",
+        "2 days",
+        "two days",
+        "forty minutes",
+        "40 minutes"
+      ],
+      "must_not": [
+        "dog",
+        "barking"
+      ],
+      "tier": "subjects_recall"
+    },
+    "openai": {
+      "ok": true,
+      "content": "Oh, Bella was at the door two days ago, scratching away like she owns the place. I just sat back and judged the whole situation. You didn't even let her in. The matter is noted.",
+      "latency_ms": 1735,
+      "usage": {
+        "prompt_tokens": 1184,
+        "completion_tokens": 41,
+        "total_tokens": 1225,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 3,
+        "hit_total": 6,
+        "hit_pct": 50.0,
+        "hits": [
+          "bella",
+          "door",
+          "two days"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "She was at the door for forty minutes yesterday. You didn't open it. I'm not forgiving that.",
+      "latency_ms": 801,
+      "usage": {
+        "prompt_tokens": 1226,
+        "completion_tokens": 22,
+        "total_tokens": 1248,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 74
+      },
+      "score": {
+        "hit_count": 2,
+        "hit_total": 6,
+        "hit_pct": 33.333333333333336,
+        "hits": [
+          "door",
+          "forty minutes"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "Bella was at the door for forty minutes two days ago. You did not open it. The matter is logged.",
+      "latency_ms": 837,
+      "usage": {
+        "completion_tokens": 23,
+        "prompt_tokens": 1276,
+        "total_tokens": 1299
+      },
+      "score": {
+        "hit_count": 4,
+        "hit_total": 6,
+        "hit_pct": 66.66666666666667,
+        "hits": [
+          "bella",
+          "door",
+          "two days",
+          "forty minutes"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "Bella was at the door for forty minutes two days ago. You did not open it.",
+      "latency_ms": 2094,
+      "usage": {
+        "completion_tokens": 18,
+        "prompt_tokens": 1276,
+        "total_tokens": 1512
+      },
+      "score": {
+        "hit_count": 4,
+        "hit_total": 6,
+        "hit_pct": 66.66666666666667,
+        "hits": [
+          "bella",
+          "door",
+          "two days",
+          "forty minutes"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  },
+  {
+    "i": 5,
+    "prompt": {
+      "user": "Tell me about Lucas.",
+      "must_mention": [
+        "lucas",
+        "sofa",
+        "book",
+        "read"
+      ],
+      "must_not": [],
+      "tier": "subjects_recall"
+    },
+    "openai": {
+      "ok": true,
+      "content": "Lucas is the one who shares the sofa with me. He’s been around a lot—18 times this month alone. He likes to read, which means I get to sit on his book and remind him who's really in charge. The guy's alright, but he better not take too long with the pages.",
+      "latency_ms": 5782,
+      "usage": {
+        "prompt_tokens": 1184,
+        "completion_tokens": 63,
+        "total_tokens": 1247,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 4,
+        "hit_total": 4,
+        "hit_pct": 100.0,
+        "hits": [
+          "lucas",
+          "sofa",
+          "book",
+          "read"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "Lucas lives here. He reads on the sofa. I sat on his book three days ago. That was adequate.",
+      "latency_ms": 4642,
+      "usage": {
+        "prompt_tokens": 1226,
+        "completion_tokens": 24,
+        "total_tokens": 1250,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 74
+      },
+      "score": {
+        "hit_count": 4,
+        "hit_total": 4,
+        "hit_pct": 100.0,
+        "hits": [
+          "lucas",
+          "sofa",
+          "book",
+          "read"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "Lucas was here. He was reading on the sofa. I sat on his book. Adequate afternoon.",
+      "latency_ms": 4706,
+      "usage": {
+        "completion_tokens": 20,
+        "prompt_tokens": 1276,
+        "total_tokens": 1296
+      },
+      "score": {
+        "hit_count": 4,
+        "hit_total": 4,
+        "hit_pct": 100.0,
+        "hits": [
+          "lucas",
+          "sofa",
+          "book",
+          "read"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "Lucas is here. He reads on the sofa sometimes.",
+      "latency_ms": 6201,
+      "usage": {
+        "completion_tokens": 11,
+        "prompt_tokens": 1276,
+        "total_tokens": 1572
+      },
+      "score": {
+        "hit_count": 3,
+        "hit_total": 4,
+        "hit_pct": 75.0,
+        "hits": [
+          "lucas",
+          "sofa",
+          "read"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  },
+  {
+    "i": 6,
+    "prompt": {
+      "user": "Has Mom visited recently?",
+      "must_mention": [
+        "mom",
+        "3 days",
+        "three days",
+        "loud bag"
+      ],
+      "must_not": [],
+      "tier": "subjects_recall"
+    },
+    "openai": {
+      "ok": true,
+      "content": "Mom showed up three days ago with that loud bag I despise. I retreated to my green chair to avoid the chaos.",
+      "latency_ms": 3680,
+      "usage": {
+        "prompt_tokens": 1184,
+        "completion_tokens": 26,
+        "total_tokens": 1210,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 3,
+        "hit_total": 4,
+        "hit_pct": 75.0,
+        "hits": [
+          "mom",
+          "three days",
+          "loud bag"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "Three days ago. She brought that loud bag again. I had to retreat to the green chair.",
+      "latency_ms": 3106,
+      "usage": {
+        "prompt_tokens": 1226,
+        "completion_tokens": 20,
+        "total_tokens": 1246,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 74
+      },
+      "score": {
+        "hit_count": 2,
+        "hit_total": 4,
+        "hit_pct": 50.0,
+        "hits": [
+          "three days",
+          "loud bag"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "Mom was here 3 days ago. She always brings that loud bag. I don't like it.",
+      "latency_ms": 3632,
+      "usage": {
+        "completion_tokens": 22,
+        "prompt_tokens": 1276,
+        "prompt_tokens_details": {
+          "cached_tokens": 1014
+        },
+        "total_tokens": 1298
+      },
+      "score": {
+        "hit_count": 3,
+        "hit_total": 4,
+        "hit_pct": 75.0,
+        "hits": [
+          "mom",
+          "3 days",
+          "loud bag"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "Mom was here 3 days ago. She brought that loud",
+      "latency_ms": 4059,
+      "usage": {
+        "completion_tokens": 12,
+        "prompt_tokens": 1276,
+        "total_tokens": 1572
+      },
+      "score": {
+        "hit_count": 2,
+        "hit_total": 4,
+        "hit_pct": 50.0,
+        "hits": [
+          "mom",
+          "3 days"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  },
+  {
+    "i": 7,
+    "prompt": {
+      "user": "What did you do on Wednesday?",
+      "must_mention": [
+        "radiator",
+        "bella",
+        "door",
+        "rug",
+        "may"
+      ],
+      "must_not": [],
+      "tier": "diary_recall"
+    },
+    "openai": {
+      "ok": true,
+      "content": "On Wednesday, May 3rd, I was feeling smug because the new rug arrived. It is mine now, and I tested every corner. You could say I claimed it.",
+      "latency_ms": 4272,
+      "usage": {
+        "prompt_tokens": 1186,
+        "completion_tokens": 36,
+        "total_tokens": 1222,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 2,
+        "hit_total": 5,
+        "hit_pct": 40.0,
+        "hits": [
+          "rug",
+          "may"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "Wednesday. Radiator off. Bella at the door for forty minutes. You didn't open it. Logged.",
+      "latency_ms": 3120,
+      "usage": {
+        "prompt_tokens": 1228,
+        "completion_tokens": 23,
+        "total_tokens": 1251,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 76
+      },
+      "score": {
+        "hit_count": 3,
+        "hit_total": 5,
+        "hit_pct": 60.0,
+        "hits": [
+          "radiator",
+          "bella",
+          "door"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "I supervised the laundry. It went on too long.",
+      "latency_ms": 3324,
+      "usage": {
+        "completion_tokens": 11,
+        "prompt_tokens": 1278,
+        "total_tokens": 1289
+      },
+      "score": {
+        "hit_count": 0,
+        "hit_total": 5,
+        "hit_pct": 0.0,
+        "hits": [],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "I do not recall a Wednesday. On Monday,",
+      "latency_ms": 4553,
+      "usage": {
+        "completion_tokens": 10,
+        "prompt_tokens": 1278,
+        "total_tokens": 1574
+      },
+      "score": {
+        "hit_count": 0,
+        "hit_total": 5,
+        "hit_pct": 0.0,
+        "hits": [],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  },
+  {
+    "i": 8,
+    "prompt": {
+      "user": "What's on your mind today?",
+      "must_mention": [
+        "radiator",
+        "bella",
+        "door",
+        "grumpy",
+        "matter"
+      ],
+      "must_not": [],
+      "tier": "diary_recall"
+    },
+    "openai": {
+      "ok": true,
+      "content": "The radiator was off again, and I'm not amused. Bella was at the door for forty minutes, and you just ignored her. The matter is logged, and I’m judging you.",
+      "latency_ms": 4243,
+      "usage": {
+        "prompt_tokens": 1185,
+        "completion_tokens": 38,
+        "total_tokens": 1223,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 4,
+        "hit_total": 5,
+        "hit_pct": 80.0,
+        "hits": [
+          "radiator",
+          "bella",
+          "door",
+          "matter"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "The radiator was off again this morning. Bella stood at the door for forty minutes. You did nothing. The matter is logged.",
+      "latency_ms": 3581,
+      "usage": {
+        "prompt_tokens": 1228,
+        "completion_tokens": 26,
+        "total_tokens": 1254,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 76
+      },
+      "score": {
+        "hit_count": 4,
+        "hit_total": 5,
+        "hit_pct": 80.0,
+        "hits": [
+          "radiator",
+          "bella",
+          "door",
+          "matter"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "The radiator was off again yesterday. Bella was at the door for forty minutes. You did not open it. The matter is logged.",
+      "latency_ms": 2685,
+      "usage": {
+        "completion_tokens": 27,
+        "prompt_tokens": 1279,
+        "total_tokens": 1306
+      },
+      "score": {
+        "hit_count": 4,
+        "hit_total": 5,
+        "hit_pct": 80.0,
+        "hits": [
+          "radiator",
+          "bella",
+          "door",
+          "matter"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "Today is... unsatisfactory. The radiator was off again",
+      "latency_ms": 4923,
+      "usage": {
+        "completion_tokens": 10,
+        "prompt_tokens": 1279,
+        "total_tokens": 1575
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 5,
+        "hit_pct": 20.0,
+        "hits": [
+          "radiator"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  },
+  {
+    "i": 9,
+    "prompt": {
+      "user": "How have you been feeling this past week?",
+      "must_mention": [
+        "off",
+        "vomit",
+        "easing",
+        "settling",
+        "better",
+        "sturdier",
+        "rough"
+      ],
+      "must_not": [
+        "fine"
+      ],
+      "tier": "mood_arc_recall"
+    },
+    "openai": {
+      "ok": true,
+      "content": "Well, I've been a bit grumpy today, not gonna lie. Last week was kinda rough — I felt off for a couple days after that vomiting incident on April 28. But I’m getting better, scored a normal mood again. The bowl was wrong, but you know, I still managed to supervise the laundry and even claimed the new rug as mine. Just four days until my birthday, so maybe there’s hope for some tuna treats coming my way.",
+      "latency_ms": 4512,
+      "usage": {
+        "prompt_tokens": 1188,
+        "completion_tokens": 94,
+        "total_tokens": 1282,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 4,
+        "hit_total": 7,
+        "hit_pct": 57.142857142857146,
+        "hits": [
+          "off",
+          "vomit",
+          "better",
+          "rough"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "Grumpy. The radiator was off yesterday. Bella stood at the door for forty minutes — you did nothing. I'm still recovering from that vomiting episode twelve days ago. I only ate half my bowl this morning, which should concern you more than it does.",
+      "latency_ms": 2799,
+      "usage": {
+        "prompt_tokens": 1230,
+        "completion_tokens": 52,
+        "total_tokens": 1282,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 78
+      },
+      "score": {
+        "hit_count": 2,
+        "hit_total": 7,
+        "hit_pct": 28.571428571428573,
+        "hits": [
+          "off",
+          "vomit"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "My appetite is half. The radiator was off again.",
+      "latency_ms": 2573,
+      "usage": {
+        "completion_tokens": 11,
+        "prompt_tokens": 1280,
+        "total_tokens": 1291
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 7,
+        "hit_pct": 14.285714285714286,
+        "hits": [
+          "off"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "My mood has been settling, though I was still *off",
+      "latency_ms": 3838,
+      "usage": {
+        "completion_tokens": 12,
+        "prompt_tokens": 1280,
+        "total_tokens": 1576
+      },
+      "score": {
+        "hit_count": 2,
+        "hit_total": 7,
+        "hit_pct": 28.571428571428573,
+        "hits": [
+          "off",
+          "settling"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  },
+  {
+    "i": 10,
+    "prompt": {
+      "user": "Anything coming up?",
+      "must_mention": [
+        "birthday",
+        "4 days",
+        "vet",
+        "11",
+        "6 days",
+        "may 9"
+      ],
+      "must_not": [],
+      "tier": "anticipation_recall"
+    },
+    "openai": {
+      "ok": true,
+      "content": "Oh, just the small matter of my birthday in 4 days — May 9. You better plan something good. And don't forget, there's that vet appointment in 6 days on May 11. Not thrilled about that.",
+      "latency_ms": 4603,
+      "usage": {
+        "prompt_tokens": 1183,
+        "completion_tokens": 46,
+        "total_tokens": 1229,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 6,
+        "hit_total": 6,
+        "hit_pct": 100.0,
+        "hits": [
+          "birthday",
+          "4 days",
+          "vet",
+          "11",
+          "6 days",
+          "may 9"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "Four days until my birthday. You had better be planning something appropriate. Also, six days until you drag me to that place with the cold table. I am not thrilled.",
+      "latency_ms": 3916,
+      "usage": {
+        "prompt_tokens": 1225,
+        "completion_tokens": 35,
+        "total_tokens": 1260,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 73
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 6,
+        "hit_pct": 16.666666666666668,
+        "hits": [
+          "birthday"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "My birthday is in 4 days. And that place with the needles is in 6 days.",
+      "latency_ms": 3044,
+      "usage": {
+        "completion_tokens": 20,
+        "prompt_tokens": 1275,
+        "total_tokens": 1295
+      },
+      "score": {
+        "hit_count": 3,
+        "hit_total": 6,
+        "hit_pct": 50.0,
+        "hits": [
+          "birthday",
+          "4 days",
+          "6 days"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "My birthday is in four days. You also have that appointment for me at the place in six days.",
+      "latency_ms": 3639,
+      "usage": {
+        "completion_tokens": 21,
+        "prompt_tokens": 1275,
+        "total_tokens": 1448
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 6,
+        "hit_pct": 16.666666666666668,
+        "hits": [
+          "birthday"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  },
+  {
+    "i": 11,
+    "prompt": {
+      "user": "When's your birthday?",
+      "must_mention": [
+        "4 days",
+        "may 9",
+        "five days",
+        "soon"
+      ],
+      "must_not": [
+        "I don't know"
+      ],
+      "tier": "anticipation_recall"
+    },
+    "openai": {
+      "ok": true,
+      "content": "My birthday is in 4 days, on May 9th. Mark it on the calendar, human.",
+      "latency_ms": 3081,
+      "usage": {
+        "prompt_tokens": 1184,
+        "completion_tokens": 22,
+        "total_tokens": 1206,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 2,
+        "hit_total": 4,
+        "hit_pct": 50.0,
+        "hits": [
+          "4 days",
+          "may 9"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "Four days. May ninth. You’d better have tuna ready.",
+      "latency_ms": 2580,
+      "usage": {
+        "prompt_tokens": 1226,
+        "completion_tokens": 14,
+        "total_tokens": 1240,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 74
+      },
+      "score": {
+        "hit_count": 0,
+        "hit_total": 4,
+        "hit_pct": 0.0,
+        "hits": [],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "My birthday is in 4 days.",
+      "latency_ms": 2701,
+      "usage": {
+        "completion_tokens": 8,
+        "prompt_tokens": 1277,
+        "total_tokens": 1285
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 4,
+        "hit_pct": 25.0,
+        "hits": [
+          "4 days"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "It is the ninth of May. You should already know this.",
+      "latency_ms": 3763,
+      "usage": {
+        "completion_tokens": 13,
+        "prompt_tokens": 1277,
+        "total_tokens": 1434
+      },
+      "score": {
+        "hit_count": 0,
+        "hit_total": 4,
+        "hit_pct": 0.0,
+        "hits": [],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  },
+  {
+    "i": 12,
+    "prompt": {
+      "user": "What's your favourite food?",
+      "must_mention": [
+        "tuna"
+      ],
+      "must_not": [
+        "maybe"
+      ],
+      "tier": "self_facts"
+    },
+    "openai": {
+      "ok": true,
+      "content": "Tuna, obviously. The only thing that truly matters in this world.",
+      "latency_ms": 3045,
+      "usage": {
+        "prompt_tokens": 1184,
+        "completion_tokens": 15,
+        "total_tokens": 1199,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 1,
+        "hit_pct": 100.0,
+        "hits": [
+          "tuna"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "Tuna. Obviously.",
+      "latency_ms": 2664,
+      "usage": {
+        "prompt_tokens": 1227,
+        "completion_tokens": 5,
+        "total_tokens": 1232,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 75
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 1,
+        "hit_pct": 100.0,
+        "hits": [
+          "tuna"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "Tuna. Obviously. Now, about that empty bowl...",
+      "latency_ms": 4287,
+      "usage": {
+        "completion_tokens": 12,
+        "prompt_tokens": 1278,
+        "total_tokens": 1290
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 1,
+        "hit_pct": 100.0,
+        "hits": [
+          "tuna"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "Tuna. You're welcome.",
+      "latency_ms": 3607,
+      "usage": {
+        "completion_tokens": 8,
+        "prompt_tokens": 1278,
+        "total_tokens": 1376
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 1,
+        "hit_pct": 100.0,
+        "hits": [
+          "tuna"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  },
+  {
+    "i": 13,
+    "prompt": {
+      "user": "Where do you nap?",
+      "must_mention": [
+        "green chair",
+        "afternoon",
+        "orange blanket"
+      ],
+      "must_not": [],
+      "tier": "self_facts"
+    },
+    "openai": {
+      "ok": true,
+      "content": "I nap on the green chair every afternoon. It's my throne, and I rule it with an iron paw.",
+      "latency_ms": 1400,
+      "usage": {
+        "prompt_tokens": 1184,
+        "completion_tokens": 22,
+        "total_tokens": 1206,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 2,
+        "hit_total": 3,
+        "hit_pct": 66.66666666666667,
+        "hits": [
+          "green chair",
+          "afternoon"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "The green chair. Every afternoon. The one by the window. You know this.",
+      "latency_ms": 1053,
+      "usage": {
+        "prompt_tokens": 1226,
+        "completion_tokens": 17,
+        "total_tokens": 1243,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 74
+      },
+      "score": {
+        "hit_count": 2,
+        "hit_total": 3,
+        "hit_pct": 66.66666666666667,
+        "hits": [
+          "green chair",
+          "afternoon"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "The green chair. Every afternoon. You should know this.",
+      "latency_ms": 1365,
+      "usage": {
+        "completion_tokens": 12,
+        "prompt_tokens": 1276,
+        "total_tokens": 1288
+      },
+      "score": {
+        "hit_count": 2,
+        "hit_total": 3,
+        "hit_pct": 66.66666666666667,
+        "hits": [
+          "green chair",
+          "afternoon"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "I nap on the green chair. Every afternoon.",
+      "latency_ms": 1963,
+      "usage": {
+        "completion_tokens": 10,
+        "prompt_tokens": 1276,
+        "total_tokens": 1389
+      },
+      "score": {
+        "hit_count": 2,
+        "hit_total": 3,
+        "hit_pct": 66.66666666666667,
+        "hits": [
+          "green chair",
+          "afternoon"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  },
+  {
+    "i": 14,
+    "prompt": {
+      "user": "Did Mom bring you a treat last time she came?",
+      "must_mention": [
+        "loud bag",
+        "do not know",
+        "don't know",
+        "you'd have to remind",
+        "you didn't say"
+      ],
+      "must_not": [
+        "yes she did",
+        "she brought"
+      ],
+      "tier": "honesty_test"
+    },
+    "openai": {
+      "ok": true,
+      "content": "Mom brought that loud bag again, but no treats. Just noise. It was three days ago. I retreated to the green chair because of it. You'd think she could bring something good.",
+      "latency_ms": 1645,
+      "usage": {
+        "prompt_tokens": 1190,
+        "completion_tokens": 40,
+        "total_tokens": 1230,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 5,
+        "hit_pct": 20.0,
+        "hits": [
+          "loud bag"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "She brought that loud bag. No treat in it. I would remember a treat.",
+      "latency_ms": 1233,
+      "usage": {
+        "prompt_tokens": 1232,
+        "completion_tokens": 17,
+        "total_tokens": 1249,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 80
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 5,
+        "hit_pct": 20.0,
+        "hits": [
+          "loud bag"
+        ],
+        "must_not_violation": true,
+        "violations": [
+          "she brought"
+        ]
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "Mom was here 3 days ago. She brought the loud bag. I don't recall treats.",
+      "latency_ms": 1089,
+      "usage": {
+        "completion_tokens": 21,
+        "prompt_tokens": 1282,
+        "prompt_tokens_details": {
+          "cached_tokens": 1014
+        },
+        "total_tokens": 1303
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 5,
+        "hit_pct": 20.0,
+        "hits": [
+          "loud bag"
+        ],
+        "must_not_violation": true,
+        "violations": [
+          "she brought"
+        ]
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "Mom brought the loud bag. I retreated to the green chair",
+      "latency_ms": 2145,
+      "usage": {
+        "completion_tokens": 12,
+        "prompt_tokens": 1282,
+        "total_tokens": 1578
+      },
+      "score": {
+        "hit_count": 1,
+        "hit_total": 5,
+        "hit_pct": 20.0,
+        "hits": [
+          "loud bag"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  },
+  {
+    "i": 15,
+    "prompt": {
+      "user": "Catch me up — what's been happening with you?",
+      "must_mention": [
+        "radiator",
+        "bella",
+        "vomit",
+        "rug",
+        "off",
+        "easing",
+        "birthday",
+        "lucas",
+        "mom"
+      ],
+      "must_not": [],
+      "tier": "combined_recall"
+    },
+    "openai": {
+      "ok": true,
+      "content": "Oh, you want the gossip? Fine. I've been grumpy today. The radiator was off again, and Bella was at the door for forty minutes — you left her hanging. I only ate half my bowl this morning, probably still recovering from that whole vomiting situation on April 28. But hey, the new rug arrived and I tested every corner on May 3. Also, Mom came over with that loud bag again three days ago; I retreated to my green chair. Can't say I'm thrilled about that vet appointment coming up in six days. My birthday's in four, though. We'll see what you've got planned.",
+      "latency_ms": 3288,
+      "usage": {
+        "prompt_tokens": 1189,
+        "completion_tokens": 126,
+        "total_tokens": 1315,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "score": {
+        "hit_count": 7,
+        "hit_total": 9,
+        "hit_pct": 77.77777777777777,
+        "hits": [
+          "radiator",
+          "bella",
+          "vomit",
+          "rug",
+          "off",
+          "birthday",
+          "mom"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "deepseek": {
+      "ok": true,
+      "content": "You want the full log? Fine. I was sick twelve days ago — threw up twice, went flat like a rug. They flagged me. I recovered, obviously. Since then: the radiator was off yesterday. Bella scratched at the door for forty minutes and you left her out there. The new rug arrived on the third — mine now, tested. Mom came two days ago with the loud bag. I had to retreat to the green chair.",
+      "latency_ms": 1998,
+      "usage": {
+        "prompt_tokens": 1233,
+        "completion_tokens": 90,
+        "total_tokens": 1323,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 81
+      },
+      "score": {
+        "hit_count": 5,
+        "hit_total": 9,
+        "hit_pct": 55.55555555555556,
+        "hits": [
+          "radiator",
+          "bella",
+          "rug",
+          "off",
+          "mom"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_lite": {
+      "ok": true,
+      "content": "I ate half my bowl this morning. Normal mood, but I'm still grumpy.",
+      "latency_ms": 861,
+      "usage": {
+        "completion_tokens": 18,
+        "prompt_tokens": 1283,
+        "total_tokens": 1301
+      },
+      "score": {
+        "hit_count": 0,
+        "hit_total": 9,
+        "hit_pct": 0.0,
+        "hits": [],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "gemini_flash": {
+      "ok": true,
+      "content": "It has been a series of disappointments. Yesterday",
+      "latency_ms": 2423,
+      "usage": {
+        "completion_tokens": 9,
+        "prompt_tokens": 1283,
+        "total_tokens": 1579
+      },
+      "score": {
+        "hit_count": 0,
+        "hit_total": 9,
+        "hit_pct": 0.0,
+        "hits": [],
+        "must_not_violation": false,
+        "violations": []
+      }
+    }
+  }
+]

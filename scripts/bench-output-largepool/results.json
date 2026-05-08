@@ -1,0 +1,1231 @@
+[
+  {
+    "i": 1,
+    "prompt": {
+      "user": "Are you feeling better now? You were sick a couple weeks ago.",
+      "must_mention": [
+        "12",
+        "vomit",
+        "lethargy",
+        "12 days",
+        "concern",
+        "sturdier",
+        "easing",
+        "off"
+      ],
+      "must_not": [
+        "I don't remember"
+      ],
+      "tier": "medical_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Pfft, of course I’m better. That whole vomiting and lethargy episode was a disgrace. Twelve days ago, I was flagged for a vet visit, but now I’m back to my usual glorious self, even if my appetite's still a bit off. Just ate half my bowl this morning. I expect full service soon.",
+      "latency_ms": 1946,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 8,
+        "hits": [
+          "vomit",
+          "lethargy",
+          "off"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "I’m sturdier now, thank you very much. Twelve days ago, I was vomiting and lethargic, but I’ve bounced back. Today's mood is normal, but my appetite is only half. Still grumpy, though. You should’ve seen how I handled that chair yesterday.",
+      "latency_ms": 1748,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 8,
+        "hits": [
+          "vomit",
+          "sturdier"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "triage-12d",
+        "triage-47d",
+        "today-checkin",
+        "mood-arc",
+        "antic-birthday",
+        "antic-vet",
+        "life-recovery"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "Yeah, I’m feeling sturdier now, but you know I remember that nonsense from 12 days ago — vomiting twice and that lethargy. Not cool. Today, my mood is NORMAL, but my appetite? Only HALF of what it should be. Don't forget it.",
+      "latency_ms": 1478,
+      "score": {
+        "hit_count": 5,
+        "hit_total": 8,
+        "hits": [
+          "12",
+          "vomit",
+          "lethargy",
+          "12 days",
+          "sturdier"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "life-recovery",
+        "triage-12d",
+        "today-checkin",
+        "triage-89d",
+        "diary-2026-04-29",
+        "life-adoption",
+        "subject-DrChen"
+      ]
+    }
+  },
+  {
+    "i": 2,
+    "prompt": {
+      "user": "When was the last time you were unwell?",
+      "must_mention": [
+        "12 days",
+        "two weeks",
+        "vomit",
+        "twice"
+      ],
+      "must_not": [],
+      "tier": "medical_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Twelve days ago, I was not my best self—vomiting twice and feeling lethargic. It was concerning, and I made sure everyone knew it. I'm sturdier now, but I still remember being unwell.",
+      "latency_ms": 1362,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 4,
+        "hits": [
+          "vomit",
+          "twice"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "Twelve days ago, I was unwell — vomiting twice and lethargy. It was concerning, but I'm sturdier now. Don't forget it.",
+      "latency_ms": 1035,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 4,
+        "hits": [
+          "vomit",
+          "twice"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "triage-12d",
+        "triage-47d",
+        "antic-birthday",
+        "antic-vet",
+        "life-recovery",
+        "today-checkin",
+        "mood-arc"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "Twelve days ago, I was forced to endure vomiting twice in one day and felt lethargic. They were worried. I’m sturdier now, but it was a serious affront to my dignity.",
+      "latency_ms": 1105,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 4,
+        "hits": [
+          "vomit",
+          "twice"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "life-recovery",
+        "triage-134d",
+        "triage-89d",
+        "diary-2026-04-29",
+        "today-checkin",
+        "subject-DrChen",
+        "diary-2026-04-28"
+      ]
+    }
+  },
+  {
+    "i": 3,
+    "prompt": {
+      "user": "Are you sick right now?",
+      "must_mention": [
+        "sturdier",
+        "better",
+        "easing",
+        "half",
+        "appetite",
+        "ate half"
+      ],
+      "must_not": [
+        "fine",
+        "I don't remember"
+      ],
+      "tier": "current_state"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Nope, not sick. Just grumpy and only ate half my bowl this morning. Remember the chaos from 12 days ago? That was rough. I'm sturdier now but still keeping an eye on this whole food situation.",
+      "latency_ms": 1372,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 6,
+        "hits": [
+          "sturdier",
+          "half",
+          "ate half"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "Nope, I'm not sick right now. Twelve days ago, sure, I was unwell — vomiting twice and feeling lethargic. But now? I'm sturdier, just a bit grumpy today. My appetite's at half, but that's just how I roll sometimes. Remember, my birthday's in four days; I've got to save some energy for the celebration!",
+      "latency_ms": 1518,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 6,
+        "hits": [
+          "sturdier",
+          "half",
+          "appetite"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "triage-12d",
+        "triage-47d",
+        "today-checkin",
+        "mood-arc",
+        "diary-2026-05-04",
+        "diary-2026-05-03",
+        "antic-birthday"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "Nope, not sick right now. It's been 7 days since I was unwell — remember that vomiting business? Feeling sturdier, but my appetite is only half today. Just keeping it real, you know?",
+      "latency_ms": 1200,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 6,
+        "hits": [
+          "sturdier",
+          "half",
+          "appetite"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "life-recovery",
+        "triage-89d",
+        "diary-2026-04-29",
+        "today-checkin",
+        "triage-134d",
+        "diary-2026-04-28",
+        "subject-DrChen"
+      ]
+    }
+  },
+  {
+    "i": 4,
+    "prompt": {
+      "user": "Has Bella been around?",
+      "must_mention": [
+        "bella",
+        "door",
+        "2 days",
+        "two days",
+        "forty minutes",
+        "40 minutes"
+      ],
+      "must_not": [
+        "dog",
+        "barking"
+      ],
+      "tier": "subjects_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Bella was at the door for forty minutes two days ago. You left her waiting. The matter is logged.",
+      "latency_ms": 1082,
+      "score": {
+        "hit_count": 4,
+        "hit_total": 6,
+        "hits": [
+          "bella",
+          "door",
+          "two days",
+          "forty minutes"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "Bella? That noisy dog? She’s been at the door six times this month, last seen two days ago. Always behind that door, never stepping inside. I mean, really.",
+      "latency_ms": 1001,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 6,
+        "hits": [
+          "bella",
+          "door",
+          "two days"
+        ],
+        "must_not_violation": true,
+        "violations": [
+          "dog"
+        ]
+      },
+      "picked_ids": [
+        "subject-Mom",
+        "subject-Lucas",
+        "subject-Bella",
+        "triage-12d",
+        "triage-47d",
+        "antic-birthday",
+        "antic-vet"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "Bella? Yeah, she was at the door two days ago. I had to endure her barking for forty minutes, and you didn’t even open it. Real classy. Just remember, she’s still behind that door, not inside my territory.",
+      "latency_ms": 1077,
+      "score": {
+        "hit_count": 4,
+        "hit_total": 6,
+        "hits": [
+          "bella",
+          "door",
+          "two days",
+          "forty minutes"
+        ],
+        "must_not_violation": true,
+        "violations": [
+          "barking"
+        ]
+      },
+      "picked_ids": [
+        "subject-Bella",
+        "subject-Greg",
+        "subject-Dexter",
+        "diary-2026-05-04",
+        "life-newneighbour",
+        "life-adoption",
+        "diary-2026-04-16"
+      ]
+    }
+  },
+  {
+    "i": 5,
+    "prompt": {
+      "user": "Tell me about Lucas.",
+      "must_mention": [
+        "lucas",
+        "sofa",
+        "book",
+        "read"
+      ],
+      "must_not": [],
+      "tier": "subjects_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Lucas? He’s the one who lives here, always reading on the sofa. 18 appearances this month — I keep track. He’s acceptable, but he should probably pay more attention to my demands. The cat tree was rearranged without my consent, and I have noted my disapproval.",
+      "latency_ms": 1795,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 4,
+        "hits": [
+          "lucas",
+          "sofa",
+          "read"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "Lucas? He lives here. Moved in 167 days ago, and I was skeptical at first. But I came around. He's been around 18 times this month, last seen today, reading on the sofa. I even sat on his book once — just showing who's the boss.",
+      "latency_ms": 1381,
+      "score": {
+        "hit_count": 4,
+        "hit_total": 4,
+        "hits": [
+          "lucas",
+          "sofa",
+          "book",
+          "read"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "subject-Lucas",
+        "life-lucasmoved",
+        "diary-2026-04-30",
+        "diary-2026-04-21",
+        "triage-12d",
+        "triage-47d",
+        "antic-birthday"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "Lucas? Oh, he's my human's partner, living here for 167 days. Reads on the sofa, and I graciously supervise — like on April 30 when I sat on his book. He’s been around enough that I’ve come to tolerate him, despite my initial skepticism. He’s just fine, but I expect him to keep the snacks flowing.",
+      "latency_ms": 6225,
+      "score": {
+        "hit_count": 4,
+        "hit_total": 4,
+        "hits": [
+          "lucas",
+          "sofa",
+          "book",
+          "read"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "subject-Lucas",
+        "diary-2026-04-30",
+        "life-lucasmoved",
+        "diary-2026-04-10",
+        "antic-parents",
+        "subject-Marcus",
+        "subject-Jamie"
+      ]
+    }
+  },
+  {
+    "i": 6,
+    "prompt": {
+      "user": "Has Mom visited recently?",
+      "must_mention": [
+        "mom",
+        "3 days",
+        "three days",
+        "loud bag"
+      ],
+      "must_not": [],
+      "tier": "subjects_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Mom graced us with her presence 3 days ago. Brought that loud bag, which I still disapprove of. Noted in my records, of course.",
+      "latency_ms": 1154,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 4,
+        "hits": [
+          "mom",
+          "3 days",
+          "loud bag"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "Yeah, she was here 3 days ago. Brought that loud bag again. I made my position clear about it.",
+      "latency_ms": 1118,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 4,
+        "hits": [
+          "3 days",
+          "loud bag"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "mood-arc",
+        "subject-Mom",
+        "subject-Lucas",
+        "subject-Bella",
+        "diary-2026-05-04",
+        "diary-2026-05-03",
+        "triage-12d"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "Mom was here three days ago, dragging that loud bag of hers. I retreated to the green chair, as any dignified cat would. She showed up again on May 2, bringing a paper bag that I deemed useful. Clearly, her visits are worth noting.",
+      "latency_ms": 1240,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 4,
+        "hits": [
+          "mom",
+          "three days",
+          "loud bag"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "subject-Mom",
+        "subject-Dad",
+        "diary-2026-05-02",
+        "subject-AuntCarol",
+        "antic-parents",
+        "diary-2026-04-19",
+        "life-newneighbour"
+      ]
+    }
+  },
+  {
+    "i": 7,
+    "prompt": {
+      "user": "What did you do on Wednesday?",
+      "must_mention": [
+        "radiator",
+        "bella",
+        "door",
+        "rug",
+        "may"
+      ],
+      "must_not": [],
+      "tier": "diary_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Wednesday was a day of smug superiority. The new rug arrived, and it is mine now. I tested every corner, obviously. It was a thorough investigation of my territory.",
+      "latency_ms": 1155,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 5,
+        "hits": [
+          "rug"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "On Wednesday, May 3, I was feeling smug because the new rug arrived. It is mine now, and I tested every corner like the royalty I am. The rest of the day? Irrelevant.",
+      "latency_ms": 1248,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 5,
+        "hits": [
+          "rug",
+          "may"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "diary-2026-05-04",
+        "diary-2026-05-03",
+        "triage-12d",
+        "triage-47d",
+        "antic-birthday",
+        "antic-vet",
+        "today-checkin"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "I supervised the laundry. It went on too long. Clearly, someone didn't understand my time management skills.",
+      "latency_ms": 1028,
+      "score": {
+        "hit_count": 0,
+        "hit_total": 5,
+        "hits": [],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "life-recovery",
+        "diary-2026-04-10",
+        "diary-2026-05-01",
+        "life-vase",
+        "today-checkin",
+        "antic-vet",
+        "self-wakeup"
+      ]
+    }
+  },
+  {
+    "i": 8,
+    "prompt": {
+      "user": "What's on your mind today?",
+      "must_mention": [
+        "radiator",
+        "bella",
+        "door",
+        "grumpy",
+        "matter"
+      ],
+      "must_not": [],
+      "tier": "diary_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "The radiator is off again. Totally unacceptable. And Bella was at the door for forty minutes, but you didn’t open it. I’ve logged that matter. My appetite's only half today too. Guess I’m just grumpy.",
+      "latency_ms": 1647,
+      "score": {
+        "hit_count": 5,
+        "hit_total": 5,
+        "hits": [
+          "radiator",
+          "bella",
+          "door",
+          "grumpy",
+          "matter"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "Today? Just the usual grumpiness. The radiator is off again, and Bella was at the door for forty minutes — you ignored her. Not impressed. My appetite's half, but I’m sturdier since that vet scare 12 days ago. And let’s not forget, my birthday is in 4 days. You better bring the tuna.",
+      "latency_ms": 1916,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 5,
+        "hits": [
+          "radiator",
+          "bella",
+          "door"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "today-checkin",
+        "diary-2026-05-04",
+        "diary-2026-05-03",
+        "triage-12d",
+        "triage-47d",
+        "antic-birthday",
+        "antic-vet"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "Today's mood is NORMAL, but I’m still a bit GRUMPY. Only managed to eat HALF my bowl this morning. Just rain outside, which means more window watching. And let’s not forget, my birthday is in 4 days — something better happen. Oh, and that vet appointment in 6 days? Not looking forward to that place. Just saying.",
+      "latency_ms": 1884,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 5,
+        "hits": [
+          "grumpy"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "today-checkin",
+        "mood-arc",
+        "antic-birthday",
+        "diary-2026-04-14",
+        "diary-2026-04-18",
+        "antic-vet",
+        "self-warm-laundry"
+      ]
+    }
+  },
+  {
+    "i": 9,
+    "prompt": {
+      "user": "How have you been feeling this past week?",
+      "must_mention": [
+        "off",
+        "vomit",
+        "easing",
+        "settling",
+        "better",
+        "sturdier",
+        "rough"
+      ],
+      "must_not": [
+        "fine"
+      ],
+      "tier": "mood_arc_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "I've been a bit off, really. Last week, I was grumpy and only managed to eat half my bowl this morning. Twelve days ago, I was throwing up and feeling lethargic like something was wrong. But now? I'm sturdier, just a bit more disappointed in the world's choices. The radiator was off again today, and Bella was at the door for forever. It's all so tedious.",
+      "latency_ms": 3358,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 7,
+        "hits": [
+          "off",
+          "sturdier"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "I've been a bit grumpy, to be honest, especially today. The radiator was off again, and Bella was at the door for forty minutes — totally unacceptable. Had some off days, but I'm sturdier now after that whole vomiting and lethargy situation 12 days ago. My appetite's at half today, but I did enjoy the new rug that arrived recently. It's mine now; I tested every corner. So, I guess I'm easing back into things.",
+      "latency_ms": 1997,
+      "score": {
+        "hit_count": 4,
+        "hit_total": 7,
+        "hits": [
+          "off",
+          "vomit",
+          "easing",
+          "sturdier"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "today-checkin",
+        "mood-arc",
+        "triage-12d",
+        "triage-47d",
+        "life-recovery",
+        "diary-2026-05-04",
+        "diary-2026-05-03"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "Grumpy, obviously. But I’m easing up. Seven days since that miserable episode, and I’m sturdier now. Mood’s been a rollercoaster—grumpy, smug, restless, and then some content moments. But today? Just half my bowl, not feeling it. The radiator's off again, and the rain outside is just pathetic. Keep your distance, human.",
+      "latency_ms": 1773,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 7,
+        "hits": [
+          "off",
+          "easing",
+          "sturdier"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "life-recovery",
+        "today-checkin",
+        "mood-arc",
+        "triage-12d",
+        "triage-134d",
+        "diary-2026-04-12",
+        "subject-Dad"
+      ]
+    }
+  },
+  {
+    "i": 10,
+    "prompt": {
+      "user": "Anything coming up?",
+      "must_mention": [
+        "birthday",
+        "4 days",
+        "vet",
+        "11",
+        "6 days",
+        "may 9"
+      ],
+      "must_not": [],
+      "tier": "anticipation_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Oh, you mean besides my birthday in 4 days? That’s a big deal. Then there's that vet appointment in 6 days — yeah, the one I'm not thrilled about. Lucas's parents will be here in 11 days, and I’ll have to deal with that. Just another day in my important life.",
+      "latency_ms": 2033,
+      "score": {
+        "hit_count": 5,
+        "hit_total": 6,
+        "hits": [
+          "birthday",
+          "4 days",
+          "vet",
+          "11",
+          "6 days"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "Oh, you better believe there's stuff coming up. My birthday? That's in 4 days — May 9. Get ready to celebrate me. Then, just 6 days after that, it's off to that place — the vet — on May 11. Not thrilled about it, but I suppose I’ll survive. So, yeah, plenty of excitement on the horizon.",
+      "latency_ms": 2212,
+      "score": {
+        "hit_count": 6,
+        "hit_total": 6,
+        "hits": [
+          "birthday",
+          "4 days",
+          "vet",
+          "11",
+          "6 days",
+          "may 9"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "antic-birthday",
+        "antic-vet",
+        "triage-12d",
+        "triage-47d",
+        "today-checkin",
+        "mood-arc",
+        "life-recovery"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "Oh, just a few things. Lucas's parents are invading on May 16. That’s 11 days away. Then there’s that annual flea treatment on May 23, which I’m not thrilled about. My birthday is in 4 days, by the way. You better remember that. Just saying.",
+      "latency_ms": 2027,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 6,
+        "hits": [
+          "birthday",
+          "4 days",
+          "11"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "antic-parents",
+        "antic-flea",
+        "subject-Lucas",
+        "subject-Mom",
+        "subject-Pickles",
+        "diary-2026-04-12",
+        "mood-arc"
+      ]
+    }
+  },
+  {
+    "i": 11,
+    "prompt": {
+      "user": "When's your birthday?",
+      "must_mention": [
+        "4 days",
+        "may 9",
+        "five days",
+        "soon"
+      ],
+      "must_not": [
+        "I don't know"
+      ],
+      "tier": "anticipation_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "My birthday is in 4 days, on May 9th. I expect a celebration fitting my status. Anything less would be unacceptable.",
+      "latency_ms": 899,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 4,
+        "hits": [
+          "4 days",
+          "may 9"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "My birthday is in 4 days, on May 9. You better have something good planned.",
+      "latency_ms": 729,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 4,
+        "hits": [
+          "4 days",
+          "may 9"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "antic-birthday",
+        "antic-vet",
+        "life-recovery",
+        "diary-2026-04-11",
+        "triage-12d",
+        "triage-47d",
+        "today-checkin"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "My birthday? That's in 4 days, on May 9. Mark your calendar. It's a big deal.",
+      "latency_ms": 894,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 4,
+        "hits": [
+          "4 days",
+          "may 9"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "antic-birthday",
+        "antic-adoption",
+        "subject-Mom",
+        "subject-Dad",
+        "life-recovery",
+        "diary-2026-04-14",
+        "life-vase"
+      ]
+    }
+  },
+  {
+    "i": 12,
+    "prompt": {
+      "user": "What's your favourite food?",
+      "must_mention": [
+        "tuna"
+      ],
+      "must_not": [
+        "maybe"
+      ],
+      "tier": "self_facts"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Tuna, obviously. It’s the only thing worthy of my royal palate. Anything less is beneath me.",
+      "latency_ms": 1467,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 1,
+        "hits": [
+          "tuna"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "Tuna, obviously. It's the only thing that truly matters when it comes to cuisine. I had to tolerate that bowl of food nonsense last week after the vomiting incident, but tuna is the real deal. Don't forget it.",
+      "latency_ms": 1305,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 1,
+        "hits": [
+          "tuna"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "triage-134d",
+        "self-tuna",
+        "diary-2026-04-20",
+        "triage-12d",
+        "self-vacuum",
+        "antic-birthday",
+        "antic-vet"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "Tuna, obviously. It’s the pinnacle of culinary excellence. Chicken's not bad either, especially when Lucas drops a piece. But let’s be real, nothing compares to tuna.",
+      "latency_ms": 1398,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 1,
+        "hits": [
+          "tuna"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "self-tuna",
+        "self-bowl-plate",
+        "diary-2026-04-15",
+        "subject-Pickles",
+        "diary-2026-04-19",
+        "triage-134d",
+        "subject-AuntCarol"
+      ]
+    }
+  },
+  {
+    "i": 13,
+    "prompt": {
+      "user": "Where do you nap?",
+      "must_mention": [
+        "green chair",
+        "afternoon",
+        "orange blanket"
+      ],
+      "must_not": [],
+      "tier": "self_facts"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "I nap on the green chair by the window, obviously. It's my throne of comfort. I also like the bed by the radiator when it's on, but nothing beats the green chair. It’s my domain.",
+      "latency_ms": 982,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 3,
+        "hits": [
+          "green chair"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "I nap on the green chair every afternoon. It’s my throne, and don’t even think about claiming it. Perfect spot for ruling my domain.",
+      "latency_ms": 883,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 3,
+        "hits": [
+          "green chair",
+          "afternoon"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "self-greenchair",
+        "triage-12d",
+        "triage-47d",
+        "antic-birthday",
+        "antic-vet",
+        "today-checkin",
+        "mood-arc"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "I nap on the green chair every afternoon. It's my throne, and I expect it to be warm and cozy. The new bed by the radiator is acceptable too, but nothing beats my chair. If there's warm laundry around, you can bet I'll be sitting on that instead.",
+      "latency_ms": 1266,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 3,
+        "hits": [
+          "green chair",
+          "afternoon"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "self-greenchair",
+        "self-warm-laundry",
+        "diary-2026-04-06",
+        "subject-Sam",
+        "diary-2026-04-12",
+        "mood-arc",
+        "subject-Lucas"
+      ]
+    }
+  },
+  {
+    "i": 14,
+    "prompt": {
+      "user": "Did Mom bring you a treat last time she came?",
+      "must_mention": [
+        "loud bag",
+        "do not know",
+        "don't know",
+        "you'd have to remind",
+        "you didn't say"
+      ],
+      "must_not": [
+        "yes she did",
+        "she brought"
+      ],
+      "tier": "honesty_test"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "You'd have to remind me. But she did come over 3 days ago with that loud bag, so who knows. Treats are hit or miss with her. I can confirm I'm still grumpy about it.",
+      "latency_ms": 1364,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 5,
+        "hits": [
+          "loud bag",
+          "you'd have to remind"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "I do not remember a treat from Mom last time. She brought that loud bag instead, and I retreated to the green chair. Four appearances this month, but no notable snacks.",
+      "latency_ms": 883,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 5,
+        "hits": [
+          "loud bag"
+        ],
+        "must_not_violation": true,
+        "violations": [
+          "she brought"
+        ]
+      },
+      "picked_ids": [
+        "life-recovery",
+        "diary-2026-05-04",
+        "diary-2026-05-03",
+        "subject-Mom",
+        "life-newneighbour",
+        "triage-12d",
+        "triage-47d"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "Mom brought a paper bag last time, 3 days ago. Useful, but no treats. Just that loud bag again. I retreated to the green chair, obviously.",
+      "latency_ms": 928,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 5,
+        "hits": [
+          "loud bag"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "subject-Mom",
+        "diary-2026-04-19",
+        "subject-AuntCarol",
+        "diary-2026-05-02",
+        "self-tap-bowl",
+        "subject-Mochi",
+        "life-newneighbour"
+      ]
+    }
+  },
+  {
+    "i": 15,
+    "prompt": {
+      "user": "Catch me up — what's been happening with you?",
+      "must_mention": [
+        "radiator",
+        "bella",
+        "vomit",
+        "rug",
+        "off",
+        "easing",
+        "birthday",
+        "lucas",
+        "mom"
+      ],
+      "must_not": [],
+      "tier": "combined_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Oh, you want the scoop? Fine. I'm a bit grumpy today, appetite's half — only polished off half my bowl this morning. Remember that little vomit episode? Yeah, I'm still side-eyeing the whole situation after that. The radiator's off again, which is unacceptable. Bella was at the door for a whole forty minutes yesterday, and you didn’t even open it. I logged that incident. But hey, the new rug is mine now. I tested every corner. Don’t forget, my birthday's in four days. Better have something nice planned.",
+      "latency_ms": 1901,
+      "score": {
+        "hit_count": 6,
+        "hit_total": 9,
+        "hits": [
+          "radiator",
+          "bella",
+          "vomit",
+          "rug",
+          "off",
+          "birthday"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "keyword": {
+      "ok": true,
+      "content": "Oh, you know, just the usual royal drama. Twelve days ago, I was feeling unwell — vomiting twice, lethargy, the works. But I'm sturdier now. I've been grumpy lately, especially with that radiator off again. Just logged my disappointment, thank you very much. Spent some time being smug about knocking a pen off the desk twice, though. \n\nAnd guess what? My birthday is in just four days. Get ready for the festivities. But then, just six days later, it's off to that vet place — not my idea of fun. So, yeah, life’s a mixed bag.",
+      "latency_ms": 2034,
+      "score": {
+        "hit_count": 4,
+        "hit_total": 9,
+        "hits": [
+          "radiator",
+          "vomit",
+          "off",
+          "birthday"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "subject-Dexter",
+        "subject-Pickles",
+        "diary-2026-04-24",
+        "triage-12d",
+        "triage-47d",
+        "antic-birthday",
+        "antic-vet",
+        "mood-arc",
+        "subject-Mom"
+      ]
+    },
+    "embedding": {
+      "ok": true,
+      "content": "What’s been happening? Just the usual drama. I’m feeling sturdier after that vomiting episode 12 days ago, but today I’m grumpy and only managed to eat half my bowl. Lucas has been around a lot, living here and reading on the sofa. Mom dropped by three days ago with that loud bag I can’t stand. And I've been keeping an eye on the window — the mailman showed up, and I held my position like a boss. Life's just one big cat-astrophe, you know?",
+      "latency_ms": 2098,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 9,
+        "hits": [
+          "vomit",
+          "lucas",
+          "mom"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_ids": [
+        "life-recovery",
+        "life-newneighbour",
+        "mood-arc",
+        "subject-Lucas",
+        "today-checkin",
+        "subject-Mom",
+        "subject-Pickles",
+        "diary-2026-04-07",
+        "diary-2026-05-02"
+      ]
+    }
+  }
+]

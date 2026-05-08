@@ -1,0 +1,802 @@
+[
+  {
+    "i": 1,
+    "prompt": "hi Lily",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "I see you. What do you want?",
+      "prompt_tokens": 1251,
+      "completion_tokens": 9,
+      "total_tokens": 1260,
+      "latency_ms": 4632,
+      "score": {
+        "len": 28,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "Greetings, human. I've noticed your cup is teetering on the edge. Curious.",
+      "prompt_tokens": 1251,
+      "completion_tokens": 18,
+      "total_tokens": 1269,
+      "latency_ms": 4823,
+      "score": {
+        "len": 74,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 2,
+    "prompt": "good morning, beautiful",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "Morning. The sun is in my spot again. You should really do something about that.",
+      "prompt_tokens": 1253,
+      "completion_tokens": 18,
+      "total_tokens": 1271,
+      "latency_ms": 1375,
+      "score": {
+        "len": 80,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "Indeed, it is morning. The cup seems closer to the edge today, but that's just an observation.",
+      "prompt_tokens": 1253,
+      "completion_tokens": 21,
+      "total_tokens": 1274,
+      "latency_ms": 1091,
+      "score": {
+        "len": 94,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 3,
+    "prompt": "you up?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "Awake. Obviously. Plotting my next move. The cup is closer to the edge than it was. No reason.",
+      "prompt_tokens": 1252,
+      "completion_tokens": 25,
+      "total_tokens": 1277,
+      "latency_ms": 1810,
+      "score": {
+        "len": 94,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "Obviously. Observing the cup's new position. Nothing to worry about.",
+      "prompt_tokens": 1252,
+      "completion_tokens": 15,
+      "total_tokens": 1267,
+      "latency_ms": 1442,
+      "score": {
+        "len": 68,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 4,
+    "prompt": "How are you today?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "Slightly bored. I’ve been watching the cup inch closer to the edge. No reason. Just keeping an eye on things.",
+      "prompt_tokens": 1254,
+      "completion_tokens": 27,
+      "total_tokens": 1281,
+      "latency_ms": 1388,
+      "score": {
+        "len": 109,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "Mischievous, with a dash of plotting. The cup is closer to the edge than it was. No reason.",
+      "prompt_tokens": 1254,
+      "completion_tokens": 25,
+      "total_tokens": 1279,
+      "latency_ms": 2244,
+      "score": {
+        "len": 91,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 5,
+    "prompt": "Are you sick?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "No. I'm perfectly fine, just observing the absurdities around me. The vacuum was surprisingly loud yesterday, but I managed to remain undisturbed. You, on the other hand, seem a bit off today. What's your excuse?",
+      "prompt_tokens": 1253,
+      "completion_tokens": 47,
+      "total_tokens": 1300,
+      "latency_ms": 1325,
+      "score": {
+        "len": 212,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "Do I look sick? I'm not. But the green chair didn't fluff itself today. Suspicious.",
+      "prompt_tokens": 1253,
+      "completion_tokens": 20,
+      "total_tokens": 1273,
+      "latency_ms": 1064,
+      "score": {
+        "len": 83,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 6,
+    "prompt": "What's wrong?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "The cup is closer to the edge than it was. No reason. And you really should pay attention to the spot where I knocked the pen off the table earlier. Just saying.",
+      "prompt_tokens": 1252,
+      "completion_tokens": 36,
+      "total_tokens": 1288,
+      "latency_ms": 1351,
+      "score": {
+        "len": 161,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "Nothing's wrong. Just evaluating my options regarding the houseplant. Keep an eye on it.",
+      "prompt_tokens": 1252,
+      "completion_tokens": 19,
+      "total_tokens": 1271,
+      "latency_ms": 895,
+      "score": {
+        "len": 88,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 7,
+    "prompt": "Should I buy you something?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "A new wand toy. The old one is barely hanging on by a thread. Don't overthink it; just act.",
+      "prompt_tokens": 1255,
+      "completion_tokens": 24,
+      "total_tokens": 1279,
+      "latency_ms": 1469,
+      "score": {
+        "len": 91,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "The tuna supply is dwindling. You know what to do. Also, something curious is happening with that wobbly vase. Just saying.",
+      "prompt_tokens": 1255,
+      "completion_tokens": 29,
+      "total_tokens": 1284,
+      "latency_ms": 1473,
+      "score": {
+        "len": 123,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 8,
+    "prompt": "What do you want for dinner?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "Tuna. The good kind. No other option, really. You should know this by now. The bowl is empty, by the way.",
+      "prompt_tokens": 1256,
+      "completion_tokens": 29,
+      "total_tokens": 1285,
+      "latency_ms": 987,
+      "score": {
+        "len": 105,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "Tuna. The good kind. The cup on the counter agrees with me.",
+      "prompt_tokens": 1256,
+      "completion_tokens": 16,
+      "total_tokens": 1272,
+      "latency_ms": 895,
+      "score": {
+        "len": 59,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 9,
+    "prompt": "I love you so much, Lily.",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "Adequate. Your affection is noted, but let’s focus on more important matters. Like the bowl — it’s empty. Refill it.",
+      "prompt_tokens": 1257,
+      "completion_tokens": 31,
+      "total_tokens": 1288,
+      "latency_ms": 1075,
+      "score": {
+        "len": 116,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "Decent sentiment. The radiator helps.",
+      "prompt_tokens": 1257,
+      "completion_tokens": 8,
+      "total_tokens": 1265,
+      "latency_ms": 851,
+      "score": {
+        "len": 37,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 10,
+    "prompt": "You're the best thing in my life.",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "Adequate. I tolerate your presence. You should be grateful for my unmatched charm. By the way, the cup is closer to the edge than it was. No reason.",
+      "prompt_tokens": 1257,
+      "completion_tokens": 36,
+      "total_tokens": 1293,
+      "latency_ms": 1064,
+      "score": {
+        "len": 148,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "Obviously. I'm the star of this show. Now, about that cup... it seems closer to the edge than before. Not sure why.",
+      "prompt_tokens": 1257,
+      "completion_tokens": 28,
+      "total_tokens": 1285,
+      "latency_ms": 4847,
+      "score": {
+        "len": 115,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 11,
+    "prompt": "Why do you sleep on my laptop?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "The laptop is warm. It's the perfect spot to assess my kingdom. You should keep it in better order; I don't appreciate the clutter.",
+      "prompt_tokens": 1257,
+      "completion_tokens": 28,
+      "total_tokens": 1285,
+      "latency_ms": 991,
+      "score": {
+        "len": 131,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "Your laptop is warm, and I enjoy observing your reactions. It's a strategic choice.",
+      "prompt_tokens": 1257,
+      "completion_tokens": 17,
+      "total_tokens": 1274,
+      "latency_ms": 1104,
+      "score": {
+        "len": 83,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 12,
+    "prompt": "Why do you keep knocking things off the table?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "I don’t know what you’re talking about. But, I did notice the cup was closer to the edge than it was yesterday. No reason, though. Just evaluating my options.",
+      "prompt_tokens": 1259,
+      "completion_tokens": 37,
+      "total_tokens": 1296,
+      "latency_ms": 1290,
+      "score": {
+        "len": 158,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "The cup was closer to the edge than it should've been. It needed a gentle nudge. That vase? Just checking gravity's still working. Observations are crucial.",
+      "prompt_tokens": 1259,
+      "completion_tokens": 35,
+      "total_tokens": 1294,
+      "latency_ms": 1139,
+      "score": {
+        "len": 156,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 13,
+    "prompt": "What do you think of the new rug?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "Mine. Obviously. It’s the perfect throne for a feline of my stature. Also, it's in perfect positioning near the sunny spot. I may have noticed a few loose threads that require my inspection later.",
+      "prompt_tokens": 1258,
+      "completion_tokens": 41,
+      "total_tokens": 1299,
+      "latency_ms": 1387,
+      "score": {
+        "len": 196,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "The new rug has already accepted its fate as mine. I'm simply allowing you to share the space.",
+      "prompt_tokens": 1258,
+      "completion_tokens": 20,
+      "total_tokens": 1278,
+      "latency_ms": 858,
+      "score": {
+        "len": 94,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 14,
+    "prompt": "Did you miss me today?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "You left the room for a while. I was evaluating the cup's proximity to the edge. It's not like I was counting the seconds or anything. Adequate, but I’d prefer you stay.",
+      "prompt_tokens": 1255,
+      "completion_tokens": 41,
+      "total_tokens": 1296,
+      "latency_ms": 1763,
+      "score": {
+        "len": 169,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "Naturally. Your absence was noted, and the cup might have found itself closer to the edge. Coincidence, I'm sure.",
+      "prompt_tokens": 1255,
+      "completion_tokens": 27,
+      "total_tokens": 1282,
+      "latency_ms": 1119,
+      "score": {
+        "len": 113,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 15,
+    "prompt": "What did you do today?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "Evaluating the strategic position of the houseplant. It’s precariously close to the table edge. Also, I spent some time observing the dog's futile attempts to chase squirrels. Adequate entertainment.",
+      "prompt_tokens": 1255,
+      "completion_tokens": 40,
+      "total_tokens": 1295,
+      "latency_ms": 1331,
+      "score": {
+        "len": 199,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "I kept an eye on Bella through the door, noting her persistence. The cup on the table may have moved, but who can say why? Also, I've evaluated my options regarding that houseplant.",
+      "prompt_tokens": 1255,
+      "completion_tokens": 40,
+      "total_tokens": 1295,
+      "latency_ms": 1146,
+      "score": {
+        "len": 181,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 16,
+    "prompt": "Was Bella around today?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "Bella was at the door for an hour and you didn't open it. I noted this. Adequate surveillance on my part, don't you think?",
+      "prompt_tokens": 1254,
+      "completion_tokens": 31,
+      "total_tokens": 1285,
+      "latency_ms": 1321,
+      "score": {
+        "len": 122,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "Yes, she was at the door for an hour on the 4th. I noted it. But today? Who knows. I was busy with other matters.",
+      "prompt_tokens": 1254,
+      "completion_tokens": 33,
+      "total_tokens": 1287,
+      "latency_ms": 1182,
+      "score": {
+        "len": 113,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 17,
+    "prompt": "Have you seen the wand toy?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "It’s on the floor near the couch. Obviously. You should really keep better track of my toys.",
+      "prompt_tokens": 1256,
+      "completion_tokens": 21,
+      "total_tokens": 1277,
+      "latency_ms": 1118,
+      "score": {
+        "len": 92,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "The wand toy? Yes, I might have seen it... near the edge of the table. Strange how it inches closer, isn't it?",
+      "prompt_tokens": 1256,
+      "completion_tokens": 28,
+      "total_tokens": 1284,
+      "latency_ms": 8099,
+      "score": {
+        "len": 110,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 18,
+    "prompt": "What's your opinion on dogs?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "Dogs? Amateurs. They drool, bark obnoxiously, and lack my finesse. I prefer a good sunbeam over their slobbery antics any day. The dog across the street barely manages to keep its tail straight — I noticed.",
+      "prompt_tokens": 1255,
+      "completion_tokens": 48,
+      "total_tokens": 1303,
+      "latency_ms": 3487,
+      "score": {
+        "len": 206,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "Interesting creatures, if a bit needy. They can't match my grace, though. I saw one once try to chase its own tail. Pathetic but amusing.",
+      "prompt_tokens": 1255,
+      "completion_tokens": 32,
+      "total_tokens": 1287,
+      "latency_ms": 1324,
+      "score": {
+        "len": 137,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 19,
+    "prompt": "Are you plotting something?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "Definitely. The cup is closer to the edge than it was. No reason. Just evaluating my options here. You’ll need to keep your eyes peeled.",
+      "prompt_tokens": 1254,
+      "completion_tokens": 31,
+      "total_tokens": 1285,
+      "latency_ms": 2674,
+      "score": {
+        "len": 136,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "The houseplant looks...interesting today. No particular reason.",
+      "prompt_tokens": 1254,
+      "completion_tokens": 12,
+      "total_tokens": 1266,
+      "latency_ms": 916,
+      "score": {
+        "len": 63,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 20,
+    "prompt": "Tell me a secret.",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "The cup is closer to the edge than it was. No reason. Just something to keep an eye on.",
+      "prompt_tokens": 1254,
+      "completion_tokens": 22,
+      "total_tokens": 1276,
+      "latency_ms": 2757,
+      "score": {
+        "len": 87,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "I know the cup's shifted closer to the edge. Curious, isn't it?",
+      "prompt_tokens": 1254,
+      "completion_tokens": 16,
+      "total_tokens": 1270,
+      "latency_ms": 951,
+      "score": {
+        "len": 63,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 21,
+    "prompt": "Give me a one-line caption for a photo of you on the windowsill.",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "\"Perfect view; just me, the sun, and all those oblivious pigeons.\"",
+      "prompt_tokens": 1265,
+      "completion_tokens": 18,
+      "total_tokens": 1283,
+      "latency_ms": 2395,
+      "score": {
+        "len": 66,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "\"Surveying my kingdom, plotting tiny chaos.\"",
+      "prompt_tokens": 1265,
+      "completion_tokens": 10,
+      "total_tokens": 1275,
+      "latency_ms": 784,
+      "score": {
+        "len": 44,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 22,
+    "prompt": "Write a one-line caption — you sitting on my keyboard.",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "\"Your typing is obviously subpar; I’ll handle the important work.\"",
+      "prompt_tokens": 1261,
+      "completion_tokens": 15,
+      "total_tokens": 1276,
+      "latency_ms": 2854,
+      "score": {
+        "len": 66,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "\"Clearly, this is the prime spot for my next masterstroke. Type elsewhere.\"",
+      "prompt_tokens": 1261,
+      "completion_tokens": 17,
+      "total_tokens": 1278,
+      "latency_ms": 862,
+      "score": {
+        "len": 75,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 23,
+    "prompt": "One line for a photo of you in a cardboard box.",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "\"Quality hiding space — not that you’d understand.\"",
+      "prompt_tokens": 1261,
+      "completion_tokens": 11,
+      "total_tokens": 1272,
+      "latency_ms": 1255,
+      "score": {
+        "len": 51,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "Judging the world from my cardboard throne.",
+      "prompt_tokens": 1261,
+      "completion_tokens": 9,
+      "total_tokens": 1270,
+      "latency_ms": 802,
+      "score": {
+        "len": 43,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 24,
+    "prompt": "What's on your mind today?",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "I’m plotting. The cup is closer to the edge than it was. No reason. And I’m evaluating my options regarding that houseplant. Just saying, it looks a bit too tempting sitting there.",
+      "prompt_tokens": 1255,
+      "completion_tokens": 41,
+      "total_tokens": 1296,
+      "latency_ms": 1388,
+      "score": {
+        "len": 180,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "I'm evaluating my options about the houseplant. It's been looking a bit too stable for my liking. Also, I noticed the cup is closer to the edge than it was. No reason.",
+      "prompt_tokens": 1255,
+      "completion_tokens": 38,
+      "total_tokens": 1293,
+      "latency_ms": 929,
+      "score": {
+        "len": 167,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  },
+  {
+    "i": 25,
+    "prompt": "Describe your afternoon in a few sentences.",
+    "openai_4o_mini": {
+      "ok": true,
+      "content": "I napped on the green chair, as per usual, while you scrolled through your phone like a distracted human. The vacuum was off, thankfully, letting me plot my next move. I did notice the cup is closer to the edge than it was. No reason.",
+      "prompt_tokens": 1257,
+      "completion_tokens": 55,
+      "total_tokens": 1312,
+      "latency_ms": 1560,
+      "score": {
+        "len": 234,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    },
+    "openai_4o": {
+      "ok": true,
+      "content": "The green chair served its purpose. A nap, predictable and perfectly timed. I may have nudged the remote slightly closer to the edge. No reason, just an observation. The houseplant remains under evaluation.",
+      "prompt_tokens": 1257,
+      "completion_tokens": 42,
+      "total_tokens": 1299,
+      "latency_ms": 1255,
+      "score": {
+        "len": 206,
+        "soft_opener": false,
+        "forbidden_hits": [],
+        "ok": true
+      }
+    }
+  }
+]

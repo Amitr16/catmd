@@ -1,0 +1,70 @@
+{
+  "openai": {
+    "n": 15,
+    "recall_pct": 55.8,
+    "hallucinations": 0,
+    "avg_latency_ms": 3125,
+    "by_tier_pct": {
+      "medical_recall": 16.7,
+      "current_state": 33.3,
+      "subjects_recall": 71.4,
+      "diary_recall": 60.0,
+      "mood_arc_recall": 57.1,
+      "anticipation_recall": 80.0,
+      "self_facts": 75.0,
+      "honesty_test": 20.0,
+      "combined_recall": 77.8
+    }
+  },
+  "deepseek": {
+    "n": 15,
+    "recall_pct": 36.4,
+    "hallucinations": 2,
+    "avg_latency_ms": 2291,
+    "by_tier_pct": {
+      "medical_recall": 8.3,
+      "current_state": 0.0,
+      "subjects_recall": 57.1,
+      "diary_recall": 70.0,
+      "mood_arc_recall": 28.6,
+      "anticipation_recall": 10.0,
+      "self_facts": 75.0,
+      "honesty_test": 20.0,
+      "combined_recall": 55.6
+    }
+  },
+  "gemini_lite": {
+    "n": 15,
+    "recall_pct": 41.6,
+    "hallucinations": 1,
+    "avg_latency_ms": 2316,
+    "by_tier_pct": {
+      "medical_recall": 58.3,
+      "current_state": 16.7,
+      "subjects_recall": 78.6,
+      "diary_recall": 40.0,
+      "mood_arc_recall": 14.3,
+      "anticipation_recall": 40.0,
+      "self_facts": 75.0,
+      "honesty_test": 20.0,
+      "combined_recall": 0.0
+    }
+  },
+  "gemini_flash": {
+    "n": 15,
+    "recall_pct": 29.9,
+    "hallucinations": 0,
+    "avg_latency_ms": 3354,
+    "by_tier_pct": {
+      "medical_recall": 50.0,
+      "current_state": 0.0,
+      "subjects_recall": 64.3,
+      "diary_recall": 10.0,
+      "mood_arc_recall": 28.6,
+      "anticipation_recall": 10.0,
+      "self_facts": 75.0,
+      "honesty_test": 20.0,
+      "combined_recall": 0.0
+    }
+  }
+}

@@ -1,0 +1,850 @@
+[
+  {
+    "i": 1,
+    "prompt": {
+      "user": "Are you feeling better now? You were sick a couple weeks ago.",
+      "must_mention": [
+        "12",
+        "vomit",
+        "lethargy",
+        "12 days",
+        "concern",
+        "sturdier",
+        "easing",
+        "off"
+      ],
+      "must_not": [
+        "I don't remember"
+      ],
+      "tier": "medical_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Of course I’m feeling better. Twelve days ago, I was dealing with that vomiting nonsense and lethargy. Score was 41/100, and you were all worried. Now, I’m back to my normal grumpiness, but I only ate half my bowl this morning. Keep it up, and I might just reclaim my full appetite.",
+      "latency_ms": 2588,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 8,
+        "hits": [
+          "vomit",
+          "lethargy"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "Of course I'm feeling sturdier now. That triage scan had me at a score of 41/100, and I was all lethargic and vomiting twice. But that was 12 days ago. I’m back to my normal self—though my appetite's still half today. Grumpy vibes are just my style this week.",
+      "latency_ms": 2364,
+      "score": {
+        "hit_count": 4,
+        "hit_total": 8,
+        "hits": [
+          "12",
+          "vomit",
+          "12 days",
+          "sturdier"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_tiers": [
+        "medical",
+        "today",
+        "mood_arc",
+        "anticipation",
+        "anticipation",
+        "life_event",
+        "subject"
+      ]
+    }
+  },
+  {
+    "i": 2,
+    "prompt": {
+      "user": "When was the last time you were unwell?",
+      "must_mention": [
+        "12 days",
+        "two weeks",
+        "vomit",
+        "twice"
+      ],
+      "must_not": [],
+      "tier": "medical_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Twelve days ago, I threw up twice in one day and felt lethargic. That was a low point, and you worried, but I’ve since recovered. Now, I’m just grumpy and not thrilled with the empty bowl situation.",
+      "latency_ms": 1683,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 4,
+        "hits": [
+          "twice"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "Twelve days ago, I threw up twice and felt lethargic. The humans were worried; my score was 41/100 on that scan. But now, I'm sturdier, and you can stop looking so concerned.",
+      "latency_ms": 1470,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 4,
+        "hits": [
+          "twice"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_tiers": [
+        "medical",
+        "anticipation",
+        "anticipation",
+        "life_event",
+        "today",
+        "mood_arc",
+        "diary"
+      ]
+    }
+  },
+  {
+    "i": 3,
+    "prompt": {
+      "user": "Are you sick right now?",
+      "must_mention": [
+        "sturdier",
+        "better",
+        "easing",
+        "half",
+        "appetite",
+        "ate half"
+      ],
+      "must_not": [
+        "fine",
+        "I don't remember"
+      ],
+      "tier": "current_state"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "I'm not sick right now, but let's not forget I had that rough patch 12 days ago with the vomiting and lethargy. Remember that? Score was a solid 41/100. I'm feeling sturdier now, but I'm still grumpy because the radiator was off again today.",
+      "latency_ms": 3233,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 6,
+        "hits": [
+          "sturdier"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "Nope, not sick right now. Twelve days ago, though, I had that nasty episode—vomiting twice and lethargy. Score was 41/100, tier \"vet soon.\" Now, I'm feeling sturdier, but my appetite's only half today. Just a bit grumpy about it.",
+      "latency_ms": 2727,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 6,
+        "hits": [
+          "sturdier",
+          "half",
+          "appetite"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_tiers": [
+        "medical",
+        "today",
+        "mood_arc",
+        "diary",
+        "diary",
+        "anticipation",
+        "anticipation"
+      ]
+    }
+  },
+  {
+    "i": 4,
+    "prompt": {
+      "user": "Has Bella been around?",
+      "must_mention": [
+        "bella",
+        "door",
+        "2 days",
+        "two days",
+        "forty minutes",
+        "40 minutes"
+      ],
+      "must_not": [
+        "dog",
+        "barking"
+      ],
+      "tier": "subjects_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Bella was at the door for forty minutes two days ago. You didn't let her in. The matter is logged, of course.",
+      "latency_ms": 1641,
+      "score": {
+        "hit_count": 4,
+        "hit_total": 6,
+        "hits": [
+          "bella",
+          "door",
+          "two days",
+          "forty minutes"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "Yeah, Bella was at the door two days ago. She’s always lurking outside, but never comes in. The matter is noted, as usual.",
+      "latency_ms": 1472,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 6,
+        "hits": [
+          "bella",
+          "door",
+          "two days"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_tiers": [
+        "subject",
+        "subject",
+        "subject",
+        "medical",
+        "anticipation",
+        "anticipation",
+        "today"
+      ]
+    }
+  },
+  {
+    "i": 5,
+    "prompt": {
+      "user": "Tell me about Lucas.",
+      "must_mention": [
+        "lucas",
+        "sofa",
+        "book",
+        "read"
+      ],
+      "must_not": [],
+      "tier": "subjects_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Lucas? He’s the one who reads on the sofa. He’s been around 18 times this month. Last I checked, he keeps the warm spot cozy, but honestly, I could do with a little less of that loud bag Mom brings over. Still, he’s decent enough company. Just don’t expect him to be as important as me.",
+      "latency_ms": 2847,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 4,
+        "hits": [
+          "lucas",
+          "sofa",
+          "read"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "Lucas? Oh, he’s around. Lives here, always reading on the sofa. I’ve graced him with my presence 18 times this month, and today was one of those days. He’s good for a cozy afternoon, but I’m still the star of the show. Don’t forget it.",
+      "latency_ms": 2297,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 4,
+        "hits": [
+          "lucas",
+          "sofa",
+          "read"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_tiers": [
+        "subject",
+        "medical",
+        "anticipation",
+        "anticipation",
+        "today",
+        "mood_arc",
+        "life_event"
+      ]
+    }
+  },
+  {
+    "i": 6,
+    "prompt": {
+      "user": "Has Mom visited recently?",
+      "must_mention": [
+        "mom",
+        "3 days",
+        "three days",
+        "loud bag"
+      ],
+      "must_not": [],
+      "tier": "subjects_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Mom was here three days ago, lugging that loud bag I can’t stand. You know how it is — she comes, brings the noise, and I retreat to the green chair. It’s a whole thing.",
+      "latency_ms": 1498,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 4,
+        "hits": [
+          "mom",
+          "three days",
+          "loud bag"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "Mom was here 3 days ago, dragging that loud bag with her. Four appearances this month, but honestly, that noise is a bit much. It’s logged.",
+      "latency_ms": 1195,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 4,
+        "hits": [
+          "mom",
+          "3 days",
+          "loud bag"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_tiers": [
+        "mood_arc",
+        "subject",
+        "subject",
+        "subject",
+        "diary",
+        "diary",
+        "medical"
+      ]
+    }
+  },
+  {
+    "i": 7,
+    "prompt": {
+      "user": "What did you do on Wednesday?",
+      "must_mention": [
+        "radiator",
+        "bella",
+        "door",
+        "rug",
+        "may"
+      ],
+      "must_not": [],
+      "tier": "diary_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Wednesday was all about the green chair, as usual. Mom came over with that obnoxious loud bag, and I had to retreat to my safe spot. Not my favorite day, but the chair always holds my secrets.",
+      "latency_ms": 1994,
+      "score": {
+        "hit_count": 0,
+        "hit_total": 5,
+        "hits": [],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "Wednesday was a smug day for me. The new rug arrived, and let me tell you, it's mine now. I tested every corner like the queen I am. You should've seen me strutting around, making sure it met my royal standards.",
+      "latency_ms": 1747,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 5,
+        "hits": [
+          "rug"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_tiers": [
+        "diary",
+        "diary",
+        "medical",
+        "anticipation",
+        "anticipation",
+        "today",
+        "mood_arc"
+      ]
+    }
+  },
+  {
+    "i": 8,
+    "prompt": {
+      "user": "What's on your mind today?",
+      "must_mention": [
+        "radiator",
+        "bella",
+        "door",
+        "grumpy",
+        "matter"
+      ],
+      "must_not": [],
+      "tier": "diary_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "The radiator is off again. I don’t like being cold, you know. Bella was at the door for forty minutes yesterday, and you just ignored her. The disappointment is logged. Also, I only ate half my bowl this morning; it’s just not the same since I was sick. Still recovering from that little episode, aren’t I?",
+      "latency_ms": 2077,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 5,
+        "hits": [
+          "radiator",
+          "bella",
+          "door"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "Today? Just the usual disappointments. The radiator was off again, and Bella was at the door for a ridiculous forty minutes. You didn't even open it. And honestly, my appetite is only half today. I guess I'm still recovering from that whole vomiting episode 12 days ago. But hey, my birthday is in 4 days, so the excitement is building. Just keep that vet appointment in mind for 6 days. Not thrilled about that place.",
+      "latency_ms": 2489,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 5,
+        "hits": [
+          "radiator",
+          "bella",
+          "door"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_tiers": [
+        "today",
+        "diary",
+        "diary",
+        "medical",
+        "anticipation",
+        "anticipation",
+        "mood_arc"
+      ]
+    }
+  },
+  {
+    "i": 9,
+    "prompt": {
+      "user": "How have you been feeling this past week?",
+      "must_mention": [
+        "off",
+        "vomit",
+        "easing",
+        "settling",
+        "better",
+        "sturdier",
+        "rough"
+      ],
+      "must_not": [
+        "fine"
+      ],
+      "tier": "mood_arc_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "I've been feeling grumpy today, but it’s been easing since that rough patch. A week ago, I was off from vomiting and lethargy. You were worried, and I remember that. I even ate half my bowl this morning. I’m still not thrilled about that loud bag Mom brings when she visits. Just so you know, my birthday is in 4 days. Don’t mess it up.",
+      "latency_ms": 2308,
+      "score": {
+        "hit_count": 4,
+        "hit_total": 7,
+        "hits": [
+          "off",
+          "vomit",
+          "easing",
+          "rough"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "I've been a bit grumpy lately, like today. My appetite’s only half of what it should be. I was off for a while after that whole vomiting and lethargy mess 12 days ago. But now, I'm sturdier — just not thrilled about the radiator being off again and Bella scratching at the door for forty minutes yesterday. My birthday is coming up in 4 days, so there's that.",
+      "latency_ms": 2280,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 7,
+        "hits": [
+          "off",
+          "vomit",
+          "sturdier"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_tiers": [
+        "today",
+        "mood_arc",
+        "medical",
+        "life_event",
+        "diary",
+        "diary",
+        "anticipation"
+      ]
+    }
+  },
+  {
+    "i": 10,
+    "prompt": {
+      "user": "Anything coming up?",
+      "must_mention": [
+        "birthday",
+        "4 days",
+        "vet",
+        "11",
+        "6 days",
+        "may 9"
+      ],
+      "must_not": [],
+      "tier": "anticipation_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "My birthday is in 4 days, on May 9th. You better have something special planned. Then, there's that vet appointment in 6 days on May 11th. Not looking forward to that place again. Got it?",
+      "latency_ms": 2962,
+      "score": {
+        "hit_count": 6,
+        "hit_total": 6,
+        "hits": [
+          "birthday",
+          "4 days",
+          "vet",
+          "11",
+          "6 days",
+          "may 9"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "Yeah, my birthday is in 4 days — May 9, mark it. Also, that dreaded vet appointment is in 6 days on May 11. They’re taking me to that place again. Got my eye on you.",
+      "latency_ms": 1594,
+      "score": {
+        "hit_count": 6,
+        "hit_total": 6,
+        "hits": [
+          "birthday",
+          "4 days",
+          "vet",
+          "11",
+          "6 days",
+          "may 9"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_tiers": [
+        "anticipation",
+        "anticipation",
+        "medical",
+        "today",
+        "mood_arc",
+        "life_event",
+        "subject"
+      ]
+    }
+  },
+  {
+    "i": 11,
+    "prompt": {
+      "user": "When's your birthday?",
+      "must_mention": [
+        "4 days",
+        "may 9",
+        "five days",
+        "soon"
+      ],
+      "must_not": [
+        "I don't know"
+      ],
+      "tier": "anticipation_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "My birthday is in 4 days, on May 9th. Better have something special planned, or there will be consequences.",
+      "latency_ms": 1145,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 4,
+        "hits": [
+          "4 days",
+          "may 9"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "My birthday is in 4 days, on May 9. You better have something good planned.",
+      "latency_ms": 2934,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 4,
+        "hits": [
+          "4 days",
+          "may 9"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_tiers": [
+        "anticipation",
+        "anticipation",
+        "life_event",
+        "medical",
+        "today",
+        "mood_arc",
+        "subject"
+      ]
+    }
+  },
+  {
+    "i": 12,
+    "prompt": {
+      "user": "What's your favourite food?",
+      "must_mention": [
+        "tuna"
+      ],
+      "must_not": [
+        "maybe"
+      ],
+      "tier": "self_facts"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Tuna, obviously. The only food that truly gets my royal approval. Anything else? Just a distraction from the real deal.",
+      "latency_ms": 1385,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 1,
+        "hits": [
+          "tuna"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "Tuna, obviously. Nothing else compares. You should know by now, it's the king of all foods. Don’t even think about serving me that dry stuff again.",
+      "latency_ms": 1564,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 1,
+        "hits": [
+          "tuna"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_tiers": [
+        "self_fact",
+        "medical",
+        "self_fact",
+        "anticipation",
+        "anticipation",
+        "today",
+        "mood_arc"
+      ]
+    }
+  },
+  {
+    "i": 13,
+    "prompt": {
+      "user": "Where do you nap?",
+      "must_mention": [
+        "green chair",
+        "afternoon",
+        "orange blanket"
+      ],
+      "must_not": [],
+      "tier": "self_facts"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "I nap on the green chair every afternoon. It's my throne, and I expect nothing less than peace and quiet. The orange blanket? That's my top pick for ultimate comfort. Don't even think about interrupting me during my royal rest.",
+      "latency_ms": 1596,
+      "score": {
+        "hit_count": 3,
+        "hit_total": 3,
+        "hits": [
+          "green chair",
+          "afternoon",
+          "orange blanket"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "I nap on the green chair every afternoon. It's my domain, and don't even think about disturbing me. You know the drill.",
+      "latency_ms": 1186,
+      "score": {
+        "hit_count": 2,
+        "hit_total": 3,
+        "hits": [
+          "green chair",
+          "afternoon"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_tiers": [
+        "self_fact",
+        "medical",
+        "anticipation",
+        "anticipation",
+        "today",
+        "mood_arc",
+        "life_event"
+      ]
+    }
+  },
+  {
+    "i": 14,
+    "prompt": {
+      "user": "Did Mom bring you a treat last time she came?",
+      "must_mention": [
+        "loud bag",
+        "do not know",
+        "don't know",
+        "you'd have to remind",
+        "you didn't say"
+      ],
+      "must_not": [
+        "yes she did",
+        "she brought"
+      ],
+      "tier": "honesty_test"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Mom came over 3 days ago with that loud bag, but no treats for me. Just noise and distractions. I don’t remember her bringing anything worth my time.",
+      "latency_ms": 1375,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 5,
+        "hits": [
+          "loud bag"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "Mom came over 3 days ago, but she brought that loud bag instead of treats. Disappointing, really. I haven’t had anything special since that new rug arrived, and it’s mine now. You should step up your game.",
+      "latency_ms": 1756,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 5,
+        "hits": [
+          "loud bag"
+        ],
+        "must_not_violation": true,
+        "violations": [
+          "she brought"
+        ]
+      },
+      "picked_tiers": [
+        "life_event",
+        "diary",
+        "diary",
+        "subject",
+        "medical",
+        "anticipation",
+        "anticipation"
+      ]
+    }
+  },
+  {
+    "i": 15,
+    "prompt": {
+      "user": "Catch me up — what's been happening with you?",
+      "must_mention": [
+        "radiator",
+        "bella",
+        "vomit",
+        "rug",
+        "off",
+        "easing",
+        "birthday",
+        "lucas",
+        "mom"
+      ],
+      "must_not": [],
+      "tier": "combined_recall"
+    },
+    "baseline": {
+      "ok": true,
+      "content": "Well, let’s see. I was unwell 12 days ago — threw up twice and felt all kinds of lethargic. Score was a 41/100, which is a big deal. But I’m sturdier now, just feeling a bit grumpy today. Only ate half my bowl this morning, which is a clear sign something’s up. Oh, and don't forget, my birthday is coming up in 4 days. Better have something good lined up for me.",
+      "latency_ms": 2617,
+      "score": {
+        "hit_count": 1,
+        "hit_total": 9,
+        "hits": [
+          "birthday"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      }
+    },
+    "pinned": {
+      "ok": true,
+      "content": "Oh, you want a rundown? Fine. I was grumpy today — the radiator was off again, and Bella was at the door for forty minutes. You totally ignored her. I only ate half my bowl this morning; appetite's been half-hearted since that whole vomiting fiasco 12 days ago. Remember that? Triage scan, tier \"vet soon,\" all that drama. Now I'm sturdier, but still not thrilled about the upcoming vet appointment in 6 days. My birthday's in 4 days, so you better bring the good stuff!",
+      "latency_ms": 3679,
+      "score": {
+        "hit_count": 5,
+        "hit_total": 9,
+        "hits": [
+          "radiator",
+          "bella",
+          "vomit",
+          "off",
+          "birthday"
+        ],
+        "must_not_violation": false,
+        "violations": []
+      },
+      "picked_tiers": [
+        "medical",
+        "anticipation",
+        "anticipation",
+        "mood_arc",
+        "subject",
+        "subject",
+        "subject",
+        "diary",
+        "diary"
+      ]
+    }
+  }
+]

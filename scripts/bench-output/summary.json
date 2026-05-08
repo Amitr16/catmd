@@ -1,0 +1,33 @@
+{
+  "n_prompts": 25,
+  "openai_4o_mini": {
+    "n": 25,
+    "avg_len_chars": 129.5,
+    "avg_latency_ms": 1762.0,
+    "soft_opener_count": 0,
+    "forbidden_phrase_count": 0,
+    "clean_pass_count": 25,
+    "clean_pass_pct": 100.0,
+    "total_prompt_tokens": 31396,
+    "total_completion_tokens": 762,
+    "avg_input_tokens": 1255.8,
+    "avg_output_tokens": 30.5,
+    "cost_per_turn_usd": 0.000207,
+    "cost_per_1k_turns_usd": 0.207
+  },
+  "openai_4o": {
+    "n": 25,
+    "avg_len_chars": 99.2,
+    "avg_latency_ms": 1684.0,
+    "soft_opener_count": 0,
+    "forbidden_phrase_count": 0,
+    "clean_pass_count": 25,
+    "clean_pass_pct": 100.0,
+    "total_prompt_tokens": 31396,
+    "total_completion_tokens": 575,
+    "avg_input_tokens": 1255.8,
+    "avg_output_tokens": 23.0,
+    "cost_per_turn_usd": 0.00337,
+    "cost_per_1k_turns_usd": 3.37
+  }
+}
