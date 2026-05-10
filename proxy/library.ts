@@ -1,3 +1,8 @@
+import {
+  ADDITIONAL_ARTICLES,
+  ADDITIONAL_IMAGE_ALTS,
+} from './library-additions-2026-05-09';
+
 /**
  * CatMD knowledge library — catmd.pet/library
  *
@@ -50,6 +55,7 @@ const IMAGE_HEIGHT = 630;
 
 /** Per-article alt text — descriptive, keyword-aware, accessibility-safe. */
 const IMAGE_ALT_BY_SLUG: Record<string, string> = {
+  ...ADDITIONAL_IMAGE_ALTS,
   'cat-vomiting-when-to-see-vet':
     'Tabby cat sitting next to a clean ceramic water bowl, looking thoughtful — illustrative hero for a guide on cat vomiting urgency',
   'cat-not-eating':
@@ -1938,7 +1944,7 @@ const ARTICLES: Article[] = [
     datePublished: '2026-05-01',
     dateModified: '2026-05-01',
     readMinutes: 9,
-    relatedSlugs: ['cat-body-language-ears-whiskers-eyes', 'feline-five-personality-framework', 'cat-hiding-illness'],
+    relatedSlugs: ['cat-body-language-ears-whiskers-eyes', 'feline-five-personality-framework', 'what-is-my-cat-thinking-ai-apps'],
     primaryKeyword: 'cat tail meaning',
     faqs: [
       {
@@ -2146,7 +2152,7 @@ const ARTICLES: Article[] = [
     datePublished: '2026-05-01',
     dateModified: '2026-05-01',
     readMinutes: 11,
-    relatedSlugs: ['cat-tail-language', 'cat-body-language-ears-whiskers-eyes', 'five-pillars-happy-indoor-cat'],
+    relatedSlugs: ['cat-tail-language', 'do-cats-remember-owners', 'five-pillars-happy-indoor-cat'],
     primaryKeyword: 'cat personality types',
     faqs: [
       {
@@ -2247,7 +2253,7 @@ const ARTICLES: Article[] = [
     datePublished: '2026-05-01',
     dateModified: '2026-05-01',
     readMinutes: 12,
-    relatedSlugs: ['feline-five-personality-framework', 'cat-body-language-ears-whiskers-eyes', 'cat-litter-box-changes'],
+    relatedSlugs: ['feline-five-personality-framework', 'how-to-bond-with-cat', 'cat-litter-box-changes'],
     primaryKeyword: 'happy indoor cat',
     faqs: [
       {
@@ -2743,4 +2749,5 @@ const ARTICLES: Article[] = [
 <p>The cats with the easiest adult lives almost always had an unusually good first 16 weeks. The ones with the most behavioural problems almost always didn’t. That fact alone reshapes how you should think about adoption sources, breeder questions, and the calendar of your kitten’s first weeks at home.</p>
 `,
   },
+  ...ADDITIONAL_ARTICLES,
 ];
