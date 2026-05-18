@@ -25,6 +25,7 @@ import {
   CalendarCheck,
   CaretDown,
   CaretRight,
+  ChartLineUp,
   FileText,
   FirstAid,
   Heartbeat,
@@ -90,6 +91,16 @@ export default function TriageTab() {
   const appt = nextAppointment(catEvents);
 
   const trackRows: RowDef[] = [
+    {
+      // Health Rhythm — 30-day trend visualisation. Moved here from
+      // Today tab 2026-05-11. Sits FIRST in the Track list because
+      // it's the medical-trend headline and naturally pairs with the
+      // scan history just below the CTA.
+      title: 'Health Rhythm',
+      subtitle: '30-day patterns — mood, appetite, weight, behaviour drift',
+      icon: <ChartLineUp size={22} color={t.primary700} />,
+      href: '/health-rhythm',
+    },
     {
       title: 'Vaccinations',
       subtitle: vax
@@ -288,7 +299,7 @@ export default function TriageTab() {
             ]}
           >
             <Text token="body" color="textMuted" style={{ textAlign: 'center' }}>
-              No scans yet. Run one to start building {cat?.name ?? 'your cat'}'s health timeline.
+              No scans yet. Run one to start building {cat?.name ?? 'your cat'}&apos;s health timeline.
             </Text>
           </View>
         ) : (

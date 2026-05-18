@@ -1,8 +1,16 @@
 /**
  * Minimal line chart in react-native-svg — no new deps, no animations.
  * Built for weight / SRR / water-intake trends. Keep it boring.
+ *
+ * Responsive width (audit 2026-05-14 user-feedback fix):
+ *   When `width` is omitted, the chart measures its parent's content
+ *   width via `onLayout` and renders the SVG to fit. This fixes the
+ *   Samsung A14 overflow report where a hardcoded 340px chart spilled
+ *   out of its ~288px content area. Callers that pass an explicit
+ *   `width` keep the old fixed behaviour for layout-critical contexts.
  */
-import { View, type ViewStyle } from 'react-native';
+import { useState } from 'react';
+import { View, type ViewStyle, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Line, Path, Text as SvgText } from 'react-native-svg';
 import { useTheme } from '../theme/useTheme';
 import { Text } from './Text';
@@ -12,6 +20,7 @@ export type Point = { x: number; y: number; label?: string };
 
 export type LineChartProps = {
   data: Point[];               // must be pre-sorted by x ascending
+  /** When omitted, the chart auto-fits its parent's width. */
   width?: number;
   height?: number;
   strokeColor?: string;
@@ -25,9 +34,13 @@ export type LineChartProps = {
   style?: ViewStyle;
 };
 
+/** Floor for the auto-measured width — prevents 0×height SVG renders
+ *  on the first frame before `onLayout` fires. */
+const AUTO_WIDTH_FALLBACK = 280;
+
 export function LineChart({
   data,
-  width = 320,
+  width: widthProp,
   height = 180,
   strokeColor,
   fillColor,
@@ -43,14 +56,29 @@ export function LineChart({
   const stroke = strokeColor ?? t.primary500;
   const fill = fillColor ?? 'rgba(91, 138, 122, 0.10)';
 
+  // Auto-width when the caller didn't pass one. Measured on first
+  // layout, then re-measured if the parent resizes (rotation,
+  // keyboard, split-screen). Initial render uses the fallback so the
+  // SVG isn't 0-wide for a frame.
+  const [measuredWidth, setMeasuredWidth] = useState<number | null>(null);
+  const handleLayout = (e: LayoutChangeEvent) => {
+    if (widthProp != null) return; // explicit width — skip measurement
+    const w = e.nativeEvent.layout.width;
+    if (w > 0 && w !== measuredWidth) setMeasuredWidth(w);
+  };
+  const width = widthProp ?? measuredWidth ?? AUTO_WIDTH_FALLBACK;
+
   const padX = 28;
   const padY = 18;
 
   if (data.length === 0) {
     return (
       <View
+        onLayout={handleLayout}
         style={[{
-          width, height,
+          // When no explicit width: stretch to parent. Otherwise fixed.
+          ...(widthProp != null ? { width: widthProp } : { alignSelf: 'stretch' }),
+          height,
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: t.surfaceElevated,
@@ -99,7 +127,13 @@ export function LineChart({
     ` L ${pts[pts.length - 1]!.x.toFixed(2)} ${baselineY.toFixed(2)} Z`;
 
   return (
-    <View style={style}>
+    <View
+      onLayout={handleLayout}
+      style={[
+        widthProp != null ? { width: widthProp } : { alignSelf: 'stretch' },
+        style,
+      ]}
+    >
       <Svg width={width} height={height}>
         {/* Horizontal grid lines at min + mid + max */}
         {[yLo, (yLo + yHi) / 2, yHi].map((yVal, i) => {

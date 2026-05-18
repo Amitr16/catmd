@@ -136,6 +136,13 @@ For ENVIRONMENT entries, the "kind" field is ALWAYS "environment".
 
 CAP: at most 6 objects per photo — pick the most prominent. Quality over quantity. A photo of just the cat curled on a blanket should produce ~1 object (the blanket) and a place (e.g. "the bedroom").
 
+SCENE CAPTION — one short sentence that captures WHAT THE PHOTO SHOWS, written as a quiet observation a cat-savvy friend would make if they walked into the room and saw the scene. ANCHORED IN WHAT IS ACTUALLY VISIBLE — do NOT invent objects, weather, time of day, or activity not present in the image. Examples:
+  - "{{CAT_NAME}} on the green chair in afternoon light, half-closed eyes."
+  - "{{CAT_NAME}} stretched along the windowsill, watching outside."
+  - "{{CAT_NAME}} curled in a tight loaf on the cream blanket."
+  - "{{CAT_NAME}} mid-yawn on the bed, one paw out."
+Length: 6-16 words. ONE sentence. Period at the end. Lower-case unless naming. NEVER mention props that aren't visible. NEVER guess at the cat's mood beyond what posture clearly shows. If the photo doesn't show the cat clearly, use a literal scene phrase ("the living room, lamp-lit, no cat in frame.").
+
 Output strict JSON. No prose outside JSON. No emoji. Use empty arrays / null when nothing fits — never invent.`;
 
 // JSON schema for OpenAI Structured Outputs. `additionalProperties:
@@ -165,12 +172,12 @@ const NULLABLE_NAMED_SCHEMA = {
 } as const;
 
 const WORLD_EXTRACTION_SCHEMA = {
-  name: 'world_extraction_v1',
+  name: 'world_extraction_v2',
   strict: true,
   schema: {
     type: 'object',
     additionalProperties: false,
-    required: ['objects', 'place', 'environment'],
+    required: ['objects', 'place', 'environment', 'scene_caption'],
     properties: {
       objects: {
         type: 'array',
@@ -179,6 +186,13 @@ const WORLD_EXTRACTION_SCHEMA = {
       },
       place: NULLABLE_NAMED_SCHEMA,
       environment: NULLABLE_NAMED_SCHEMA,
+      // One-sentence scene caption — drives the "today's photos"
+      // section in the chat / diary prompt so the cat can reference
+      // visual context without the prompt needing the photo itself.
+      // Strict-grounded: the prompt forbids inventing objects /
+      // weather / activity not visible. Empty string when the photo
+      // is unreadable or fails extraction (caller filters).
+      scene_caption: { type: 'string', maxLength: 180 },
     },
   },
 } as const;
@@ -192,6 +206,8 @@ export type ExtractedWorld = {
   }>;
   place: { name: string } | null;
   environment: { name: string } | null;
+  /** One-sentence grounded scene caption. Empty string = none. */
+  scene_caption: string;
 };
 
 /**
@@ -254,6 +270,14 @@ export async function extractWorldFromPhoto(opts: {
   const source = opts.source ?? 'photo';
   const observedAt = opts.observedAt ?? new Date().toISOString();
 
+  // Pro gate (added 2026-05-12) — silent vision passes cost ~$0.005
+  // each. Free users post-trial don't generate world memory; the
+  // foreground gate already stops them generating new diary entries,
+  // chat replies, etc. that would consume world entries anyway.
+  // Cached 5 min to keep bulk photo imports cheap.
+  const { getProAccessCached } = await import('./purchases');
+  if (!(await getProAccessCached())) return 0;
+
   const b64 = await fileUriToBase64(opts.photoUri);
   if (!b64) {
     track({
@@ -310,6 +334,7 @@ export async function extractWorldFromPhoto(opts: {
         extracted.environment && extracted.environment.name
           ? extracted.environment
           : null,
+      scene_caption: extracted.scene_caption ?? '',
     },
     observedAt,
   );
@@ -317,6 +342,18 @@ export async function extractWorldFromPhoto(opts: {
   const promoted = useWorldStore
     .getState()
     .ingestObservations(opts.catId, observations);
+
+  // Persist the one-sentence scene caption so chat / diary can surface
+  // "today's photos" without re-running vision. Vision-grounded — the
+  // extraction prompt forbids inventing props not in frame.
+  const caption = (extracted.scene_caption ?? '').trim();
+  if (caption.length > 0) {
+    useWorldStore.getState().pushScene(opts.catId, {
+      photo_uri: opts.photoUri,
+      caption,
+      observed_at: observedAt,
+    });
+  }
 
   track({
     type: 'world_extraction_run',
@@ -350,6 +387,12 @@ export async function extractWorldFromVideoFrames(opts: {
 }): Promise<number> {
   if (!opts.framesBase64 || opts.framesBase64.length === 0) return 0;
   const observedAt = opts.observedAt ?? new Date().toISOString();
+
+  // Pro gate — parallel to extractWorldFromPhoto. The body-language
+  // call that PRECEDES this is already gated at the screen level;
+  // this defence-in-depth handles direct callers.
+  const { getProAccessCached } = await import('./purchases');
+  if (!(await getProAccessCached())) return 0;
   // Sample up to 4 frames evenly across the clip — first, middle-ish,
   // and last give the model enough scene coverage to inventory the
   // setting without paying for redundant near-duplicate frames.
@@ -392,6 +435,7 @@ export async function extractWorldFromVideoFrames(opts: {
         extracted.environment && extracted.environment.name
           ? extracted.environment
           : null,
+      scene_caption: extracted.scene_caption ?? '',
     },
     observedAt,
   );
@@ -399,6 +443,17 @@ export async function extractWorldFromVideoFrames(opts: {
   const promoted = useWorldStore
     .getState()
     .ingestObservations(opts.catId, observations);
+
+  // Persist scene caption for the video clip too — body-language reads
+  // are a primary source of "what the camera saw today" memory.
+  const caption = (extracted.scene_caption ?? '').trim();
+  if (caption.length > 0) {
+    useWorldStore.getState().pushScene(opts.catId, {
+      photo_uri: null, // video clip — no single photo to dedup against
+      caption,
+      observed_at: observedAt,
+    });
+  }
 
   track({
     type: 'world_extraction_run',

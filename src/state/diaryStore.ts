@@ -22,7 +22,6 @@ import {
   generateDeepDiaryEntry,
   generateEmptyDayEntry,
   isReadyForEmptyDayEntries,
-  pickCatVoiceHighlight,
   todayKey,
   type DiaryEntry,
 } from '../services/diary';
@@ -32,12 +31,7 @@ import { useScanStore } from './scanStore';
 import { usePersonalityStore } from './personalityStore';
 import { usePhotoStudioStore } from './photoStudioStore';
 import { useChatStore } from './chatStore';
-import { useNotifPrefsStore } from './notifPrefsStore';
 import { hasEnoughDataForReveal } from '../services/personality';
-import {
-  cancelNotification,
-  setCatVoiceEveningPush,
-} from '../services/notifications';
 import { track } from '../services/analytics';
 
 const MAX_CACHED_ENTRIES_PER_CAT = 365; // one year — Pro archive scope
@@ -150,23 +144,34 @@ async function buildAndGenerate(opts: {
       ? personalityProfile.archetype
       : null;
 
-  const todayKeyLocal = (() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  })();
-  const galleryPhotosToday = isToday
-    ? usePhotoStudioStore
-        .getState()
-        .getPhotosForDate(catId, todayKeyLocal)
-        .map((p) => ({ uri: p.uri, added_at: p.added_at }))
-    : [];
-  const chatTurnsToday = isToday
-    ? (useChatStore.getState().threads[catId] ?? []).map((t) => ({
-        role: t.role,
-        content: t.content,
-        created_at: t.created_at,
-      }))
-    : [];
+  // Photos for the TARGET DATE (today OR a past date during backfill).
+  // Pre 2026-05-09 this only fetched photos when isToday — for any
+  // past date it was always [], so backfill of (e.g.) Apr 29 had no
+  // photo context. Now fetches by targetDate. If the past date had
+  // no photos, this is empty and the diary entry has no hero image
+  // (no profile-photo fallback for past dates either, see diary.ts
+  // photoUri chain).
+  const galleryPhotosToday = usePhotoStudioStore
+    .getState()
+    .getPhotosForDate(catId, targetDate)
+    .map((p) => ({ uri: p.uri, added_at: p.added_at }));
+
+  // Chat turns: filter to the target date's turns. The chat store
+  // doesn't index by date, so we filter the full thread by created_at
+  // YYYY-MM-DD.
+  const chatTurnsToday = (useChatStore.getState().threads[catId] ?? [])
+    .filter((t) => {
+      try {
+        return t.created_at.slice(0, 10) === targetDate;
+      } catch {
+        return false;
+      }
+    })
+    .map((t) => ({
+      role: t.role,
+      content: t.content,
+      created_at: t.created_at,
+    }));
 
   // Gallery dates across all time (for empty-day floor + days-since-active)
   const allGalleryPhotos = usePhotoStudioStore.getState().getPhotosForCat(catId);
@@ -213,6 +218,13 @@ async function buildAndGenerate(opts: {
         date: a.date,
       })),
       ...(e.vibe ? { vibe: e.vibe } : {}),
+      // Pass `vibe_updated_at` so the diary's toSubjectMemory can gate
+      // vibe inclusion on past-date backfills (audit 2026-05-14 round
+      // 12). Vibe text is generated from appearances; for a May 5
+      // backfill done on May 14, a vibe written on May 13 reflects
+      // post-target knowledge and shouldn't surface as if the cat
+      // knew that vibe on May 5.
+      ...(e.vibe_updated_at ? { vibe_updated_at: e.vibe_updated_at } : {}),
     }));
 
   // Today's photo ids — used to compute `subjectsToday` precisely
@@ -300,7 +312,7 @@ async function buildAndGenerate(opts: {
     assertion_count: f.assertion_count,
   }));
 
-  const deep = buildDeepContext({
+  const deep = await buildDeepContext({
     cat,
     events,
     scans,
@@ -319,13 +331,30 @@ async function buildAndGenerate(opts: {
 
   // EMPTY-DAY PATH — only fires when:
   //   1. The day has no material activity, AND
-  //   2. We're generating for today (past empty days are just blanks),
+  //   2. We're generating for TODAY (past empty days are gaps in the
+  //      archive — pre 2026-05-09 past empty days went through the
+  //      populated path with no real data and the LLM hallucinated
+  //      content. User reported diary entries for dates 10 days ago
+  //      with same-photo / same-themes — exactly that bug. Now any
+  //      past empty day returns null and is simply not written.),
   //   3. The cat is "ready" (≥7 distinct activity-days lifetime — so
   //      brand-new users don't get melancholic entries before the
   //      relationship is real),
   //   4. forceMaterial is not requested (user didn't manually demand
   //      a populated entry).
   if (deep.isEmptyDay) {
+    if (!isToday) {
+      // Past empty day — skip generation entirely. No entry written.
+      // Diary archive will simply not have this date — gap is more
+      // honest than hallucinated retroactive content.
+      void import('../services/analytics').then(({ track }) =>
+        track({
+          type: 'diary_backfill_skipped',
+          props: { reason: 'past_empty_day', date: targetDate },
+        }),
+      );
+      return null;
+    }
     const ready = isReadyForEmptyDayEntries({
       catId,
       events,
@@ -362,6 +391,71 @@ export const useDiaryStore = create<State>()(
         if (!force) {
           const cached = get().entries[key];
           if (cached) return cached;
+        }
+
+        // ── 7pm gate (defense-in-depth) ───────────────────────────
+        // The diary screen is supposed to gate auto-generation on
+        // local hour ≥ 19. This is a backstop in case any caller
+        // (current or future) bypasses the screen-side gate. The
+        // gate is what prevents the staleness bug — if we generate
+        // at 14:00 and the user logs activity at 16:00, the entry
+        // would be locked in with only the 14:00 snapshot. Forcing
+        // generation to wait until evening means the day's full
+        // activity is captured.
+        //
+        // `force: true` (manual rewrite) bypasses this — user is
+        // explicitly demanding fresh content, respect that.
+        if (!force && new Date().getHours() < 19) {
+          return null;
+        }
+
+        // ── Clock-sanity guard ────────────────────────────────────
+        // Two checks before we burn an LLM call on a date the device
+        // is wrong about. See services/clockSanity.ts for context.
+        //
+        // 1. Local check (free, sync): if "today" looks earlier than
+        //    the most-recent cached entry, the clock has moved
+        //    backwards. Refuse to generate. Catches the common case
+        //    instantly — incident reported 2026-05-08 had the device
+        //    clock ~14 days behind.
+        // 2. Server check (one network call, cached for 30 min):
+        //    compares device clock to Supabase server time via the
+        //    HTTP Date header. If delta > 1 hour, refuse.
+        //
+        // Both checks fail open (assume clock is fine) on any error
+        // — better to let the user use the app than block them on
+        // network issues.
+        const allCachedForCat = Object.values(get().entries).filter(
+          (e) => e.cat_id === catId,
+        );
+        const latestCachedDate = allCachedForCat
+          .map((e) => e.date)
+          .sort((a, b) => b.localeCompare(a))[0] ?? null;
+        try {
+          const { isClockMovingBackwards, isDeviceClockOff } = await import(
+            '../services/clockSanity'
+          );
+          if (isClockMovingBackwards(today, latestCachedDate)) {
+            track({
+              type: 'clock_anomaly_detected',
+              props: { surface: 'diary', reason: 'cached_entry_backwards' },
+            });
+            console.warn(
+              `[diary] refusing to generate for ${today} — latest cached is ${latestCachedDate}. Device clock likely wrong.`,
+            );
+            return null;
+          }
+          if (await isDeviceClockOff({ surface: 'diary' })) {
+            console.warn(
+              '[diary] refusing to generate — device clock differs from server by > 1 hour.',
+            );
+            return null;
+          }
+        } catch (e) {
+          // Clock-sanity import / network failure — proceed. We've
+          // already failed open inside the helpers; this catch is
+          // defence in depth.
+          console.warn('[diary] clock-sanity check skipped:', e);
         }
 
         set((s) => ({ generating: { ...s.generating, [catId]: true } }));
@@ -416,41 +510,22 @@ export const useDiaryStore = create<State>()(
               referenced_past_date: entry.referenced_past_date ?? null,
             },
           });
+          // Unified activation event for marketing-attribution funnels
+          // (audit 2026-05-16). Fires alongside diary_entry_generated.
+          track({ type: 'core_feature_used', props: { feature: 'diary' } });
 
-          // Cat-voice evening push: pull a punchy 1-liner from the
-          // freshly-written diary and re-arm the 19:00 push. Best-
-          // effort: failure here doesn't block the entry from
-          // landing. See marketing/chat-as-viral-lever.md §2 — the
-          // lock-screen push doubles as shareable content.
-          void (async () => {
-            try {
-              const prefs = useNotifPrefsStore.getState();
-              if (!prefs.enabled.cat_voice_evening) return;
-              const cat = useCatStore
-                .getState()
-                .cats.find((c) => c.id === catId);
-              if (!cat) return;
-              const oneLiner = pickCatVoiceHighlight(entry);
-              if (!oneLiner) return;
-              const oldId = prefs.getScheduledId(
-                catId,
-                'cat_voice_evening',
-              );
-              await cancelNotification(oldId);
-              const newId = await setCatVoiceEveningPush({
-                catName: cat.name,
-                catId,
-                oneLiner,
-              });
-              prefs.setScheduledId(catId, 'cat_voice_evening', newId);
-              track({
-                type: 'cat_voice_push_armed',
-                props: { length: oneLiner.length },
-              });
-            } catch (e) {
-              console.warn('[Diary] cat-voice push schedule failed:', e);
-            }
-          })();
+          // Cat-voice evening push: REMOVED 2026-05-09 with the
+          // 7pm-gate diary-writing redesign. The old design scheduled
+          // a per-day push at 19:00 with the entry's highlight as
+          // body — but under the 7pm gate, entries can only be
+          // written AT or AFTER 19:00, meaning today's 19:00 has
+          // already passed by the time we'd schedule. The push would
+          // fire on TOMORROW 19:00 with TODAY's highlight, mistiming
+          // the content vs the day. Instead, the new push system
+          // (setDailyDiaryReminders) schedules a generic 7-day
+          // rolling window of "diary is waiting" pushes; user taps
+          // one and the diary generates fresh on screen open.
+          // See _layout.tsx for the rolling-window scheduler.
 
           return entry;
         } catch (e) {
@@ -478,6 +553,39 @@ export const useDiaryStore = create<State>()(
 
         const today = todayKey();
         const isToday = dateKey === today;
+
+        // Clock-sanity guard — only when generating for "today". For
+        // explicit past-date backfill (isToday=false) we don't gate
+        // on server-time, because the user / backfill flow has chosen
+        // the date deliberately. The cached-entry-backwards check
+        // doesn't apply either since we're not claiming "this is
+        // today". See services/clockSanity.ts and the same guard in
+        // generateForToday above.
+        if (isToday) {
+          const allCachedForCat = Object.values(get().entries).filter(
+            (e) => e.cat_id === catId,
+          );
+          const latestCachedDate = allCachedForCat
+            .map((e) => e.date)
+            .sort((a, b) => b.localeCompare(a))[0] ?? null;
+          try {
+            const { isClockMovingBackwards, isDeviceClockOff } = await import(
+              '../services/clockSanity'
+            );
+            if (isClockMovingBackwards(today, latestCachedDate)) {
+              track({
+                type: 'clock_anomaly_detected',
+                props: { surface: 'diary', reason: 'cached_entry_backwards' },
+              });
+              return null;
+            }
+            if (await isDeviceClockOff({ surface: 'diary' })) {
+              return null;
+            }
+          } catch (e) {
+            console.warn('[diary] clock-sanity check skipped:', e);
+          }
+        }
 
         set((s) => ({ generating: { ...s.generating, [catId]: true } }));
 
@@ -698,6 +806,22 @@ function countCheckinStreak(
 export function useTodaysDiaryEntry(catId: string | null | undefined) {
   return useDiaryStore((s) =>
     catId ? s.entries[entryKey(catId, todayKey())] ?? null : null,
+  );
+}
+
+/**
+ * Read a specific date's cached entry for a cat (no generation).
+ * Used by the Daily Card screen when navigating to a past day's
+ * card via the diary screen's "Today's card / past card" link.
+ *
+ * date format: YYYY-MM-DD. When date is null/empty, returns null.
+ */
+export function useDiaryEntryByDate(
+  catId: string | null | undefined,
+  date: string | null | undefined,
+) {
+  return useDiaryStore((s) =>
+    catId && date ? s.entries[entryKey(catId, date)] ?? null : null,
   );
 }
 

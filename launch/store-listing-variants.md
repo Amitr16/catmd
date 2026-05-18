@@ -110,9 +110,9 @@ PRIVACY
 
 PRICING
 • Free: 3 scans per month, all flows
-• Pro Annual: $69/year (~$5.75/month), 7-day free trial
-• Pro Monthly: $12.99/month
-• Pro Lifetime: $199 one-time, first 1,000 users only
+• Pro Annual: $79.99/year (~$6.67/month), 7-day free trial
+• Pro Monthly: $9.99/month
+• 14-day free trial with full Pro access — no card required to start
 
 ⚠️ CatMD is informational only. It is not veterinary advice, diagnosis, or treatment, and does not replace a licensed veterinarian. In a medical emergency, contact your nearest emergency vet immediately.
 ```

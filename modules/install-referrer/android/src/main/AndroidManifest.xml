@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Empty manifest — Play Install Referrer SDK does NOT require any
+  additional permissions or service declarations. The SDK binds to a
+  service exposed by Google Play Services that already lives on the
+  device; no manifest entry needed in the embedding app.
+
+  We declare the package so Gradle's manifest merger doesn't fail when
+  combining this module with the host app.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" />

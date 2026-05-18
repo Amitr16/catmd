@@ -53,11 +53,9 @@ import {
   confidenceLabel,
   hasEnoughDataForReveal,
 } from '../../src/services/personality';
-import { useTodaysDiaryEntry, useDiaryUnreadCount, useDiaryEntriesForCat } from '../../src/state/diaryStore';
+import { useTodaysDiaryEntry, useDiaryUnreadCount } from '../../src/state/diaryStore';
 import { useSubjectsForCat } from '../../src/state/subjectDirectoryStore';
-import { useChatStore } from '../../src/state/chatStore';
-import { useHealthStore } from '../../src/state/healthStore';
-import { deriveBecoming } from '../../src/services/becoming';
+import { useBecomingForCat } from '../../src/services/useBecomingForCat';
 import { useTodaysPostcard } from '../../src/state/postcardStore';
 import {
   PICKER_BATCH_LIMIT,
@@ -96,58 +94,11 @@ export default function BondTab() {
 
   // Becoming — composite "depth" of how shaped the cat-in-the-app
   // has become. Drives the Becoming tile body copy + headline depth.
-  const allHealthEvents = useHealthStore((s) => s.events);
-  const chatTurns = useChatStore((s) => (cat?.id ? (s.threads[cat.id] ?? []).length : 0));
-  const photosCountForCat = usePhotoStudioStore((s) => (cat?.id ? (s.photos[cat.id] ?? []).length : 0));
-  const diaryEntriesCount = useDiaryEntriesForCat(cat?.id).length;
-  const becoming = useMemo(() => {
-    if (!cat?.id) return null;
-    const catEvents = allHealthEvents.filter((e) => e.cat_id === cat.id);
-    const checkinDates = new Set<string>();
-    for (const e of catEvents) {
-      if (e.type !== 'daily_checkin') continue;
-      try {
-        const d = new Date(e.ts);
-        const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        checkinDates.add(k);
-      } catch {
-        // skip
-      }
-    }
-    let streak = 0;
-    const cursor = new Date();
-    let firstHit = false;
-    for (let i = 0; i < 365; i += 1) {
-      const k = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`;
-      if (checkinDates.has(k)) {
-        firstHit = true;
-        streak += 1;
-      } else if (firstHit) {
-        break;
-      } else if (i > 0) {
-        break;
-      }
-      cursor.setDate(cursor.getDate() - 1);
-    }
-    return deriveBecoming({
-      photoCount: photosCountForCat,
-      chatTurnCount: chatTurns,
-      bodyLanguageSessionCount: catEvents.filter((e) => e.type === 'behavior_observation').length,
-      checkinStreak: streak,
-      namedSubjectsCount: subjectsCount,
-      personalityArchetypeSet: !!personalityProfile,
-      diaryEntryCount: diaryEntriesCount,
-      previousStages: null,
-    });
-  }, [
-    cat?.id,
-    photosCountForCat,
-    chatTurns,
-    allHealthEvents,
-    subjectsCount,
-    personalityProfile,
-    diaryEntriesCount,
-  ]);
+  // Computation moved to the shared useBecomingForCat hook (used here
+  // and on chat/diary for the PersonalityProgressBanner). The
+  // ~45-line inline useMemo this replaces was duplicated three times
+  // before extraction.
+  const becoming = useBecomingForCat(cat?.id);
   const diarySubtitle = todaysDiary
     ? truncateForPreview(todaysDiary.entry, 110)
     : `Private journal in ${catName}'s voice — writes at 7pm if anything happened today (check-in, photo, scan, or chat).`;
@@ -267,6 +218,10 @@ export default function BondTab() {
         body={postcardSubtitle}
         onPress={() => router.push('/postcard' as never)}
       />
+
+      {/* Meow Translator moved to Today tab on 2026-05-11 — it's a
+          quick-action read, not a passive bond surface. Lives alongside
+          Body Language under "Know your cat" on Today. */}
 
       <Tile
         live

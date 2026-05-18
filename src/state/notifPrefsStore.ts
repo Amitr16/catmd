@@ -49,7 +49,15 @@ export type NotifCategory =
    * /weekly-reading screen where the cat reads the HUMAN. Implements
    * marketing/chat-as-viral-lever.md §5.
    */
-  | 'weekly_reading';
+  | 'weekly_reading'
+  /**
+   * Morning Mew — daily 8:00 AM push that fires a mood-shaped "good
+   * morning" line from the cat's voice. Body = pickMorningGreeting()
+   * for today's mood. Tap → opens /daily-card. Daily ritual hook —
+   * the cat is the first voice the user hears every morning.
+   * Added 2026-05-13.
+   */
+  | 'morning_mew';
 
 export type NotifPrefs = {
   // Per-category enabled flags (all default ON; user opts out)
@@ -58,6 +66,15 @@ export type NotifPrefs = {
   // In-flight scheduled notification ids — used to cancel/replace cleanly.
   // Key: cat_id + ':' + category. Value: expo-notifications id string.
   scheduledIds: Record<string, string>;
+
+  // Diary daily-reminder rolling window (added 2026-05-09 with the
+  // 7pm-gate diary redesign). Stores up to 7 scheduled push IDs per
+  // cat — one per upcoming day. On every app foreground we cancel
+  // these and reschedule for the next 7 days, so a user who stops
+  // opening the app stops getting "diary is waiting" pushes after
+  // ~7 quiet days. Stored separately from scheduledIds because that
+  // map's one-id-per-category contract doesn't fit a multi-id case.
+  diaryReminderIds: Record<string, string[]>;
 };
 
 type Actions = {
@@ -68,6 +85,8 @@ type Actions = {
     id: string | null,
   ) => void;
   getScheduledId: (catId: string, category: NotifCategory) => string | null;
+  setDiaryReminderIds: (catId: string, ids: string[]) => void;
+  getDiaryReminderIds: (catId: string) => string[];
   clearAll: () => void;
 };
 
@@ -86,6 +105,7 @@ const defaultEnabled: Record<NotifCategory, boolean> = {
   daily_photo_studio: true,
   cat_voice_evening: true,
   weekly_reading: true,
+  morning_mew: true,
 };
 
 export const useNotifPrefsStore = create<NotifPrefs & Actions>()(
@@ -93,6 +113,7 @@ export const useNotifPrefsStore = create<NotifPrefs & Actions>()(
     (set, get) => ({
       enabled: { ...defaultEnabled },
       scheduledIds: {},
+      diaryReminderIds: {},
 
       setEnabled: (category, enabled) => {
         set((state) => ({
@@ -124,10 +145,18 @@ export const useNotifPrefsStore = create<NotifPrefs & Actions>()(
         return get().scheduledIds[key] ?? null;
       },
 
+      setDiaryReminderIds: (catId, ids) =>
+        set((state) => ({
+          diaryReminderIds: { ...state.diaryReminderIds, [catId]: ids },
+        })),
+
+      getDiaryReminderIds: (catId) => get().diaryReminderIds[catId] ?? [],
+
       clearAll: () =>
         set({
           enabled: { ...defaultEnabled },
           scheduledIds: {},
+          diaryReminderIds: {},
         }),
     }),
     {

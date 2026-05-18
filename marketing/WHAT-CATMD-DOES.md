@@ -1,6 +1,28 @@
 # What CatMD Actually Does — Marketing Reference
 
-*Last updated 2026-05-09 (build vc 82 / v0.1.18)*
+*Last updated 2026-05-18 (build vc 99 / v0.1.21 — LIVE on Google Play production in 177 countries; vc 99 AAB built, awaiting Play Console upload)*
+
+> 🆕 **WHAT'S NEW SINCE VC 94 (2026-05-18)** — short list (full detail in §"Latest additions" at bottom):
+> - **vc 96** — Partner code system (annual-only, 30% off $79.99 → $55.99, $14 royalty per subscriber to creator, weekly settlement, free Pro for life)
+> - **vc 99** — 3-tier depth-modulated cat voice (warm-curious → emerging → intimate-comfort), replacing the always-aristocratic register that was driving day-1 churn
+> - **vc 99** — PersonalityProgressBanner on Chat + Diary (sticky one-line status, taps to /becoming)
+> - **vc 99** — removed Caution mood banner (cleaner header)
+> - **catmd.pet** — 3 new library articles + 2 new interactive tool pages (`/cat-symptom-checker`, `/cat-personality-test`) + 2 SEO title-tag fixes + 8 orphan articles linked
+
+> ⚠️ **For content writers (ChatGPT, Claude, ghost-writers):** this
+> doc is the structural reference. For the **comprehensive content
+> brief** with positioning, focus cohort, strengths/uniqueness, full
+> research citations, brand voice rules, approved/forbidden vocabulary,
+> and content-type playbook, **read `marketing/CONTENT-WRITING-BRIEF.md`
+> first.** That's the canonical content-writing doc as of 2026-05-16.
+>
+> Major features shipped since this doc's prior refresh (vc 82 → vc 94)
+> not yet inlined here: 15-mood daily lottery, 15 pop-culture voice
+> modes, 4-tier voice quality gate, live mood overlay (weather /
+> weight / water / pain / appetite / litter / meow), YOUR WORLD
+> grounding, date-anchored diary backfill, marketing attribution.
+> See `FEATURE-INVENTORY-COMPLETE.md` for canonical technical detail,
+> or `CONTENT-WRITING-BRIEF.md` for the marketing-ready summary.
 
 This is the canonical "what's in the app right now" document for the marketing team. Use the copy here verbatim — it's already audited against the actual feature set. Anything not in this doc isn't shippable claim territory yet.
 
@@ -324,3 +346,70 @@ Pick the angle that matches the channel:
 ## One-paragraph summary marketing can paste anywhere
 
 > CatMD is the AI cat-care companion that fuses three things into one app: vet-aware health triage (scan a symptom, get an urgency tier in 60 seconds), an AI body-language reader (6-second video → posture/ears/tail interpretation in the voice of a cat-savvy friend), and a personality-driven cat companion who keeps a daily diary in your cat's voice, sends you a Co-Star-style daily card every 7pm, and references your home's actual people, pets, and objects after learning about them silently from your photos. Free to start, anonymous-first, no signup. Pro unlocks unlimited scans + the year-long diary archive + AI-generated themed art.
+
+---
+
+## Latest additions (full detail) — vc 95 → vc 99 / catmd.pet refresh (2026-05-18)
+
+### Mobile app
+
+**vc 96 — Partner code system**
+- Annual-only discount codes for influencer / creator partnerships
+- Partner product: `pro_annual_partner` at **$55.99/yr** (30% off the standard $79.99)
+- Partner royalty: **$14 per subscriber** = 30% of net (after Google's 15% Play fee on $55.99)
+- Settlement: **weekly** via Stripe / PayPal / Wise
+- Refund hedge: hold for Google's 14-day window, then payout in next weekly batch (~3 weeks from signup)
+- Creator gets **free Pro for life** the moment they accept (via `pro_whitelist` table — `is_current_user_whitelisted` flips Pro on instantly)
+- Architecture: paywall coupon entry → Supabase RPC `validate_partner_code` → RevenueCat subscriber attribute → RC webhook → Cloudflare Worker handler → `partner_redemptions` table
+- Full activation doc: `docs/PARTNER-CODE-ACTIVATION.md`; ongoing ops: `docs/SUPABASE-SETUP-AND-OPERATIONS.md`
+
+**vc 99 — 3-tier depth-modulated cat voice**
+
+Replaces the always-aristocratic-distant voice that was driving day-1 churn. Voice now matures with the bond:
+
+| Depth | Tier | Voice register | Asks back |
+|---|---|---|---|
+| 0-25% | **Warm + Curious** | "I think I like you. Early signs are good." | ~1 in 3 |
+| 25-65% | **Emerging** (70% warm, 30% dry) | "Decent. You came home at 7:30. The chair is warm now." | ~1 in 4 |
+| 65-100% | **Intimate-Comfort** | "You. Always you. I noticed the way you sighed." | ~1 in 5 |
+
+- At depth < 25%: NO fabricating past activities (no diary yet → honest "I'm too new for that")
+- Banned phrases (every depth): "What about you?", "How about you?", "How can I help you?", "thank you", "I appreciate"
+- Source: `src/services/chat.ts` (3-tier override in `buildSystemPrompt`)
+- Regression-test simulators: `scripts/simulator-new-user-voice.mjs` (depth 10), `scripts/simulator-deep-stage-voice.mjs` (depth 80 with fake diary)
+
+**vc 99 — PersonalityProgressBanner on Chat + Diary**
+- Sticky one-line strip: "✨ Forming · voice is still warming up · 12% — Improve →"
+- Per-stage status words: Forming / Sketching / Shaping / Settling / Settled / Fully here
+- Tap routes to `/becoming` (existing screen with per-facet "do X to deepen" CTAs)
+- Fires `personality_progress_banner_tapped` PostHog event with source/depth/stage
+- Source: `src/components/PersonalityProgressBanner.tsx`, `src/services/useBecomingForCat.ts`
+
+**vc 99 — removed Caution mood banner** from Chat (cleaner header — only the personality progress strip remains; mood signal still drives chat replies internally via `buildLiveMoodContext`)
+
+### catmd.pet (Cloudflare Worker — live in `dcd70e67`)
+
+**3 new library articles** (full SEO chrome — MedicalWebPage + FAQPage schema + cross-linked):
+- `/library/why-does-my-cat-meow-at-me`
+- `/library/cat-not-jumping`
+- `/library/cat-grooming-less`
+
+**2 new interactive tool pages** (high-intent SEO targets where competitors have tools, not articles):
+- `/cat-symptom-checker` — symptom-grid hub routing to 18 library articles, severity-color-coded, WebApplication + ItemList + BreadcrumbList schema
+- `/cat-personality-test` — 10-question Feline Five quiz scoring against 9 archetypes, native share API + clipboard fallback, fires `cat_personality_test_completed` PostHog event
+
+**2 SEO title-tag fixes** (page-level retitles to match high-intent queries):
+- `/library/how-meow-translators-work` → now targets "AI Cat Translator how it works"
+- `/library/cat-body-language-ears-whiskers-eyes` → now targets "Cat Body Language Meaning"
+
+**8 orphan articles fixed** with contextual inline links (long-tail anchor text) from topically-closest parent — see earlier audit fixes in 2026-05-17 changelog.
+
+### Influencer outreach kit refresh (2026-05-17 → 2026-05-18)
+
+In `marketing/INFLUENCER-PROSPECTS.md`:
+- **Annual-only clarification** — the 30% off + 30% royalty apply to the annual plan ONLY (monthly stays $9.99 standard, no discount, no royalty)
+- **Per-subscriber dollar figure**: ~$14 (NOT $16.80 — accounts for Google's 15% Play fee)
+- **Settlement cadence**: weekly (not monthly — promised in the DM, so payout ops must support weekly batches)
+- **Payout window**: ~3 weeks from each subscriber's signup (14-day refund hold + next weekly batch)
+- **DM tone**: lead with the carrot (30% royalty + per-subscriber $$), free Pro as the safety net, soft close ("if interested, happy to share more")
+- **Forbidden in DM**: $1,260 ceiling-projections were removed (they cap creators' imagination instead of expanding it)

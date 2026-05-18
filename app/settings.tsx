@@ -34,6 +34,7 @@ import { useAuthSession } from '../src/hooks/useAuthSession';
 import { useEntitlement } from '../src/hooks/useEntitlement';
 import { useCatStore } from '../src/state/catStore';
 import { useScanStore } from '../src/state/scanStore';
+import { useMoodFeedbackStore } from '../src/state/moodFeedbackStore';
 import { forgetMe, signOut } from '../src/services/auth';
 import { referralCodeFromUid, referralLink } from '../src/utils/referral';
 import { purchases, restorePurchases } from '../src/services/purchases';
@@ -126,6 +127,9 @@ export default function SettingsScreen() {
               await forgetMe().catch((e) => console.warn('[CatMD] forget_me rpc:', e));
               clearAllCats();
               clearScans();
+              // Mood-feedback counters are user-data — clear them too
+              // (they reveal which moods the user prefers).
+              useMoodFeedbackStore.getState().clearAll();
               resetOnboarded(false);
               router.replace('/onboarding');
             } finally {
@@ -169,6 +173,7 @@ export default function SettingsScreen() {
       await signOut();
       clearAllCats();
       clearScans();
+      useMoodFeedbackStore.getState().clearAll();
       resetOnboarded(false);
       router.replace('/onboarding');
     } finally {
@@ -200,14 +205,18 @@ export default function SettingsScreen() {
             }
             subtitle={
               hasConfirmedEmail
-                ? 'Email linked \u2014 data syncs across devices'
+                ? 'Email linked \u2014 tap to change'
                 : pendingEmail
-                  ? 'Check your inbox \u2014 tap the confirmation link to finish'
+                  ? 'Check your inbox \u2014 enter the 6-digit code'
                   : noSession
                     ? 'Save your cat\u2019s history to the cloud'
                     : 'Recover your data on a new device'
             }
-            onPress={hasConfirmedEmail ? undefined : () => router.push('/upgrade-account')}
+            // Always tappable \u2014 change-email uses the SAME OTP flow:
+            // /upgrade-account \u2192 enter new email \u2192 6-digit code \u2192 done.
+            // Supabase's updateUser({ email }) handles the email-change
+            // case automatically with type='email_change' OTP.
+            onPress={() => router.push('/upgrade-account')}
           />
           <Divider />
           <Row

@@ -48,8 +48,10 @@ import {
   WarningCircle,
 } from 'phosphor-react-native';
 import { Button } from '../src/components/Button';
+import { PersonalityProgressBanner } from '../src/components/PersonalityProgressBanner';
 import { Text } from '../src/components/Text';
 import { useActiveCat } from '../src/hooks/useActiveCat';
+import { useBecomingForCat } from '../src/services/useBecomingForCat';
 import { useEntitlement } from '../src/hooks/useEntitlement';
 import {
   useDiaryEntriesForCat,
@@ -59,6 +61,9 @@ import {
 } from '../src/state/diaryStore';
 import type { DiaryEntry } from '../src/services/diary';
 import { useNotifPrefsStore } from '../src/state/notifPrefsStore';
+import { usePhotoStudioStore } from '../src/state/photoStudioStore';
+import { useHealthStore } from '../src/state/healthStore';
+import { useChatStore } from '../src/state/chatStore';
 import {
   cancelNotification,
   setDailyDiaryReminder,
@@ -116,12 +121,22 @@ export default function DiaryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const cat = useActiveCat();
+  // Personality-progress banner — sits above the diary content so
+  // first-time users understand that the diary's voice gets sharper
+  // as they enrich the underlying signals (photos, check-ins, etc.).
+  // Copy graduates with Becoming.overallStage; see component for
+  // the per-stage table.
+  const becoming = useBecomingForCat(cat?.id);
   const todayEntry = useTodaysDiaryEntry(cat?.id);
   const entries = useDiaryEntriesForCat(cat?.id); // newest first
   const generating = useDiaryGenerating(cat?.id);
   const generateForToday = useDiaryStore((s) => s.generateForToday);
   const markViewed = useDiaryStore((s) => s.markViewed);
-  const { isPro } = useEntitlement();
+  // hasProAccess gates the AI generation calls below. The screen still
+  // RENDERS for non-Pro users (they can read historical entries) — only
+  // the new-entry generation is gated. This matches the agreed
+  // free-after-trial tier: history is free; generation is Pro.
+  const { isPro, hasProAccess } = useEntitlement();
   const [error, setError] = useState<string | null>(null);
 
   // Currently-viewed date. Default = today.
@@ -141,15 +156,31 @@ export default function DiaryScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cat?.id]);
 
-  // Auto-generate today's entry on screen mount IF it's not cached
-  // already AND the day has material AND we're not already generating.
-  // Keeps `requireMaterial: true` semantics — empty days don't get
-  // populated entries here. The 7pm cron + app-boot backfill cover
-  // the days users don't open the screen.
+  // Auto-generate today's entry on screen mount IF
+  //   (a) it's not cached already, AND
+  //   (b) we're past the 19:00 "writing hour" (post 2026-05-09 7pm
+  //       gate). Pre-7pm visits show the explainer card and skip
+  //       generation — see the pre-7pm explainer block in render.
+  //       The 7pm rule means stale-snapshot bugs (entry written at
+  //       14:00, then 16:00 activity ignored) can't happen.
+  // The diaryStore.generateForToday function ALSO enforces the 7pm
+  // gate as defense-in-depth — even if this screen forgets to gate,
+  // the store refuses to generate before 19:00.
   useEffect(() => {
     if (!cat?.id) return;
     if (todayEntry) return;
     if (generating) return;
+    if (new Date().getHours() < 19) {
+      // Pre-7pm: don't auto-generate. Telemetry tracked via the
+      // diary_pre_7pm_visit event below.
+      return;
+    }
+    // Pro gate — silent skip for non-Pro users. We don't route to the
+    // paywall on diary-screen-mount because that would feel intrusive
+    // (the user opened the diary just to read). Instead, the screen
+    // shows historical entries + a "Generate today's entry — Pro"
+    // CTA in the empty state. The CTA does route to /paywall.
+    if (!hasProAccess) return;
     setError(null);
     void generateForToday(cat.id, { requireMaterial: true })
       .then(() => {
@@ -164,6 +195,27 @@ export default function DiaryScreen() {
             : "Couldn't write today's entry — tap retry.",
         );
       });
+    // hasProAccess is in deps so that when the entitlement resolves
+    // AFTER mount (anonymous-session race fix), the auto-gen fires.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cat?.id, hasProAccess]);
+
+  // ── Pre-7pm visit telemetry ────────────────────────────────────
+  // Counts how many users land before 7pm and see the explainer
+  // card. Useful for measuring: (a) is the framing landing? (b) are
+  // users coming back after 7pm to read? Fires once per (cat, day)
+  // visit — the dedup is implicit via session lifetime.
+  useEffect(() => {
+    if (!cat?.id) return;
+    if (new Date().getHours() < 19) {
+      track({
+        type: 'diary_pre_7pm_visit',
+        props: {
+          had_today_entry: !!todayEntry,
+          local_hour: new Date().getHours(),
+        },
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cat?.id]);
 
@@ -264,8 +316,80 @@ export default function DiaryScreen() {
     }
   };
 
-  // ── Render ──────────────────────────────────────────────────────────
+  // First-time empty: no entries cached yet, nothing in flight, no error
+  const isFirstTimeEmpty =
+    entries.length === 0 && !generating && !error && !todayEntry;
 
+  // ── Pre-7pm explainer state ────────────────────────────────────
+  // When the user opens the diary BEFORE 19:00 local time AND today's
+  // entry hasn't been generated yet AND they're viewing today, show a
+  // pre-7pm card explaining the daily writing rhythm. Hides the
+  // entry / first-time-empty / generating views for that one frame.
+  // Post 2026-05-09: 7pm gate prevents the staleness bug where a
+  // 14:00-generated entry locks in before the day's full activity.
+  const todayKey = todayKeyLocal();
+  const isViewingToday = viewingDate === todayKey;
+  const isPre7pmGated =
+    isViewingToday && !todayEntry && new Date().getHours() < 19;
+
+  // Navigator display values — when pre-7pm-gated, the user's intent
+  // is "today" but `activeEntry` resolves to the most-recent past
+  // entry (yesterday) because today doesn't exist yet. Override the
+  // navigator's date label to show TODAY (matching the user's
+  // viewingDate intent), and rewire the prev arrow to jump straight
+  // to the most-recent past entry instead of "older than yesterday".
+  // The navigator stays VISIBLE pre-7pm so users can still browse
+  // past entries — initial bug 2026-05-09 hid it entirely.
+  const navDate = isPre7pmGated ? todayKey : (activeEntry?.date ?? viewingDate);
+  const effectivePrevDate = isPre7pmGated
+    ? (entries[0]?.date ?? null)  // most recent past — yesterday-ish
+    : prevDate;
+  const effectiveNextDate = isPre7pmGated ? null : nextDate;
+  const showNavigator = entries.length > 0 || isPre7pmGated;
+
+  // Today-so-far activity counts — show in the pre-7pm card so the
+  // user knows their actions ARE being captured for tonight's entry.
+  const photoCountToday = usePhotoStudioStore((s) => {
+    if (!cat?.id) return 0;
+    return (s.photos[cat.id] ?? []).filter((p) => p.date === todayKey).length;
+  });
+  const eventsTodayCount = useHealthStore((s) => {
+    if (!cat?.id) return 0;
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const startMs = startOfToday.getTime();
+    return s.events.filter(
+      (e) =>
+        e.cat_id === cat.id &&
+        new Date(e.ts).getTime() >= startMs &&
+        // Material event types only — same set as hasMaterialToday
+        // in services/diary.ts. Counts what the diary will reference.
+        (
+          e.type === 'daily_checkin' ||
+          e.type === 'behavior_observation' ||
+          e.type === 'weight' ||
+          e.type === 'medication_dose' ||
+          e.type === 'symptom_photo' ||
+          e.type === 'litter_box_use' ||
+          e.type === 'outcome_check'
+        ),
+    ).length;
+  });
+  const chatTurnsTodayCount = useChatStore((s) => {
+    if (!cat?.id) return 0;
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const startMs = startOfToday.getTime();
+    return (s.threads[cat.id] ?? []).filter(
+      (t) => t.role === 'user' && new Date(t.created_at).getTime() >= startMs,
+    ).length;
+  });
+
+  // ── Render ──────────────────────────────────────────────────────────
+  // Hook-order safety (2026-05-14 audit fix): the "no cat" early-return
+  // used to live BEFORE the three Zustand hooks above, which violated
+  // rules-of-hooks. Moved here so every render path runs the same hooks
+  // in the same order regardless of whether a cat is selected.
   if (!cat) {
     return (
       <View style={[styles.container, { backgroundColor: t.surface, paddingTop: insets.top }]}>
@@ -279,15 +403,21 @@ export default function DiaryScreen() {
     );
   }
 
-  // First-time empty: no entries cached yet, nothing in flight, no error
-  const isFirstTimeEmpty =
-    entries.length === 0 && !generating && !error && !todayEntry;
-
   return (
     <View style={[styles.container, { backgroundColor: t.surface, paddingTop: insets.top }]}>
       <Header
         onBack={() => router.back()}
         title={`${catName}'s diary`}
+      />
+
+      {/* Personality-progress banner — same component as chat. Sits
+          directly under the header so the early-stage "voice is
+          still forming" framing is the first thing users read. */}
+      <PersonalityProgressBanner
+        catName={catName}
+        catSex={cat?.sex}
+        becoming={becoming}
+        source="diary"
       />
 
       <ScrollView
@@ -297,12 +427,73 @@ export default function DiaryScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Day navigator: left arrow + date + right arrow + position */}
-        {entries.length > 0 && activeEntry ? (
+        {/* Pre-7pm explainer — surfaces when viewing today before
+            19:00 with no cached entry. Sets the daily-rhythm
+            expectation: "diary writes after 7pm." Replaces today's
+            entry view; user can still navigate back to past entries
+            with the arrow buttons below. */}
+        {isPre7pmGated ? (
+          <View style={[styles.placeholderCard, { backgroundColor: t.surfaceElevated, borderColor: t.borderSubtle }]}>
+            <Sparkle size={28} color={t.primary700} weight="duotone" />
+            <Text token="heading3" style={{ marginTop: space[2], textAlign: 'center' }}>
+              {catName}&rsquo;s diary writes at 7pm
+            </Text>
+            <Text token="body" color="textSecondary" style={{ marginTop: space[2], textAlign: 'center', lineHeight: 22 }}>
+              {catName} settles in to write each evening, after 7pm
+              local. The richer your day, the richer the entry.
+            </Text>
+            {/* Today-so-far summary — confirms to the user that their
+                actions ARE being captured. Three counts only: photos,
+                health events (check-ins / scans / readings / etc.),
+                chat. Hides counts that are 0 to keep the card clean
+                on slow days. */}
+            {(photoCountToday + eventsTodayCount + chatTurnsTodayCount) > 0 ? (
+              <View style={{ marginTop: space[4], alignItems: 'center' }}>
+                <Text token="caption" color="textMuted" style={{ letterSpacing: 1, textTransform: 'uppercase' }}>
+                  Today so far
+                </Text>
+                <Text token="body" style={{ marginTop: space[1], color: t.textPrimary, textAlign: 'center' }}>
+                  {[
+                    photoCountToday > 0
+                      ? `${photoCountToday} photo${photoCountToday === 1 ? '' : 's'}`
+                      : null,
+                    eventsTodayCount > 0
+                      ? `${eventsTodayCount} health event${eventsTodayCount === 1 ? '' : 's'}`
+                      : null,
+                    chatTurnsTodayCount > 0
+                      ? `${chatTurnsTodayCount} chat${chatTurnsTodayCount === 1 ? '' : 's'}`
+                      : null,
+                  ].filter(Boolean).join(' · ')}
+                </Text>
+              </View>
+            ) : (
+              <Text token="caption" color="textMuted" style={{ marginTop: space[4], textAlign: 'center', lineHeight: 18 }}>
+                Nothing logged yet. Take a photo, log a check-in, or
+                run a body-language read — {catName} writes from what
+                actually happens.
+              </Text>
+            )}
+          </View>
+        ) : null}
+
+        {/* Day navigator — always visible when there are any entries
+            OR when we're showing the pre-7pm card for today.
+            Pre-7pm: nav reads "Today" (matches user intent), prev
+            arrow jumps to the most recent past entry, next arrow
+            disabled (no future entries). Initial 2026-05-09 ship
+            hid the navigator pre-7pm — that broke past-entry
+            browsing for users who opened before 7pm. Fixed below. */}
+        {showNavigator ? (
           <View style={styles.navRow}>
             <Pressable
-              onPress={onArrowOlder}
-              disabled={!prevDate}
+              onPress={() => {
+                if (isPre7pmGated) {
+                  if (effectivePrevDate) setViewingDate(effectivePrevDate);
+                } else {
+                  onArrowOlder();
+                }
+              }}
+              disabled={!effectivePrevDate}
               accessibilityRole="button"
               accessibilityLabel={
                 prevBlockedByPaywall
@@ -313,7 +504,7 @@ export default function DiaryScreen() {
               style={({ pressed }) => [
                 styles.navArrow,
                 {
-                  opacity: !prevDate ? 0.25 : pressed ? 0.5 : 1,
+                  opacity: !effectivePrevDate ? 0.25 : pressed ? 0.5 : 1,
                   borderColor: t.borderSubtle,
                 },
               ]}
@@ -327,26 +518,26 @@ export default function DiaryScreen() {
 
             <View style={{ flex: 1, alignItems: 'center' }}>
               <Text token="caption" color="textMuted" style={styles.navRelative}>
-                {relativeDateLabel(activeEntry.date) ?? ''}
+                {relativeDateLabel(navDate) ?? ''}
               </Text>
               <Text token="heading2" style={styles.navDate}>
-                {formatLongDate(activeEntry.date)}
+                {formatLongDate(navDate)}
               </Text>
               <Text token="caption" color="textMuted" style={styles.navPosition}>
-                {position} of {total}
+                {isPre7pmGated ? 'writing tonight' : `${position} of ${total}`}
               </Text>
             </View>
 
             <Pressable
               onPress={onArrowNewer}
-              disabled={!nextDate}
+              disabled={!effectiveNextDate}
               accessibilityRole="button"
               accessibilityLabel="Newer day"
               hitSlop={12}
               style={({ pressed }) => [
                 styles.navArrow,
                 {
-                  opacity: !nextDate ? 0.25 : pressed ? 0.5 : 1,
+                  opacity: !effectiveNextDate ? 0.25 : pressed ? 0.5 : 1,
                   borderColor: t.borderSubtle,
                 },
               ]}
@@ -357,7 +548,7 @@ export default function DiaryScreen() {
         ) : null}
 
         {/* Generating spinner (only when nothing else to show) */}
-        {generating && !activeEntry ? (
+        {!isPre7pmGated && generating && !activeEntry ? (
           <View style={[styles.placeholderCard, { backgroundColor: t.surfaceElevated, borderColor: t.borderSubtle }]}>
             <ActivityIndicator color={t.primary700} />
             <Text token="body" color="textSecondary" style={{ marginTop: space[3] }}>
@@ -367,17 +558,21 @@ export default function DiaryScreen() {
         ) : null}
 
         {/* Error state */}
-        {error && !activeEntry ? (
+        {!isPre7pmGated && error && !activeEntry ? (
           <View style={[styles.placeholderCard, { backgroundColor: t.surfaceElevated, borderColor: t.borderSubtle }]}>
             <WarningCircle size={28} color={t.warning} weight="fill" />
             <Text token="body" color="textSecondary" style={{ marginTop: space[2], textAlign: 'center' }}>
               {error}
             </Text>
             <Button
-              label="Retry"
+              label={hasProAccess ? 'Retry' : 'Unlock with Pro'}
               size="sm"
               onPress={() => {
                 if (!cat?.id) return;
+                if (!hasProAccess) {
+                  router.push({ pathname: '/paywall', params: { source: 'diary' } } as never);
+                  return;
+                }
                 setError(null);
                 void generateForToday(cat.id, { requireMaterial: true }).catch(
                   (e) =>
@@ -393,8 +588,9 @@ export default function DiaryScreen() {
           </View>
         ) : null}
 
-        {/* First-time empty state */}
-        {isFirstTimeEmpty ? (
+        {/* First-time empty state — superseded by the pre-7pm card
+            when both conditions overlap (new user opening before 7pm). */}
+        {!isPre7pmGated && isFirstTimeEmpty ? (
           <View style={[styles.placeholderCard, { backgroundColor: t.surfaceElevated, borderColor: t.borderSubtle }]}>
             <Sparkle size={28} color={t.primary700} weight="duotone" />
             <Text token="heading3" style={{ marginTop: space[2], textAlign: 'center' }}>
@@ -409,8 +605,10 @@ export default function DiaryScreen() {
           </View>
         ) : null}
 
-        {/* THE ENTRY */}
-        {activeEntry ? (
+        {/* THE ENTRY — hidden when pre-7pm-gated so the explainer
+            card is the sole focus for today-no-entry state. User
+            can navigate back via arrows to view past entries. */}
+        {!isPre7pmGated && activeEntry ? (
           <EntryView
             entry={activeEntry}
             onTapMemoryChip={onTapMemoryChip}
@@ -418,20 +616,22 @@ export default function DiaryScreen() {
           />
         ) : null}
 
-        {/* Daily Card CTA — surfaces ONLY when viewing today's
-            populated entry. The Daily Card screen extracts the
-            punchiest single sentence from this entry as a Co-Star-
-            shaped shareable card. Without an entry point, the only
-            way to reach /daily-card is the (not-yet-shipped) 7pm
-            push notification. Marketing Video #5 needs this surface
-            to be discoverable — see chat-as-viral-lever.md §3. */}
+        {/* Daily Card CTA — surfaces for ANY populated diary entry,
+            today OR past. The Daily Card screen extracts the punchiest
+            single sentence from the entry being viewed and frames it
+            as a Co-Star-shaped shareable card. The screen accepts a
+            `date` query param so the user can share past-day cards
+            too — pre-2026-05-08 the CTA was today-only and users
+            couldn't revisit / share old cards. See
+            chat-as-viral-lever.md §3 for the surface intent. */}
         {activeEntry &&
-        activeEntry.date === todayKeyLocal() &&
         !activeEntry.is_empty_day &&
         activeEntry.entry?.length > 10 ? (
           <Pressable
             onPress={() =>
-              router.push('/daily-card?source=diary' as never)
+              router.push(
+                `/daily-card?source=diary&date=${activeEntry.date}` as never,
+              )
             }
             style={({ pressed }) => [
               styles.dailyCardLink,
@@ -445,7 +645,9 @@ export default function DiaryScreen() {
             <ShareNetwork size={18} color={t.primary500} weight="duotone" />
             <View style={{ flex: 1, marginLeft: space[2] }}>
               <Text token="body" style={{ color: t.textPrimary, fontWeight: '600' }}>
-                Today&rsquo;s card
+                {activeEntry.date === todayKeyLocal()
+                  ? 'Today’s card'
+                  : `${relativeDateLabel(activeEntry.date) ?? 'This day’s'} card`}
               </Text>
               <Text token="caption" color="textMuted" style={{ marginTop: 2, lineHeight: 16 }}>
                 {catName}&rsquo;s sharpest line, framed for your story.

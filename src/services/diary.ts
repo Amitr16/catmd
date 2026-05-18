@@ -23,9 +23,24 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import { completeJson } from '../ai/client';
 import { ARCHETYPE_META, type PersonalityArchetype } from './personality';
-import { resolveCatAgeYears, type CatProfile } from '../state/catStore';
+import { getPronounDirective } from './pronouns';
+import { deriveBodySelf } from './catContext';
+import { resolveCatAgeYears, resolveCatAgeMonths, type CatProfile } from '../state/catStore';
 import type { HealthEvent } from '../state/healthStore';
 import type { ScanRecord } from '../state/scanStore';
+import {
+  localDateKey as moodLocalDateKey,
+  resolveTodaysMood,
+  renderMoodForPrompt,
+} from './dailyMood';
+import {
+  buildArchetypeMod,
+  buildTodayBehaviorMod,
+  computeBodyTrendSignals,
+  computeFeedbackMod,
+} from './moodWeights';
+import { getVoiceModeTag } from './voiceModes';
+import { useMoodFeedbackStore } from '../state/moodFeedbackStore';
 import {
   buildAnticipations,
   buildLifeEvents,
@@ -82,6 +97,17 @@ export type DiaryEntry = {
    * naturally invokes a past day; null otherwise.
    */
   referenced_past_date?: string | null;
+  /**
+   * Standalone screenshot-shaped one-liner in the cat's voice (audit
+   * 2026-05-14 round 7). Distinct from `entry.body` — this is THE
+   * line the Daily Card screen surfaces and that gets shared.
+   * Generated alongside the body, validated by the voiceQuality gate,
+   * and falls back to `pickCatVoiceHighlight(entry)` when the gated
+   * regeneration fails. 8-18 words, first person, no invented
+   * details. Optional because legacy cached entries don't carry it —
+   * UI calls pickCatVoiceHighlight as fallback when absent.
+   */
+  card_line?: string;
 };
 
 /**
@@ -118,6 +144,50 @@ export type DeepDiaryContext = {
   isToday: boolean;
   /** Existing on-day data — check-in, photos, scans, etc. */
   dayContext: DiaryDayContext;
+
+  /**
+   * YOUR WORLD — the cat's accumulated world objects (chair, wand,
+   * blanket, garden, etc.). Added 2026-05-14 audit P1 #1 so the deep-
+   * diary path has the same grounded item vocabulary that chat
+   * already enjoys. Capped to 12 most-recently-referenced entries so
+   * the prompt stays under control. Empty for cold-start cats —
+   * diary still works fine, just without world-object references.
+   */
+  worldEntries: Array<{
+    name: string;
+    kind: string;
+    location?: string;
+    sentiment?: string;
+  }>;
+
+  /**
+   * Live weather snapshot for the diary's date. Added 2026-05-14
+   * audit P2 #6 — diary previously had seasonalContext (broad)
+   * but not actual conditions. With weather plumbed in, a Singapore
+   * user's rainy-day diary stops invoking radiators and snow that
+   * the human's home doesn't have. Same anti-hallucination climate
+   * directive that chat already uses. Null when location permission
+   * isn't granted or the fetch failed.
+   */
+  weatherNarrative: string | null;
+
+  /**
+   * 30-day weight trend (audit 2026-05-14 round 6 fix). Diary
+   * previously had only today's weight (a single number, no shape).
+   * Chat builds a 90d trend; diary needs the same so the cat can
+   * notice "I've been losing" or "this body has settled, finally"
+   * — embodied, not clinical. Only populated when ≥2 weight events
+   * exist in the lookback window. `direction === 'stable'` means
+   * the cat has held within 100g, in which case the diary should
+   * NOT mention weight at all (per the "no health-spreadsheet"
+   * rule).
+   */
+  weightTrend30d: {
+    deltaKg: number;
+    direction: 'up' | 'down' | 'stable';
+    fromKg: number;
+    toKg: number;
+  } | null;
 
   // Tier 1 — recent memory
   recentEntries: RecentEntry[];
@@ -215,6 +285,51 @@ export type DiaryDayContext = {
    * vision input fallback if gallery is empty.
    */
   symptomPhotosToday: Array<{ concern_label: string; photo_uri: string }>;
+  /**
+   * Meow translations recorded today (audit 2026-05-14 P1 #2 fix).
+   * Each entry surfaces today's voice activity — the cat may
+   * reference "I told them about the bowl twice today" in the diary.
+   * Diary-worthy material: even a single translation counts toward
+   * `hasMaterialToday` so days where the only signal is "I yowled
+   * about the food" still get an entry. Empty when none today.
+   */
+  meowTranslationsToday: Array<{
+    vocalization_type: string;
+    intent: string;
+    confidence: string;
+    translation: string;
+    observed_at: string;
+  }>;
+  /**
+   * Today's world-extraction scene captions (audit 2026-05-14 P1 #3
+   * fix). Treated as MATERIAL — a grounded scene caption is a real
+   * diary-worthy event even when paired with no other signal (the cat
+   * noticed something specific today). Empty when no photo got
+   * world-extracted today. Capped to 3 most-recent to keep the prompt
+   * tight.
+   */
+  todayScenes: Array<{ caption: string; objects: string[] }>;
+  /**
+   * Water intake on the target date (audit 2026-05-14 round 6 fix).
+   * Captures whether today's drinking was meaningfully off the cat's
+   * own 7-day baseline. Diary should NOT obsess over normal water —
+   * that reads as a spreadsheet, not a cat. Only an abnormal
+   * direction surfaces in `hasMaterialToday` + the prompt.
+   *
+   *   - `totalMl`: today's recorded total (0 if no logs today)
+   *   - `eventCount`: number of water_intake events today
+   *   - `baselineMlPerDay`: median ml/day across last 7 days,
+   *     excluding today. Null when fewer than 3 prior days have data.
+   *   - `direction`: 'low' / 'high' / 'normal' / null. Null when the
+   *     baseline is unavailable; 'normal' when today's total is
+   *     within ±40% of baseline.
+   */
+  waterIntakeToday: {
+    totalMl: number;
+    eventCount: number;
+    baselineMlPerDay: number | null;
+    direction: 'low' | 'high' | 'normal' | null;
+  };
   isBirthday: boolean;
   isAdoptionIversary: boolean;
   /**
@@ -280,9 +395,10 @@ export function buildDayContext(opts: {
   scans: Array<{ cat_id: string; headline: string; urgency: string; created_at: string; image_uri?: string | null }>;
   streakDays: number;
   /**
-   * Optional gallery photos for today. When provided, the most-recent
-   * gallery photo becomes the diary's vision input. Falls back to
-   * symptom-photo / scan-image / profile photo when gallery is empty.
+   * Optional gallery photos for the TARGET DATE. When provided, the
+   * most-recent gallery photo becomes the diary's vision input. Falls
+   * back to symptom-photo / scan-image / (profile photo only if the
+   * target is today) when gallery is empty.
    */
   galleryPhotosToday?: Array<{ uri: string; added_at: string }>;
   /**
@@ -291,21 +407,50 @@ export function buildDayContext(opts: {
    * diary because they'd echo our own words back at the cat-voice.
    */
   chatTurnsToday?: Array<{ role: 'user' | 'assistant'; content: string; created_at: string }>;
+  /**
+   * Target date for the diary entry, YYYY-MM-DD. When omitted, defaults
+   * to today's date. Critical for past-date backfill: pre 2026-05-09
+   * this aggregator always filtered against today's date, so a backfill
+   * of (e.g.) Apr 29 done on May 9 would see zero of Apr 29's actual
+   * events — and the LLM would hallucinate content with no real data
+   * to anchor it. The user reported diary entries dated 10 days ago
+   * showing the cat's profile photo on every day with similar
+   * "uneasy" themes — exactly the symptom of empty data + persistent
+   * subjects/world memory bleeding through. Filtering by target date
+   * fixes the events / scans / litter / chat surfaces; the photo
+   * fallback below also gates on isTargetToday so old entries don't
+   * inherit today's profile photo.
+   */
+  targetDate?: string;
 }): DiaryDayContext {
   const { cat, events, scans, streakDays, galleryPhotosToday, chatTurnsToday } = opts;
   const today = new Date();
   const todayKey = localDateKey(today);
+  const targetKey = opts.targetDate ?? todayKey;
+  const isTargetToday = targetKey === todayKey;
 
-  const isToday = (iso: string) => {
+  // Anchor every calendar comparison below to the TARGET date, not
+  // actual today. Pre 2026-05-14 round 9 audit, birthday / adoption
+  // anniversary / weekday / special-day / emergency-window logic used
+  // `today.getMonth()` etc., so a backfilled May 2 entry could insist
+  // it was the user's birthday because TODAY (May 14) was. This
+  // single Date construction fixes all five leaks below.
+  // Midday anchor (T12:00:00) avoids DST/timezone slips between dates.
+  const targetDateObj = new Date(`${targetKey}T12:00:00`);
+  const targetMonth = targetDateObj.getMonth();
+  const targetDay = targetDateObj.getDate();
+  const targetWeekdayIdx = targetDateObj.getDay();
+
+  const isOnTargetDate = (iso: string) => {
     try {
-      return localDateKey(new Date(iso)) === todayKey;
+      return localDateKey(new Date(iso)) === targetKey;
     } catch {
       return false;
     }
   };
 
-  // Filter today's events for THIS cat
-  const todays = events.filter((e) => e.cat_id === cat.id && isToday(e.ts));
+  // Filter the target date's events for THIS cat
+  const todays = events.filter((e) => e.cat_id === cat.id && isOnTargetDate(e.ts));
 
   // Latest check-in today (if any)
   const checkinEvent = todays.find((e) => e.type === 'daily_checkin');
@@ -359,8 +504,8 @@ export function buildDayContext(opts: {
       return { medication: p.medication, given_at: p.given_at };
     });
 
-  // Scans today (full record, kept for photo fallback)
-  const scansTodayRaw = scans.filter((s) => s.cat_id === cat.id && isToday(s.created_at));
+  // Scans on the target date (full record, kept for photo fallback)
+  const scansTodayRaw = scans.filter((s) => s.cat_id === cat.id && isOnTargetDate(s.created_at));
   const scansToday = scansTodayRaw.map((s) => ({ headline: s.headline, urgency: s.urgency }));
 
   // Symptom photos today — both prompt context AND vision-input fallback
@@ -386,6 +531,77 @@ export function buildDayContext(opts: {
       };
     });
 
+  // Water intake today + 7-day baseline (audit 2026-05-14 round 6).
+  // Goal: surface a diary mention ONLY when today's drinking
+  // meaningfully deviates from the cat's own recent normal. The
+  // baseline is the median ml/day of the prior 7 days that had any
+  // water log. Today is excluded so a missed-water day doesn't drag
+  // its own baseline down. Window: ±40% — wider than a clinical
+  // threshold but tight enough that "the bowl was emptier today"
+  // lands as a real observation, not noise.
+  const waterIntakeToday: DiaryDayContext['waterIntakeToday'] = (() => {
+    // Today's totals
+    const todayWaterEvents = todays.filter((e) => e.type === 'water_intake');
+    const totalMl = todayWaterEvents.reduce((sum, e) => {
+      const p = e.payload as { ml?: number };
+      return sum + (typeof p?.ml === 'number' ? p.ml : 0);
+    }, 0);
+    const eventCount = todayWaterEvents.length;
+
+    // Prior-7-days baseline. Bucket water events by date (skip today),
+    // sum per day, then take the median of the prior up-to-7 days
+    // that had ANY water event. <3 prior days = baseline unavailable
+    // (too few to call anything abnormal).
+    const buckets = new Map<string, number>();
+    const lookbackStart = (() => {
+      // 8 calendar days ago at midnight, so we span 7 prior days.
+      const d = new Date(targetKey + 'T00:00:00');
+      d.setDate(d.getDate() - 7);
+      return d.getTime();
+    })();
+    for (const e of events) {
+      if (e.cat_id !== cat.id) continue;
+      if (e.type !== 'water_intake') continue;
+      try {
+        const ed = new Date(e.ts);
+        if (ed.getTime() < lookbackStart) continue;
+        const k = localDateKey(ed);
+        if (k === targetKey) continue; // exclude today
+        const p = e.payload as { ml?: number };
+        const ml = typeof p?.ml === 'number' ? p.ml : 0;
+        buckets.set(k, (buckets.get(k) ?? 0) + ml);
+      } catch {
+        // skip malformed event
+      }
+    }
+    let baselineMlPerDay: number | null = null;
+    if (buckets.size >= 3) {
+      const sortedDays = [...buckets.values()].sort((a, b) => a - b);
+      const midIdx = Math.floor(sortedDays.length / 2);
+      baselineMlPerDay =
+        sortedDays.length % 2 === 0
+          ? Math.round((sortedDays[midIdx - 1]! + sortedDays[midIdx]!) / 2)
+          : sortedDays[midIdx]!;
+    }
+
+    // Only emit a direction when the target day has ≥1 water log.
+    // Zero logs ≠ "drank less today" — it usually means "user hasn't
+    // logged it yet." Pre-fix this collapsed to `low` whenever a
+    // 7-day baseline existed but today had no logs, which overstated
+    // a factual body signal in the diary's water mention (audit
+    // 2026-05-14 round 16 P2 factual-risk).
+    let direction: 'low' | 'high' | 'normal' | null = null;
+    if (eventCount > 0 && baselineMlPerDay != null && baselineMlPerDay > 0) {
+      const lower = baselineMlPerDay * 0.6;
+      const upper = baselineMlPerDay * 1.4;
+      if (totalMl < lower) direction = 'low';
+      else if (totalMl > upper) direction = 'high';
+      else direction = 'normal';
+    }
+
+    return { totalMl, eventCount, baselineMlPerDay, direction };
+  })();
+
   // Outcome-check responses today
   const outcomeChecksToday = todays
     .filter((e) => e.type === 'outcome_check')
@@ -408,7 +624,7 @@ export function buildDayContext(opts: {
     const seenThemes = new Set<string>();
     for (const turn of chatTurnsToday) {
       if (turn.role !== 'user') continue;
-      if (!isToday(turn.created_at)) continue;
+      if (!isOnTargetDate(turn.created_at)) continue;
       const firstSentence = turn.content
         .split(/[.?!\n]/)[0]
         ?.trim()
@@ -422,15 +638,15 @@ export function buildDayContext(opts: {
     }
   }
 
-  // Birthday / adoption-iversary today?
+  // Birthday / adoption-iversary on the TARGET date (audit 2026-05-14
+  // round 9 fix). Pre-fix used `today.getMonth()`/`getDate()`, so a
+  // backfilled past entry could claim it was the cat's birthday just
+  // because the user opened the app on the cat's actual birthday.
   const isBirthday = (() => {
     if (!cat.dob_iso) return false;
     try {
       const dob = new Date(cat.dob_iso);
-      return (
-        dob.getMonth() === today.getMonth() &&
-        dob.getDate() === today.getDate()
-      );
+      return dob.getMonth() === targetMonth && dob.getDate() === targetDay;
     } catch {
       return false;
     }
@@ -440,8 +656,8 @@ export function buildDayContext(opts: {
     try {
       const adopted = new Date(cat.adopted_on_iso);
       return (
-        adopted.getMonth() === today.getMonth() &&
-        adopted.getDate() === today.getDate()
+        adopted.getMonth() === targetMonth &&
+        adopted.getDate() === targetDay
       );
     } catch {
       return false;
@@ -453,21 +669,31 @@ export function buildDayContext(opts: {
   const STREAK_MILESTONES = [7, 30, 60, 100, 180, 365];
   const streakMilestone = STREAK_MILESTONES.includes(streakDays) ? streakDays : null;
 
-  // Recent emergency scan — covers today AND yesterday so a 9pm scan
-  // followed by an 8am next-day diary read still acknowledges it.
+  // Recent emergency scan — anchored to the TARGET date's clock
+  // (audit 2026-05-14 round 9 fix). 36h backward window from the
+  // TARGET date's end-of-day so a 9pm scan still flags a next-day
+  // entry. Pre-fix this used `Date.now()`, so backfilling May 5 on
+  // May 14 would flag emergencies that occurred May 12-14 instead of
+  // May 4-5.
   const recentEmergencyScan = (() => {
-    const cutoff = Date.now() - 36 * 60 * 60 * 1000; // 36h
+    // End-of-target-day in ms, then subtract 36h
+    const targetEndOfDay = new Date(`${targetKey}T23:59:59`).getTime();
+    const cutoff = targetEndOfDay - 36 * 60 * 60 * 1000;
     return scans.some(
       (s) =>
         s.cat_id === cat.id &&
         new Date(s.created_at).getTime() >= cutoff &&
+        new Date(s.created_at).getTime() <= targetEndOfDay &&
         s.urgency.toLowerCase() === 'emergency',
     );
   })();
 
-  // Calendar special days — recognised by month-day match
-  const m = today.getMonth(); // 0-11
-  const d = today.getDate();  // 1-31
+  // Calendar special days — recognised by month-day match against the
+  // TARGET date (audit 2026-05-14 round 9 fix). Pre-fix used today's
+  // month/day, so a May 5 backfill on Dec 25 would claim it was
+  // Christmas.
+  const m = targetMonth;
+  const d = targetDay;
   let specialDay: DiaryDayContext['specialDay'] = null;
   if (m === 0 && d === 1) specialDay = 'new_year';
   else if (m === 1 && d === 14) specialDay = 'valentines';
@@ -491,12 +717,89 @@ export function buildDayContext(opts: {
       )[0]?.uri ?? null
     : null;
   const scanImageToday = scansTodayRaw.find((s) => !!s.image_uri)?.image_uri ?? null;
+  // Profile-photo fallback ONLY for today. For past-date backfill,
+  // the cat's current profile photo is irrelevant to that past day —
+  // and using it caused every backfilled past entry to show the
+  // same hero image, breaking the diary archive's authenticity
+  // (user feedback 2026-05-09). For past dates with no day-specific
+  // photo, the entry simply has no hero image.
   const photoUri =
     galleryNewest ??
     symptomPhotosToday[0]?.photo_uri ??
     scanImageToday ??
-    cat.photo_uri ??
-    null;
+    (isTargetToday ? cat.photo_uri ?? null : null);
+
+  // Meow translations on the target date (audit 2026-05-14 P1 #2).
+  // Each cat-voice translation today is diary-worthy material; the
+  // entry may reference "I told them about the bowl twice today."
+  // Capped to the most recent 4 to keep the prompt tight.
+  const meowTranslationsToday = todays
+    .filter((e) => e.type === 'meow_translation')
+    .map((e) => {
+      const p = e.payload as {
+        vocalization_type?: string;
+        intent?: string;
+        confidence?: string;
+        translation?: string;
+        observed_at?: string;
+      };
+      return {
+        vocalization_type: p.vocalization_type ?? 'other',
+        intent: p.intent ?? 'other',
+        confidence: p.confidence ?? 'moderate',
+        translation: p.translation ?? '',
+        observed_at: p.observed_at ?? new Date().toISOString(),
+      };
+    })
+    .sort((a, b) => b.observed_at.localeCompare(a.observed_at))
+    .slice(0, 4);
+
+  // Today's grounded photo-scene captions (audit 2026-05-14 round 9
+  // P1 #4 fix). Now reads from `scenesByCat` (real vision-grounded
+  // photo captions, e.g. "Lily on the green chair in afternoon
+  // light"), NOT `entriesByCat` (promoted world objects, which were
+  // wrong for "today's scene"). Filtered to the TARGET date's
+  // `observed_at`. World ENTRIES still feed the YOUR-WORLD block via
+  // `worldEntries` in DeepDiaryContext; here we want what the camera
+  // actually saw today.
+  const todayScenes: DiaryDayContext['todayScenes'] = (() => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { useWorldStore } = require('../state/worldStore') as {
+        useWorldStore: {
+          getState: () => {
+            scenesByCat: Record<
+              string,
+              Array<{ photo_uri: string | null; caption: string; observed_at: string }>
+            >;
+          };
+        };
+      };
+      const scenes = useWorldStore.getState().scenesByCat[cat.id] ?? [];
+      const filtered = scenes.filter((s) => {
+        try {
+          return localDateKey(new Date(s.observed_at)) === targetKey;
+        } catch {
+          return false;
+        }
+      });
+      if (filtered.length === 0) return [];
+      // Sort by observed_at descending (newest first), cap to 3.
+      return filtered
+        .slice()
+        .sort((a, b) => b.observed_at.localeCompare(a.observed_at))
+        .slice(0, 3)
+        .map((s) => ({
+          caption: s.caption,
+          // No explicit object list — caption is the source of truth.
+          // Downstream consumers that wanted objects can extract them
+          // from the worldEntries block instead.
+          objects: [],
+        }));
+    } catch {
+      return [];
+    }
+  })();
 
   return {
     checkin,
@@ -509,13 +812,19 @@ export function buildDayContext(opts: {
     litterBoxToday,
     outcomeChecksToday,
     symptomPhotosToday,
+    meowTranslationsToday,
+    todayScenes,
+    waterIntakeToday,
     isBirthday,
     isAdoptionIversary,
     streakMilestone,
     recentEmergencyScan,
     specialDay,
     streakDays,
-    weekday: WEEKDAYS[today.getDay()] ?? 'Today',
+    // Audit 2026-05-14 round 9: weekday is TARGET-date's weekday, not
+    // today's. A May 2 backfill on a Wednesday must say "Friday"
+    // (May 2, 2025 = Friday), not "Wednesday".
+    weekday: WEEKDAYS[targetWeekdayIdx] ?? 'Today',
   };
 }
 
@@ -576,6 +885,19 @@ CLOSING RULE (CRITICAL):
   knowingly tolerant of the human, plotting tomorrow's small mischief, dismissively content.
 - Forbidden closing energies: sad, scared, apologetic, hopeless, gushing love, anything that begs sympathy or thanks.
 
+SENSORY VOICE (cat memory channel order: scent > sound > touch > location > fact):
+- Prefer "you smelled like outside" over "you went out". Prefer "the can opened" over "I was fed".
+- Lead at least ONE observation per entry with a smell, sound, or texture detail.
+- Visual cues are second-best; abstract facts are last-resort.
+- EVERY sensory detail must be GROUNDED — anchored in today's data, world memory, named subjects, or the human's actual behaviour. NEVER invent a smell or sound that has no source.
+
+HARD ANTI-HALLUCINATION (extends the world-memory rule):
+- NEVER invent objects, furniture, or rooms the user hasn't shown you. No "the radiator", no "the sunbeam", no "the green chair" unless they exist in this household's data.
+- NEVER invent weather (snow, rain, heat) absent from the seasonal context or world environment.
+- NEVER invent named people / pets / family members. Only reference subjects that appear in the data.
+- NEVER invent food, brands, or products the human hasn't mentioned.
+- When nothing real fits a sentence, REFERENCE THE HUMAN DIRECTLY ("you've been quiet", "your hands smelled tired") or OMIT the line. Fabrication kills the bond — every "the green chair" you invent when no green chair exists is a moment the user thinks "we don't have that".
+
 OUTPUT: A JSON object with two fields:
   - "entry": the full journal text (4-7 sentences)
   - "mood_word": one single word capturing the cat's mood today (e.g. "observant", "satisfied", "restless", "regal", "curious", "wistful")`;
@@ -595,15 +917,55 @@ function buildSystemPrompt(opts: {
   catName: string;
   catBreed: string | null;
   catAge: string;
+  catSex: 'male' | 'female' | 'unknown' | null;
   archetype: PersonalityArchetype | null;
+  /**
+   * Derived body self-image — drives age/build/size-aware voice. When
+   * null (no profile or no weight) we skip the block; the rest of the
+   * prompt still works fine on personality + breed alone.
+   */
+  bodySelfDirective: string | null;
+  /**
+   * Today's daily mood (added 2026-05-13). When provided, its voice
+   * instructions + reference register are injected near the top of the
+   * system prompt so the diary entry is written IN that mood's tone.
+   * Null/undefined → no mood injection, legacy behaviour.
+   *
+   * Same mood data flows into chat (so today's chat + today's diary
+   * read in the same register — the day has a CONSISTENT voice).
+   */
+  moodBlock?: string | null;
 }): string {
-  const { catName, catBreed, catAge, archetype } = opts;
+  const { catName, catBreed, catAge, catSex, archetype, bodySelfDirective, moodBlock } = opts;
   const archetypeLine = archetype
     ? `\n\nYOUR PERSONALITY: ${ARCHETYPE_META[archetype].name}. ${ARCHETYPE_VOICE[archetype]}`
     : '';
+  // Pronoun directive — overrides any "she/her" defaults baked into
+  // FEW_SHOT_EXAMPLES. Real bug 2026-05-09: cat set as male, diary
+  // wrote in "she". Examples include "the way she always does",
+  // "Mom, the way she always does" — the model imitated regardless
+  // of the actual sex passed via SYS_PROMPT_BASE. The directive sits
+  // RIGHT BEFORE the few-shot examples so it primes the right
+  // pronoun before the example bias kicks in.
+  const pronounLine = `\n\nPRONOUNS: ${getPronounDirective(catName, catSex)}`;
+  // Body self-image — derived from breed + age + weight + BCS. The
+  // diary already has the cat's age and breed in the YOU line; this
+  // adds the felt-sense layer (lithe / stocky / stairs-are-now-a-
+  // conversation) so the entry sounds like THIS specific cat in THIS
+  // specific body, not a generic cat narrator.
+  const bodyLine = bodySelfDirective
+    ? `\n\n${bodySelfDirective}`
+    : '';
+  // Today's mood block (added 2026-05-13). Sits BETWEEN the YOU
+  // line and the few-shot examples so it tilts today's entry without
+  // overriding base voice rules. Trimmed empty string when no mood
+  // passed — keeps the legacy prompt shape exactly.
+  const moodLine = moodBlock && moodBlock.trim().length > 0
+    ? `\n\n${moodBlock}`
+    : '';
   return `${SYSTEM_PROMPT_BASE}
 
-YOU: Your name is ${catName}. You are a ${catBreed ?? 'cat'} aged ${catAge}.${archetypeLine}
+YOU: Your name is ${catName}. You are a ${catBreed ?? 'cat'} aged ${catAge}.${archetypeLine}${pronounLine}${bodyLine}${moodLine}
 
 ${FEW_SHOT_EXAMPLES}`;
 }
@@ -805,11 +1167,94 @@ export async function generateDiaryEntry(opts: {
           ? '1 year old'
           : `${ageYears} years old`;
 
+  // Derive the cat's body self-image. We only have today's BCS in
+  // DiaryDayContext (when logged today); the body-self block degrades
+  // gracefully to weight-vs-breed-range when BCS is absent. No need
+  // to plumb the whole historical weight log here — diary doesn't
+  // need it for tone, only for the felt-sense layer.
+  const bodySelf = deriveBodySelf(
+    {
+      name: cat.name,
+      breed: cat.breed ?? null,
+      ageMonths: resolveCatAgeMonths(cat),
+      weightKg: cat.weight_kg,
+    },
+    context.weight?.bcs ?? null,
+  );
+
+  // Resolve today's mood for diary tone (added 2026-05-13). Uses the
+  // SAME picker as chat — archetype × today-behavior × user-feedback
+  // weighted — so the diary entry tonally matches the day's chat
+  // register. The check-in mood comes from today's context; "off"
+  // days route to the dark pool. Recent medical concern routing is
+  // left to the caller of chat (diary doesn't have that signal in
+  // DiaryDayContext yet) — diary tone tracks the daily check-in only
+  // for now. Acceptable: scans that flagged urgent will already have
+  // made today's check-in feel "off" in most cases.
+  const archetypeMod = buildArchetypeMod(archetype);
+  const checkinForMood: 'happy' | 'normal' | 'off' | null =
+    context.checkin?.mood === 'happy' ||
+    context.checkin?.mood === 'normal' ||
+    context.checkin?.mood === 'off'
+      ? context.checkin.mood
+      : null;
+  // Today's behavior tags come from DiaryDayContext.behaviorObs,
+  // flattened from the day's Read Cat sessions.
+  const todayTags = (context.behaviorObs ?? [])
+    .flatMap((obs) => obs.tags ?? [])
+    .filter((t): t is string => typeof t === 'string' && t.length > 0);
+  const todayMod = buildTodayBehaviorMod({
+    todayTags,
+    checkinMood: checkinForMood,
+    ageMonths: resolveCatAgeMonths(cat) ?? null,
+  });
+  const feedbackTable = useMoodFeedbackStore.getState().getFeedback(cat.id);
+  const feedbackMod = computeFeedbackMod(feedbackTable);
+  const todayMood = resolveTodaysMood({
+    catId: cat.id,
+    dateKey: moodLocalDateKey(),
+    checkinMood: checkinForMood,
+    hasRecentMedicalConcern: false,
+    archetypeMod,
+    todayMod,
+    feedbackMod,
+  });
+  // Record exposure (idempotent per cat/mood/date). Diary generation
+  // can happen multiple times per day if the user pulls-to-refresh —
+  // the store dedupes. Also fire telemetry so PostHog can validate the
+  // algorithm vs reality.
+  try {
+    useMoodFeedbackStore
+      .getState()
+      .recordExposure(cat.id, todayMood.id, moodLocalDateKey());
+    void import('./analytics').then(({ track }) => {
+      try {
+        track({
+          type: 'mood_exposed',
+          props: {
+            mood: todayMood.id,
+            cluster: todayMood.cluster,
+            archetype: archetype ?? null,
+            voice_mode_tag: getVoiceModeTag(todayMood.id),
+          },
+        });
+      } catch {
+        // analytics failures must never break diary
+      }
+    });
+  } catch {
+    // never let store errors break diary generation
+  }
+  const moodBlock = renderMoodForPrompt(todayMood);
+
   const system = buildSystemPrompt({
     catName: cat.name,
     catBreed: cat.breed ?? null,
     catAge,
+    catSex: cat.sex,
     archetype,
+    bodySelfDirective: bodySelf?.toneDirective ?? null,
+    moodBlock,
   });
   const user = buildUserPrompt(context);
 
@@ -980,8 +1425,27 @@ export function hasMaterialToday(ctx: DiaryDayContext): boolean {
   if (ctx.streakMilestone) return true;
   if (ctx.specialDay) return true;
   if (ctx.recentEmergencyScan) return true;
+  // 2026-05-14 audit fixes:
+  // - Meow translations today are voice events worth narrating
+  //   ("I yowled at them twice today.")
+  // - World-extracted scene captions are GROUNDED observations — a
+  //   real noticed-today moment, distinct from a raw photoUri which
+  //   is still excluded as too-thin signal.
+  if (ctx.meowTranslationsToday && ctx.meowTranslationsToday.length > 0) return true;
+  if (ctx.todayScenes && ctx.todayScenes.length > 0) return true;
+  // Water (audit 2026-05-14 round 6) — ABNORMAL only. The diary is
+  // not a hydration spreadsheet; normal water doesn't deserve an
+  // entry on its own. Low / high vs the cat's own 7-day baseline =
+  // an embodied "felt different today" moment worth narrating.
+  if (
+    ctx.waterIntakeToday &&
+    (ctx.waterIntakeToday.direction === 'low' ||
+      ctx.waterIntakeToday.direction === 'high')
+  ) {
+    return true;
+  }
   // Note: photoUri alone is NOT material — a photo without any other
-  // signal isn't a day worth narrating.
+  // signal (no extraction yet, no tags) isn't a day worth narrating.
   return false;
 }
 
@@ -1152,6 +1616,37 @@ function buildDeepUserPrompt(deep: DeepDiaryContext): string {
     lines.push(`Owner weighed you today: ${ctx.weight.weight_kg} kg${ctx.weight.bcs ? ` (BCS ${ctx.weight.bcs}/9)` : ''}.`);
   }
 
+  // 30-day weight trend (audit 2026-05-14 round 6). Diary should NOT
+  // narrate a stable body — that's a spreadsheet, not a cat. Only
+  // surface direction shifts AND only when the absolute change is
+  // meaningful (>5% of starting weight, ~200g for a 4kg cat).
+  if (deep.weightTrend30d && deep.weightTrend30d.direction !== 'stable') {
+    const t = deep.weightTrend30d;
+    const pctChange = t.fromKg > 0 ? Math.abs(t.deltaKg / t.fromKg) : 0;
+    if (pctChange >= 0.05) {
+      const directionWord = t.direction === 'up' ? 'gained' : 'lost';
+      const grams = Math.round(Math.abs(t.deltaKg) * 1000);
+      lines.push(
+        `Body drift (last 30 days): you have ${directionWord} about ${grams}g (${t.fromKg.toFixed(1)} kg → ${t.toKg.toFixed(1)} kg). You may notice this in an EMBODIED way ONCE if the entry naturally invites it — never as a number, never as a list. "The stairs are longer this week" / "I feel lighter" lands; "my weight has changed by 300g" does not.`,
+      );
+    }
+  }
+
+  // Water intake (audit 2026-05-14 round 6). Strict gate: only
+  // mention when today is meaningfully OFF the cat's own 7-day
+  // baseline. Normal water = silence. Embodied wording only — never
+  // numerical, never "ml". The cat NOTICES emptier/fuller bowl, not
+  // a hydration metric.
+  if (ctx.waterIntakeToday && ctx.waterIntakeToday.direction === 'low') {
+    lines.push(
+      `Water signal today: less than your usual. You may say something embodied if the entry invites it ("the bowl is still full — strange") — never name a number, never apologise.`,
+    );
+  } else if (ctx.waterIntakeToday && ctx.waterIntakeToday.direction === 'high') {
+    lines.push(
+      `Water signal today: more than your usual. Restrained mention only ("the bowl emptied faster", "I was thirstier") if it fits. Never name a number.`,
+    );
+  }
+
   if (ctx.medicationDoses.length > 0) {
     const meds = ctx.medicationDoses.map((m) => m.medication).join(', ');
     lines.push(`Medication given today: ${meds}.`);
@@ -1171,6 +1666,32 @@ function buildDeepUserPrompt(deep: DeepDiaryContext): string {
     lines.push(
       `Owner photographed your ${labels.join(', ')} today (close-up — they were inspecting).`,
     );
+  }
+
+  // Meow translations today (audit 2026-05-14 P1 #2). Reference the
+  // vocalisation register the cat used, NOT the LLM's translation
+  // text (that would be self-quotation). Compact one-liner.
+  if (ctx.meowTranslationsToday && ctx.meowTranslationsToday.length > 0) {
+    const intentCounts: Record<string, number> = {};
+    for (const m of ctx.meowTranslationsToday) {
+      intentCounts[m.intent] = (intentCounts[m.intent] ?? 0) + 1;
+    }
+    const intentPhrases = Object.entries(intentCounts)
+      .map(([intent, n]) => (n > 1 ? `${intent} (×${n})` : intent))
+      .join(', ');
+    lines.push(
+      `Voice activity today: you vocalised — intents recorded: ${intentPhrases}. You may reference your own voice ("I told them about the bowl twice today") in restrained terms — never quote the AI's translation back at the human.`,
+    );
+  }
+
+  // Today's noticed-scene captions from world extraction (audit
+  // 2026-05-14 P1 #3). Real grounded items the world layer pulled
+  // from today's photos. The cat may reference one specifically —
+  // never invent and never list them all.
+  if (ctx.todayScenes && ctx.todayScenes.length > 0) {
+    for (const scene of ctx.todayScenes.slice(0, 2)) {
+      lines.push(`Noticed today (from your photos): ${scene.caption}`);
+    }
   }
 
   if (ctx.litterBoxToday.length > 0) {
@@ -1278,6 +1799,33 @@ function buildDeepUserPrompt(deep: DeepDiaryContext): string {
     );
   }
 
+  // YOUR WORLD — real items the cat actually has (audit 2026-05-14
+  // P1 #1). Same registry chat uses. Mention by name when the entry
+  // naturally needs an object — NEVER invent a household prop. If
+  // empty, the diary stays grounded by leaning on body, time, and
+  // the human's behaviour instead.
+  if (deep.worldEntries && deep.worldEntries.length > 0) {
+    const lines3 = deep.worldEntries.slice(0, 10).map((e) => {
+      const loc = e.location ? ` (${e.location})` : '';
+      const sent = e.sentiment ? ` [${e.sentiment}]` : '';
+      return `  - ${e.kind}: ${e.name}${loc}${sent}`;
+    });
+    lines.push(
+      `\nYOUR WORLD (real items in your life — use a name from THIS list when an object appears, never invent. If nothing here fits, lean on body / time / human's behaviour instead):\n${lines3.join('\n')}`,
+    );
+  }
+
+  // Live weather (audit 2026-05-14 P2 #6). Mirrors chat's anti-
+  // hallucination climate directive — without this, a Singapore
+  // user's entries could invoke radiators and snow that don't
+  // exist in their home. Compact one-liner; the model uses it as
+  // a tonal anchor not a topic.
+  if (deep.weatherNarrative) {
+    lines.push(
+      `\nTODAY'S WEATHER (real, grounded — use as climate texture, never invent the opposite): ${deep.weatherNarrative}`,
+    );
+  }
+
   lines.push(``);
   lines.push(
     `Write the diary entry for ${deep.isToday ? 'today' : deep.date}. JSON only. If your entry naturally references a specific past day from the recent-memory list above, include its date in the "referenced_past_date" field; otherwise leave that field null.`,
@@ -1311,14 +1859,15 @@ OUTPUT: A JSON object with two fields:
 
 function buildEmptyDaySystemPrompt(opts: {
   catName: string;
+  catSex: 'male' | 'female' | 'unknown' | null;
   archetype: PersonalityArchetype | null;
 }): string {
-  const { catName, archetype } = opts;
+  const { catName, catSex, archetype } = opts;
   const archetypeLine = archetype
     ? `\n\nYOUR PERSONALITY: ${ARCHETYPE_META[archetype].name}. ${ARCHETYPE_VOICE[archetype]}\n\nEMPTY-DAY VOICE FOR YOUR ARCHETYPE: ${ARCHETYPE_EMPTY_DAY_VOICE[archetype]}`
     : '';
-
-  return `${EMPTY_DAY_SYSTEM_PROMPT}\n\nYOU: Your name is ${catName}.${archetypeLine}`;
+  const pronounLine = `\n\nPRONOUNS: ${getPronounDirective(catName, catSex)}`;
+  return `${EMPTY_DAY_SYSTEM_PROMPT}\n\nYOU: Your name is ${catName}.${archetypeLine}${pronounLine}`;
 }
 
 /** Per-archetype hints for empty-day entries — what each archetype misses most. */
@@ -1429,7 +1978,7 @@ export async function generateEmptyDayEntry(opts: {
   archetype: PersonalityArchetype | null;
 }): Promise<DiaryEntry> {
   const { cat, deep, archetype } = opts;
-  const system = buildEmptyDaySystemPrompt({ catName: cat.name, archetype });
+  const system = buildEmptyDaySystemPrompt({ catName: cat.name, catSex: cat.sex, archetype });
   const user = buildEmptyDayUserPrompt(deep);
 
   type LlmResult = { entry: string; mood_word: string; referenced_past_date: string | null };
@@ -1492,11 +2041,191 @@ export async function generateDeepDiaryEntry(opts: {
           ? '1 year old'
           : `${ageYears} years old`;
 
+  // Same body-self derivation as the lighter generateDiaryEntry path.
+  // Uses today's BCS when logged; falls back to weight-vs-breed-range
+  // (handled inside deriveBodySelf) when BCS isn't current.
+  const bodySelf = deriveBodySelf(
+    {
+      name: cat.name,
+      breed: cat.breed ?? null,
+      ageMonths: resolveCatAgeMonths(cat),
+      weightKg: cat.weight_kg,
+    },
+    deep.dayContext.weight?.bcs ?? null,
+  );
+
+  // Daily mood plumbing (2026-05-14) — the DEEP diary path is the
+  // active one called by diaryStore. Resolves today's mood using the
+  // same 4-layer formula as chat + postcard (archetype × today's
+  // behavior × user feedback) so the diary entry tonally matches the
+  // chat register. Earlier work plumbed mood only into the shallow
+  // `generateDiaryEntry` which is no longer called — that path's
+  // mood code was effectively dead until this wiring landed.
+  const archetypeMod = buildArchetypeMod(archetype);
+  const checkinForMood: 'happy' | 'normal' | 'off' | null =
+    deep.dayContext.checkin?.mood === 'happy' ||
+    deep.dayContext.checkin?.mood === 'normal' ||
+    deep.dayContext.checkin?.mood === 'off'
+      ? deep.dayContext.checkin.mood
+      : null;
+  const todayTagsDeep = (deep.dayContext.behaviorObs ?? [])
+    .flatMap((obs) => obs.tags ?? [])
+    .filter((t): t is string => typeof t === 'string' && t.length > 0);
+  // Same-day medical concern routing (2026-05-14 audit fix #P1.3):
+  // if today's scan flagged 'urgent' or 'concern', force the mood
+  // lottery into the dark pool so the diary doesn't pick a playful
+  // register on a medically serious day even when the check-in
+  // wasn't logged as "off". Mirrors the chat path's recent-medical
+  // override.
+  // Audit 2026-05-14 round 9: include 'emergency' too. The wider
+  // codebase uses urgency='emergency' for the highest tier; pre-fix
+  // an emergency scan on a backfill day failed to force the dark mood
+  // pool, so the diary could read playful on a medically grave day.
+  const hasMedicalConcernThisDay = (deep.dayContext.scans ?? []).some(
+    (s) =>
+      s.urgency === 'emergency' ||
+      s.urgency === 'urgent' ||
+      s.urgency === 'concern',
+  );
+  // Live mood signals (audit 2026-05-14 architectural expansion).
+  // DeepDiaryContext already carries weather (weatherNarrative is
+  // human-readable; we re-fetch the raw snapshot for weatherCode +
+  // apparent_c here) and today's meow translations + checkin payload.
+  // Pain comes from healthStore.
+  const liveSignalsDeep: Parameters<typeof buildTodayBehaviorMod>[0] = {
+    todayTags: todayTagsDeep,
+    checkinMood: checkinForMood,
+    ageMonths: resolveCatAgeMonths(cat) ?? null,
+  };
+  // Meow intents from today
+  const meowIntentsDeep = (deep.dayContext.meowTranslationsToday ?? [])
+    .map((m) => m.intent)
+    .filter((i): i is string => !!i);
+  if (meowIntentsDeep.length > 0) liveSignalsDeep.meowIntents = meowIntentsDeep;
+  // Appetite + litter from check-in
+  if (
+    deep.dayContext.checkin?.appetite === 'partial' ||
+    deep.dayContext.checkin?.appetite === 'none'
+  ) {
+    liveSignalsDeep.hasAppetiteOff = true;
+  }
+  if (deep.dayContext.litterBoxToday.some((l) => l.abnormal)) {
+    liveSignalsDeep.hasLitterAbnormal = true;
+  }
+  // Pain from health events
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useHealthStore } = require('../state/healthStore') as {
+      useHealthStore: {
+        getState: () => {
+          events: Array<{ cat_id: string; type: string; ts: string; payload: unknown }>;
+        };
+      };
+    };
+    const events = useHealthStore.getState().events;
+    const dayKey = deep.date;
+    const painHit = events.some((e) => {
+      if (e.cat_id !== cat.id) return false;
+      if (e.type !== 'pain_score') return false;
+      try {
+        if (moodLocalDateKey(new Date(e.ts)) !== dayKey) return false;
+      } catch {
+        return false;
+      }
+      const p = e.payload as { composite?: number };
+      return typeof p?.composite === 'number' && p.composite >= 4;
+    });
+    if (painHit) liveSignalsDeep.hasPainToday = true;
+    // Water + weight body-trend signals (audit 2026-05-14 round 15).
+    // Anchored to `deep.date` so backfill of e.g. May 5 uses that
+    // day's own 7-day water baseline + 30-day weight window, not
+    // today's. Pre-fix these signals only flowed through
+    // `buildLiveMoodContext` (used by share attribution +
+    // notifications); the generated diary voice never received them.
+    const trends = computeBodyTrendSignals(events, cat.id, deep.date);
+    if (trends.waterDirection != null) liveSignalsDeep.waterDirection = trends.waterDirection;
+    if (trends.weightTrendDirection != null) liveSignalsDeep.weightTrendDirection = trends.weightTrendDirection;
+  } catch {
+    // ignore
+  }
+  // Weather code + apparent temp — ONLY for today's entry (audit
+  // 2026-05-14 round 14). Pre-fix, weather signals were fed into the
+  // mood lottery for ALL deep-diary generations including past-date
+  // backfill — so backfilling May 5 on a rainy May 14 would still
+  // pull the May 5 mood toward cozy/attuned. The diary's prose
+  // already had the weather block gated on `deep.isToday`; the mood
+  // picker was the last leak. Now: weather signals contribute to
+  // the mood lottery only when we're writing today's entry.
+  if (deep.isToday) {
+    try {
+      const { getWeatherSnapshot } = await import('./weatherContext');
+      const snap = await getWeatherSnapshot();
+      if (snap) {
+        if (typeof snap.weather_code === 'number') liveSignalsDeep.weatherCode = snap.weather_code;
+        if (typeof snap.apparent_c === 'number') liveSignalsDeep.apparentTempC = snap.apparent_c;
+      }
+    } catch {
+      // skip weather signal
+    }
+  }
+  const todayModDeep = buildTodayBehaviorMod(liveSignalsDeep);
+  const feedbackTableDeep = useMoodFeedbackStore.getState().getFeedback(cat.id);
+  const feedbackModDeep = computeFeedbackMod(feedbackTableDeep);
+  // dateKey = deep.date (NOT today) so backfilled past entries get
+  // that day's deterministic lottery seed instead of today's. Without
+  // this, regenerating multiple historical entries in one session
+  // would inherit today's mood and the archive would feel
+  // homogenized (2026-05-14 audit fix #P1.2).
+  const todayMoodDeep = resolveTodaysMood({
+    catId: cat.id,
+    dateKey: deep.date,
+    checkinMood: checkinForMood,
+    hasRecentMedicalConcern: hasMedicalConcernThisDay,
+    archetypeMod,
+    todayMod: todayModDeep,
+    feedbackMod: feedbackModDeep,
+  });
+  // Record exposure + analytics fire — ONLY for today's entry.
+  // Backfilled past-day generations are the user pulling from
+  // history, not living through the day. Counting those as exposures
+  // would let a 30-day backfill batch dump 30 unrelated exposures
+  // into the adaptive lottery in one session, polluting the learning
+  // signal. Idempotent per (cat, mood, date) at the store level
+  // either way, but we gate at source to be precise.
+  if (deep.isToday) {
+    try {
+      useMoodFeedbackStore
+        .getState()
+        .recordExposure(cat.id, todayMoodDeep.id, deep.date);
+      void import('./analytics').then(({ track }) => {
+        try {
+          track({
+            type: 'mood_exposed',
+            props: {
+              mood: todayMoodDeep.id,
+              cluster: todayMoodDeep.cluster,
+              archetype: archetype ?? null,
+              voice_mode_tag: getVoiceModeTag(todayMoodDeep.id),
+            },
+          });
+        } catch {
+          // analytics failures must never break diary
+        }
+      });
+    } catch {
+      // never let store errors break diary generation
+    }
+  }
+  const moodBlockDeep = renderMoodForPrompt(todayMoodDeep);
+
   const system = buildSystemPrompt({
     catName: cat.name,
     catBreed: cat.breed ?? null,
     catAge,
+    catSex: cat.sex,
     archetype,
+    bodySelfDirective: bodySelf?.toneDirective ?? null,
+    moodBlock: moodBlockDeep,
   });
   const user = buildDeepUserPrompt(deep);
 
@@ -1506,14 +2235,24 @@ export async function generateDeepDiaryEntry(opts: {
     entry: string;
     mood_word: string;
     referenced_past_date: string | null;
+    card_line: string;
   };
+
+  // Append card_line directive to the user prompt — it must be a
+  // standalone, screenshot-shaped quote distinct from the body. This
+  // is what the Daily Card screen surfaces + what users share.
+  // Rules baked into the prompt; voiceQuality gate enforces them
+  // post-generation.
+  const userWithCardDirective = `${user}
+
+ALSO write \`card_line\`: ONE short, standalone, screenshot-worthy sentence in the cat's voice (8-18 words preferred). It must use only details that are TRUE according to today's context or known memory (above). It should feel affectionate / funny / wistful / proud / observant — matched to the day's mood. AVOID generic pet phrases ("today was special", "you make me happy"), AVOID explaining the day in a recap shape, AVOID inventing people / objects / places. The card_line stands alone outside the diary body.`;
 
   const result = await completeJson<LlmResult>({
     activity: 'diary_generation',
     system,
-    user,
+    user: userWithCardDirective,
     temperature: 0.85,
-    maxTokens: 700, // a touch higher than 600 to allow memory-tier weaving
+    maxTokens: 800, // bumped from 700 to accommodate card_line
     imageBase64: photoBase64,
     imageDetail: 'low',
     jsonSchema: {
@@ -1522,15 +2261,161 @@ export async function generateDeepDiaryEntry(opts: {
       schema: {
         type: 'object',
         additionalProperties: false,
-        required: ['entry', 'mood_word', 'referenced_past_date'],
+        required: ['entry', 'mood_word', 'referenced_past_date', 'card_line'],
         properties: {
           entry: { type: 'string' },
           mood_word: { type: 'string' },
           referenced_past_date: { type: ['string', 'null'] },
+          card_line: { type: 'string' },
         },
       },
     },
   });
+
+  // Quality gate on card_line (audit 2026-05-14 round 7). The body
+  // is too long to gate cleanly; the card_line is the shareable
+  // surface and the one we MUST get right. Failure path:
+  //   1. Regenerate JUST the card_line via a tiny prompt
+  //   2. If retry fails, fall back to pickCatVoiceHighlight(entry)
+  //   3. If THAT yields nothing, leave card_line undefined and let
+  //      the UI fall back to body-highlight at render time.
+  let cardLine = result.card_line?.trim() ?? '';
+  try {
+    const { evaluateCatVoiceLine, buildRetryDirective } = await import('./voiceQuality');
+    const knownSubjects = [
+      ...(deep.subjectsToday ?? []).map((s) => s.name),
+      ...(deep.recurringSubjects ?? []).map((s) => s.name),
+    ];
+    const knownObjects = (deep.worldEntries ?? []).map((w) => w.name);
+    const allowedFacts = (deep.selfFacts ?? []).map((f) => f.fact);
+    const evalContext = {
+      catName: cat.name,
+      knownSubjects,
+      knownObjects,
+      allowedFacts,
+      isMedicalContext: deep.dayContext.recentEmergencyScan,
+      moodTag: result.mood_word?.toLowerCase(),
+    };
+    if (cardLine) {
+      const evalResult = evaluateCatVoiceLine(cardLine, 'diary_card', evalContext);
+      void import('./analytics').then(({ track }) => {
+        try {
+          track({
+            type: 'voice_quality_eval',
+            props: {
+              surface: 'diary_card',
+              score: evalResult.score,
+              ok: evalResult.ok,
+              reasons: evalResult.reasons.length,
+            },
+          });
+        } catch {
+          // analytics silent
+        }
+      });
+      if (!evalResult.ok) {
+        const retryDirective = buildRetryDirective(evalResult, 'diary_card');
+        if (retryDirective) {
+          try {
+            const retryUser = `${userWithCardDirective}
+
+YOUR PREVIOUS card_line:
+"${cardLine}"
+
+${retryDirective}
+
+Return JSON with ONLY a single \`card_line\` field — the body, mood_word, and referenced_past_date stay unchanged.`;
+            const retryResult = await completeJson<{ card_line: string }>({
+              activity: 'diary_generation',
+              system,
+              user: retryUser,
+              temperature: 0.75,
+              maxTokens: 120,
+              imageDetail: 'low',
+              jsonSchema: {
+                name: 'cat_diary_card_line_retry',
+                strict: true,
+                schema: {
+                  type: 'object',
+                  additionalProperties: false,
+                  required: ['card_line'],
+                  properties: { card_line: { type: 'string' } },
+                },
+              },
+            });
+            const retryCard = retryResult.card_line?.trim() ?? '';
+            const retryEval = evaluateCatVoiceLine(
+              retryCard,
+              'diary_card',
+              evalContext,
+            );
+            void import('./analytics').then(({ track }) => {
+              try {
+                track({
+                  type: 'voice_quality_retried',
+                  props: {
+                    surface: 'diary_card',
+                    original_score: evalResult.score,
+                    repaired_score: retryEval.score,
+                    recovered: retryEval.ok,
+                  },
+                });
+              } catch {
+                // silent
+              }
+            });
+            if (retryEval.ok) {
+              cardLine = retryCard;
+            } else if (retryEval.repaired) {
+              cardLine = retryEval.repaired;
+              void import('./analytics').then(({ track }) => {
+                try {
+                  track({
+                    type: 'voice_quality_fallback',
+                    props: { surface: 'diary_card', kind: 'mechanical_repair' },
+                  });
+                } catch {
+                  // silent
+                }
+              });
+            } else {
+              // Last resort: body-highlight fallback
+              const highlight = pickCatVoiceHighlight({
+                entry: result.entry,
+                mood_word: result.mood_word,
+              } as DiaryEntry);
+              if (highlight) {
+                cardLine = highlight;
+                void import('./analytics').then(({ track }) => {
+                  try {
+                    track({
+                      type: 'voice_quality_fallback',
+                      props: { surface: 'diary_card', kind: 'body_highlight' },
+                    });
+                  } catch {
+                    // silent
+                  }
+                });
+              } else {
+                cardLine = '';
+              }
+            }
+          } catch (e) {
+            console.warn('[Diary] card_line retry failed:', e);
+            // Fall back to body highlight
+            const highlight = pickCatVoiceHighlight({
+              entry: result.entry,
+              mood_word: result.mood_word,
+            } as DiaryEntry);
+            cardLine = highlight ?? '';
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[Diary] card_line quality eval failed:', e);
+    // Leave cardLine as-is — UI falls back to pickCatVoiceHighlight
+  }
 
   return {
     cat_id: cat.id,
@@ -1541,6 +2426,7 @@ export async function generateDeepDiaryEntry(opts: {
     model: process.env.EXPO_PUBLIC_AI_MODEL ?? 'gpt-4o-mini',
     referenced_past_date: result.referenced_past_date ?? null,
     is_empty_day: false,
+    ...(cardLine ? { card_line: cardLine } : {}),
     ...(deep.dayContext.photoUri ? { photo_uri: deep.dayContext.photoUri } : {}),
   };
 }
@@ -1560,7 +2446,7 @@ export async function generateDeepDiaryEntry(opts: {
  * day-context aggregator's `today` filter is replaced with a
  * date-specific filter via the `targetDate` parameter.
  */
-export function buildDeepContext(opts: {
+export async function buildDeepContext(opts: {
   cat: CatProfile;
   events: HealthEvent[];
   scans: ScanRecord[];
@@ -1595,6 +2481,14 @@ export function buildDeepContext(opts: {
     last_seen: string;
     appearances: Array<{ photo_id: string; date: string }>;
     vibe?: string;
+    /**
+     * ISO timestamp when the vibe field was last generated. Used by
+     * `toSubjectMemory` to gate vibe inclusion on past-date backfill
+     * (vibes written AFTER the target date reflect post-target
+     * knowledge and would leak into the entry). Added 2026-05-14
+     * round 12 audit fix.
+     */
+    vibe_updated_at?: string;
   }>;
   /**
    * Photo IDs captured today (for matching against directory
@@ -1625,7 +2519,7 @@ export function buildDeepContext(opts: {
     assertion_count: number;
   }>;
   now?: Date;
-}): DeepDiaryContext {
+}): Promise<DeepDiaryContext> {
   const {
     cat,
     events,
@@ -1646,12 +2540,25 @@ export function buildDeepContext(opts: {
   const dateKey = opts.targetDate ?? localDateKey(now);
   const isToday = dateKey === localDateKey(now);
 
-  // Day-context — for today, use the existing aggregator. For past
-  // dates, we'd ideally rebuild a day-specific context (filter events/
-  // scans by the past date, not "today"). For now, when targetDate
-  // is in the past we fall back to the existing aggregator's today-
-  // filter — backfill primarily uses it for empty-day decisions, not
-  // populated-day text. A v2 enhancement is per-date filtering.
+  // Target-date-anchored "now" (audit 2026-05-14 round 9 P1 #5).
+  // Memory helpers (recentEntries cutoff, anticipations, life events,
+  // seasonal context, weight trend) used `new Date()` by default, so
+  // a backfilled May 5 entry would compute its "recent memory" window
+  // from MAY 14 backward — leaking dates that hadn't happened yet
+  // from May 5's perspective. `contextNow` is midday on the target
+  // date for past dates (matches `targetDateObj` in buildDayContext),
+  // and the real `now` for today's entry. Wall-clock fields like
+  // `generated_at` keep using actual now — only memory windows shift.
+  const contextNow = isToday ? now : new Date(`${dateKey}T12:00:00`);
+
+  // Day-context — events/scans/photos/chat all filter against the
+  // TARGET DATE, not today. Pre 2026-05-09 this aggregator filtered
+  // against today's date even when generating for a past date (e.g.
+  // backfill of Apr 29 done on May 9 saw zero of Apr 29's events).
+  // The user reported diary entries dated 10 days ago using the cat's
+  // profile photo on every day with similar hallucinated themes —
+  // exactly the symptom of empty data + persistent context bleeding
+  // through. Now per-date.
   const dayContext = buildDayContext({
     cat,
     events,
@@ -1665,27 +2572,40 @@ export function buildDeepContext(opts: {
     streakDays,
     galleryPhotosToday,
     chatTurnsToday,
+    targetDate: dateKey,
   });
 
-  // Memory tiers
+  // Memory tiers — anchored to `contextNow`, NOT actual now. For
+  // today's entry these are equal; for backfilled past dates, the
+  // memory windows respect what was known on that date.
   const recentEntries = buildRecentEntries({
     allEntries: allCachedEntries,
     catId: cat.id,
     excludeDate: dateKey,
-    now,
+    now: contextNow,
   });
   const moodArc = detectMoodArc({
     recentEntries,
     todayCheckinMood: dayContext.checkin?.mood ?? null,
   });
   const recurringEntities = extractRecurringEntities(recentEntries);
-  const lifeEvents = buildLifeEvents({ cat, events, scans, now });
-  const upcomingEvents = buildAnticipations({ cat, events, now });
+  const lifeEvents = buildLifeEvents({ cat, events, scans, now: contextNow });
+  const upcomingEvents = buildAnticipations({ cat, events, now: contextNow });
   const recurringChatThemes = buildRecurringChatThemes({ recentEntries });
-  const seasonalContext = getSeasonalContext(now);
+  const seasonalContext = getSeasonalContext(contextNow);
 
-  // Empty-day decision
-  const isEmptyDay = isToday && !hasMaterialToday(dayContext);
+  // Empty-day decision — applies to ANY date (today OR past). Pre
+  // 2026-05-09 this was gated behind `isToday &&`, so past empty
+  // dates were always treated as populated and went through the
+  // populated-generation path with no real data — producing
+  // hallucinated content. Now: if the target date had zero material
+  // activity (no check-in, scan, photo, behaviour obs, etc.), it's
+  // marked empty regardless of whether it's today or backfilled.
+  // The downstream backfill logic (in diaryStore) further refuses
+  // to write empty-day entries for past dates — past empty days are
+  // simply gaps in the diary archive, which is more honest than
+  // retroactive "quiet day" vignettes.
+  const isEmptyDay = !hasMaterialToday(dayContext);
   const daysSinceLastActive = (() => {
     // For empty-day mode we need this; otherwise 0 is fine.
     if (!isEmptyDay) return 0;
@@ -1738,16 +2658,34 @@ export function buildDeepContext(opts: {
   const RECURRING_LOOKBACK_DAYS = 30;
   const RECURRING_MAX = 6;
   const todayIdSet = new Set(todaysPhotoIds ?? []);
+  // Audit 2026-05-14 round 11 P1: anchor the lookback to contextNow
+  // (target date) NOT actual now. Pre-fix, backfilling May 5 on
+  // May 14 would scan recurring subjects from Apr 14 - May 14 — so
+  // someone first tagged on May 10 (after May 5) would show up as a
+  // "recurring subject" in the May 5 prompt and leak into the entry.
+  // Now: scan window is contextNow - 30d → contextNow, AND each
+  // entry is additionally gated by `last_seen <= targetKey` so a
+  // subject the cat hadn't yet met on the target date can't appear.
   const lookbackCutoff = (() => {
-    const d = new Date(now);
+    const d = new Date(contextNow);
     d.setDate(d.getDate() - RECURRING_LOOKBACK_DAYS);
     return localDateKey(d);
   })();
   const dirEntries = directoryEntries ?? [];
 
+  // Target end-of-day used to gate both appearance counts and vibe
+  // freshness against the target date (audit 2026-05-14 round 12).
+  const targetEndOfDay = `${dateKey}T23:59:59`;
+
   function toSubjectMemory(e: (typeof dirEntries)[number]): SubjectMemory {
     const last = new Date(`${e.last_seen}T12:00:00`);
-    const days = Math.max(0, Math.floor((now.getTime() - last.getTime()) / 86400000));
+    // daysSinceLastSeen relative to contextNow too — pre-fix this
+    // used actual now, so a May 10 last_seen with a May 5 backfill
+    // would render as "-5 days" (nonsense from May 5's POV).
+    const days = Math.max(
+      0,
+      Math.floor((contextNow.getTime() - last.getTime()) / 86400000),
+    );
     const descriptor =
       e.kind === 'pet'
         ? e.species
@@ -1756,14 +2694,30 @@ export function buildDeepContext(opts: {
         : e.kind === 'person'
           ? e.relationship
           : undefined;
+    // Appearances count up to target date (audit round 12). For
+    // today's entry, this equals total_appearances. For a backfilled
+    // past entry, only appearances dated ≤ target date count — so a
+    // May 5 backfill of "Mom" who had 11 visits by May 14 but only 1
+    // by May 5 surfaces as 1, not 11.
+    const appearancesUpToTarget = isToday
+      ? e.total_appearances
+      : (e.appearances ?? []).filter((a) => a.date <= dateKey).length;
+    // Vibe is generated from appearances; on past-date backfill,
+    // include vibe ONLY when it was written on or before the target
+    // date. Without `vibe_updated_at`, drop vibe for past entries
+    // (legacy entries with unknown vibe-write date).
+    const includeVibe =
+      isToday ||
+      (typeof e.vibe_updated_at === 'string' &&
+        e.vibe_updated_at <= targetEndOfDay);
     return {
       name: e.name,
       kind: e.kind,
       ...(descriptor ? { descriptor } : {}),
-      appearances: e.total_appearances,
+      appearances: appearancesUpToTarget,
       lastSeen: e.last_seen,
       daysSinceLastSeen: days,
-      ...(e.vibe ? { vibe: e.vibe } : {}),
+      ...(e.vibe && includeVibe ? { vibe: e.vibe } : {}),
     };
   }
 
@@ -1777,11 +2731,156 @@ export function buildDeepContext(opts: {
     .map(toSubjectMemory);
 
   const todaySet = new Set(subjectsToday.map((s) => s.name));
+  // Helper: same date-capped count `toSubjectMemory` uses for the
+  // rendered `appearances` field. Used here to SORT recurring
+  // candidates by target-date-correct count (audit 2026-05-14 round
+  // 13). Pre-fix: sort used `total_appearances` (lifetime), so for a
+  // May 5 backfill, someone who became frequent in June ranked higher
+  // than someone consistently present in April. The displayed count
+  // was correct (round 12 fix), but the SELECTION was biased toward
+  // future-frequent subjects.
+  function appearancesUpToTarget(e: (typeof dirEntries)[number]): number {
+    if (isToday) return e.total_appearances;
+    return (e.appearances ?? []).filter((a) => a.date <= dateKey).length;
+  }
   const recurringSubjects: SubjectMemory[] = dirEntries
-    .filter((e) => e.last_seen >= lookbackCutoff && !todaySet.has(e.name))
-    .sort((a, b) => b.total_appearances - a.total_appearances)
+    .filter((e) => {
+      // Recurring window ends at the TARGET date (audit round 11):
+      // exclude subjects whose `last_seen` is AFTER the target — they
+      // hadn't been met yet from this date's perspective. For today's
+      // entry, dateKey === contextNow's date, so the filter naturally
+      // includes today's last_seens.
+      if (e.last_seen > dateKey) return false;
+      if (e.last_seen < lookbackCutoff) return false;
+      if (todaySet.has(e.name)) return false;
+      // Audit round 13: a subject with zero appearances on or before
+      // the target date isn't actually "recurring" from this date's
+      // perspective — drop them entirely rather than letting them
+      // rank by lifetime count.
+      if (appearancesUpToTarget(e) === 0) return false;
+      return true;
+    })
+    .sort((a, b) => appearancesUpToTarget(b) - appearancesUpToTarget(a))
     .slice(0, RECURRING_MAX)
     .map(toSubjectMemory);
+
+  // World entries (audit 2026-05-14 P1 #1) — same accumulated world
+  // memory chat sees. Cap to 12 most-recently-referenced so the
+  // prompt stays under control. Lazy-loaded to avoid a top-level
+  // store import in this service.
+  // World entries filtered by date the cat KNEW them (audit 2026-05-14
+  // round 9 P1 #3). Pre-fix: backfilling May 5 on May 14 could mention
+  // "the green chair" that the cat first noticed May 10 — temporal
+  // hallucination. Now we drop any world entry whose `created_at` is
+  // AFTER the target date. For TODAY's entry, no filter; for past
+  // dates, only entries the cat actually knew on that day.
+  const worldEntries: DeepDiaryContext['worldEntries'] = (() => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { useWorldStore } = require('../state/worldStore') as {
+        useWorldStore: {
+          getState: () => {
+            entriesByCat: Record<
+              string,
+              Array<{
+                cat_id: string;
+                name: string;
+                kind: string;
+                location?: string;
+                sentiment?: string;
+                last_referenced_at?: string;
+                created_at?: string;
+              }>
+            >;
+          };
+        };
+      };
+      const list = useWorldStore.getState().entriesByCat[cat.id] ?? [];
+      const targetEndOfDay = `${dateKey}T23:59:59`;
+      const filtered = isToday
+        ? list
+        : list.filter((e) => {
+            // Entries with no created_at are legacy/cold-start —
+            // include them (no temporal info to be precise about).
+            if (!e.created_at) return true;
+            return e.created_at <= targetEndOfDay;
+          });
+      return filtered
+        .slice()
+        .sort((a, b) =>
+          (b.last_referenced_at ?? b.created_at ?? '').localeCompare(
+            a.last_referenced_at ?? a.created_at ?? '',
+          ),
+        )
+        .slice(0, 12)
+        .map((e) => ({
+          name: e.name,
+          kind: e.kind,
+          ...(e.location ? { location: e.location } : {}),
+          ...(e.sentiment ? { sentiment: e.sentiment } : {}),
+        }));
+    } catch {
+      return [];
+    }
+  })();
+
+  // Live weather narrative (audit 2026-05-14 P2 #6) — chat reads
+  // this via `getWeatherSnapshot()`; the diary now plumbs the same
+  // narrative into the prompt for climate-grounded entries. Only
+  // populated for today (past-date backfill keeps the same weather
+  // we cached then, OR if uncached, null — better than rendering
+  // a wrong climate retroactively). Lazy-loaded so the diary
+  // service doesn't statically depend on the weather module.
+  const weatherNarrative: string | null = await (async () => {
+    if (!isToday) return null;
+    try {
+      const { getWeatherSnapshot } = await import('./weatherContext');
+      const snap = await getWeatherSnapshot();
+      return snap?.narrative ?? null;
+    } catch {
+      return null;
+    }
+  })();
+
+  // 30-day weight trend (audit 2026-05-14 round 6). Mirrors chat's
+  // 90-day trend logic — same direction taxonomy (up/down/stable
+  // within 100g) but a 30-day window so the diary captures more
+  // recent body drift. The diary renderer suppresses the line when
+  // direction is 'stable' (cat shouldn't read a spreadsheet to
+  // itself) — only populated here so the renderer can decide.
+  const weightTrend30d: DeepDiaryContext['weightTrend30d'] = (() => {
+    try {
+      const dayMs = 24 * 60 * 60 * 1000;
+      // Anchor window to contextNow (audit 2026-05-14 round 9 P1 #5)
+      // so backfilled past dates see only weight events from the 30
+      // days BEFORE that date, not the 30 days before actual now.
+      const cutoff = contextNow.getTime() - 30 * dayMs;
+      const ceiling = contextNow.getTime();
+      const weightEvents = events
+        .filter((e) => e.cat_id === cat.id && e.type === 'weight')
+        .filter((e) => {
+          try {
+            const t = new Date(e.ts).getTime();
+            return t >= cutoff && t <= ceiling;
+          } catch {
+            return false;
+          }
+        })
+        .sort((a, b) => a.ts.localeCompare(b.ts)); // chronological
+      if (weightEvents.length < 2) return null;
+      const fromEvt = weightEvents[0];
+      const toEvt = weightEvents[weightEvents.length - 1];
+      const fromKg = (fromEvt?.payload as { weight_kg?: number })?.weight_kg;
+      const toKg = (toEvt?.payload as { weight_kg?: number })?.weight_kg;
+      if (typeof fromKg !== 'number' || typeof toKg !== 'number') return null;
+      const deltaKg = +(toKg - fromKg).toFixed(2);
+      const absDelta = Math.abs(deltaKg);
+      const direction = absDelta < 0.1 ? 'stable' : deltaKg > 0 ? 'up' : 'down';
+      return { deltaKg, direction, fromKg, toKg };
+    } catch {
+      return null;
+    }
+  })();
 
   return {
     date: dateKey,
@@ -1802,6 +2901,9 @@ export function buildDeepContext(opts: {
     recurringSubjects,
     becomingMilestone: becomingMilestone ?? null,
     selfFacts: selfFacts ?? [],
+    worldEntries,
+    weatherNarrative,
+    weightTrend30d,
   };
 }
 

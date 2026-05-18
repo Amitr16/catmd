@@ -105,6 +105,31 @@ export const useChatStore = create<State>()(
             syncChatTurnToCloud({ catId, turn: userTurn }).catch(() => {});
             syncChatTurnToCloud({ catId, turn: assistantTurn }).catch(() => {});
           });
+        } catch (err) {
+          // Generation failed — without this branch the user turn
+          // stays orphaned in the thread with no reply, so the next
+          // chat round re-sends it as history and the cat looks like
+          // it ignored the user. Append a faded "(no reply)"
+          // assistant placeholder so the user sees something went
+          // wrong AND the thread has a balanced turn count for the
+          // history-window slice. Errors are swallowed — the screen's
+          // catch handler shows the actual error toast.
+          console.warn('[chat] generation failed:', err);
+          const failureTurn: ChatTurn = {
+            id: newId(),
+            role: 'assistant',
+            content: '(no reply right now — try again)',
+            created_at: new Date().toISOString(),
+            is_failure: true,
+          };
+          set((s) => {
+            const existing = s.threads[catId] ?? [];
+            const next = [...existing, failureTurn];
+            const pruned =
+              next.length > MAX_TURNS ? next.slice(next.length - MAX_TURNS) : next;
+            return { threads: { ...s.threads, [catId]: pruned } };
+          });
+          throw err;
         } finally {
           set((s) => {
             const generating = { ...s.generating };

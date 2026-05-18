@@ -32,10 +32,12 @@ import {
 import { Button } from '../src/components/Button';
 import { Card } from '../src/components/Card';
 import { Text } from '../src/components/Text';
+import { TestimonialStoryModal } from '../src/components/TestimonialStoryModal';
 import { useCatStore } from '../src/state/catStore';
 import { useHealthStore } from '../src/state/healthStore';
 import { useScanStore } from '../src/state/scanStore';
 import { cancelNotification } from '../src/services/notifications';
+import { shouldShowTestimonialPrompt } from '../src/services/vetConfirmedStories';
 import { useTheme } from '../src/theme/useTheme';
 import { radius, space } from '../src/theme/tokens';
 
@@ -62,6 +64,9 @@ export default function OutcomeCheck() {
   const [stars, setStars] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  // Testimonial story modal — opens after save when vet_visited='yes'
+  // AND the 90-day cool-off has elapsed for this user. Audit 2026-05-16.
+  const [showTestimonialModal, setShowTestimonialModal] = useState(false);
 
   const alreadyResponded = !!scan?.outcome_responded;
 
@@ -87,7 +92,7 @@ export default function OutcomeCheck() {
     );
   }
 
-  const save = () => {
+  const save = async () => {
     if (!canSave || !scan || !direction || !vetVisited) return;
     setSaving(true);
     try {
@@ -109,12 +114,53 @@ export default function OutcomeCheck() {
           props: { direction, helpful_rating: stars ?? null },
         }),
       );
+
+      // Vet-confirmed funnel (audit 2026-05-16). Core trigger for the
+      // "CatMD flagged it → vet confirmed it" funnel. Fires only when
+      // the owner explicitly says yes — 'plan_to' doesn't count yet.
+      const vetConfirmed = vetVisited === 'yes';
+      if (vetConfirmed) {
+        const daysSinceScan = Math.max(
+          0,
+          Math.floor(
+            (Date.now() - new Date(scan.created_at).getTime()) /
+              (1000 * 60 * 60 * 24),
+          ),
+        );
+        void import('../src/services/analytics').then(({ track }) =>
+          track({
+            type: 'scan_outcome_vet_confirmed',
+            props: {
+              scan_id: scan.id,
+              cat_id: scan.cat_id,
+              original_urgency_tier: scan.urgency,
+              health_score: scan.score,
+              days_since_scan: daysSinceScan,
+              outcome_source: 'scan_followup',
+            },
+          }),
+        );
+      }
+
       updateScan(scan.id, {
         outcome_responded: true,
         outcome_dismissed_at: new Date().toISOString(),
       });
       if (scan.outcome_notif_id) {
         void cancelNotification(scan.outcome_notif_id).catch(() => {});
+      }
+
+      // Testimonial nudge — only opens when:
+      //   1. Owner said vet visit happened ('yes', not 'plan_to')
+      //   2. Direction is not 'worse' (don't ask while they're worried)
+      //   3. Cool-off has elapsed (90 days since prior prompt)
+      // If any condition is false, route as before.
+      if (vetConfirmed && direction !== 'worse') {
+        const shouldPrompt = await shouldShowTestimonialPrompt();
+        if (shouldPrompt) {
+          setShowTestimonialModal(true);
+          return; // Stay on screen; modal will handle final navigation.
+        }
       }
 
       if (direction === 'worse') {
@@ -291,6 +337,22 @@ export default function OutcomeCheck() {
           </>
         )}
       </ScrollView>
+
+      {/* Testimonial story nudge \u2014 fires after vet-confirmed outcome. */}
+      {scan && cat && (
+        <TestimonialStoryModal
+          visible={showTestimonialModal}
+          catName={cat.name}
+          catId={scan.cat_id}
+          scanId={scan.id}
+          urgencyTier={scan.urgency}
+          healthScore={scan.score}
+          onClose={() => {
+            setShowTestimonialModal(false);
+            router.replace('/');
+          }}
+        />
+      )}
     </KeyboardAvoidingView>
   );
 }

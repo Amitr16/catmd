@@ -150,7 +150,7 @@ The app's core features include:
 
 CatMD's knowledge base is curated from five peer-reviewed veterinary sources — Merck Veterinary Manual feline chapters, AAFP guidelines, ISFM consensus documents, Cornell Feline Health Center, and ASPCA Animal Poison Control Center — spanning 527 structured knowledge cards. The AI is explicitly bounded: it never claims to diagnose, always cites its sources, and has hardcoded safety guardrails including species-lock, emergency keyword override, and FDA/VCPR-compliant language.
 
-CatMD is available now on Android (Google Play). iOS is in development. A free tier offers three scans per month; Pro plans are $69/year (annual), $12.99/month, or $199 one-time for the first 1,000 lifetime customers.
+CatMD is available now on Android (Google Play). iOS is in development. Pro plans are $79.99/year (annual) or $9.99/month, with a 14-day free trial of full Pro features. A free tier offers three scans per month after trial.
 
 About CatMD
 CatMD is an AI-powered veterinary triage application for cats, based in Singapore. The app was developed over four months with all guidance sourced from peer-reviewed feline veterinary literature. CatMD is informational triage only and is not a substitute for professional veterinary care.

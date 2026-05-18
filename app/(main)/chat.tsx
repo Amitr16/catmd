@@ -44,13 +44,29 @@ import {
   WarningCircle,
 } from 'phosphor-react-native';
 import { Text } from '../../src/components/Text';
+import { PersonalityProgressBanner } from '../../src/components/PersonalityProgressBanner';
 import { useShareableCard } from '../../src/components/ShareableCatCard';
+import { useBecomingForCat } from '../../src/services/useBecomingForCat';
 import {
   cancelNotification,
   setWeeklyReadingReminder,
 } from '../../src/services/notifications';
 import { useNotifPrefsStore } from '../../src/state/notifPrefsStore';
-import { useCatStore } from '../../src/state/catStore';
+import { useCatStore, resolveCatAgeMonths } from '../../src/state/catStore';
+import { useHealthStore } from '../../src/state/healthStore';
+import { usePersonalityStore } from '../../src/state/personalityStore';
+import { useMoodFeedbackStore } from '../../src/state/moodFeedbackStore';
+import {
+  resolveTodaysMood,
+  localDateKey,
+} from '../../src/services/dailyMood';
+import {
+  buildArchetypeMod,
+  buildLiveMoodContext,
+  buildTodayBehaviorMod,
+  computeFeedbackMod,
+  hasMedicalConcernToday,
+} from '../../src/services/moodWeights';
 import {
   useChatGenerating,
   useChatStore,
@@ -58,7 +74,9 @@ import {
 } from '../../src/state/chatStore';
 import { suggestedPrompts } from '../../src/services/chat';
 import type { ChatTurn } from '../../src/services/chat';
+import { useProGate } from '../../src/services/paywallGate';
 import { pickMoodBanner } from '../../src/services/dailyMood';
+import { getVoiceModeTag } from '../../src/services/voiceModes';
 import { track } from '../../src/services/analytics';
 import { useTheme } from '../../src/theme/useTheme';
 import { radius, space } from '../../src/theme/tokens';
@@ -69,10 +87,17 @@ export default function ChatTab() {
   const router = useRouter();
   const cat = useCatStore((s) => s.cats.find((c) => c.id === s.activeCatId) ?? null);
   const catName = cat?.name ?? 'your cat';
+  // Personality-progress banner — sets expectations during the early
+  // "voice is still forming" phase so generic-feeling replies don't
+  // get read as "this app doesn't work." Copy graduates with the
+  // Becoming depth; see PersonalityProgressBanner for the per-stage
+  // copy table.
+  const becoming = useBecomingForCat(cat?.id);
   const thread = useChatThread(cat?.id);
   const generating = useChatGenerating(cat?.id);
   const sendMessage = useChatStore((s) => s.sendMessage);
   const clearForCat = useChatStore((s) => s.clearForCat);
+  const proGate = useProGate();
 
   const [input, setInput] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +111,7 @@ export default function ChatTab() {
     ? pickMoodBanner({ catId: cat.id, catName: cat.name })
     : null;
 
-  const handleShareTurn = (turn: ChatTurn) => {
+  const handleShareTurn = async (turn: ChatTurn) => {
     if (!cat) return;
     // Find the user message that prompted this assistant turn — the
     // share-caption builder uses it to set up context ("i asked X.
@@ -101,6 +126,38 @@ export default function ChatTab() {
           break;
         }
       }
+    }
+    // Mood-feedback attribution (2026-05-14 round 10 P2 #4: uses
+    // shared `buildLiveMoodContext`). Sharing a chat reply is the
+    // strongest preference signal — attribute to today's mood so the
+    // adaptive lottery learns. Failures must never block share.
+    try {
+      const arch = usePersonalityStore.getState().getProfile(cat.id)?.archetype ?? null;
+      const fbTable = useMoodFeedbackStore.getState().getFeedback(cat.id);
+      const liveCtx = await buildLiveMoodContext({
+        catId: cat.id,
+        ageMonths: resolveCatAgeMonths(cat) ?? null,
+      });
+      const dailyMood = resolveTodaysMood({
+        catId: cat.id,
+        checkinMood: liveCtx.checkinMood ?? null,
+        hasRecentMedicalConcern: hasMedicalConcernToday(cat.id),
+        archetypeMod: buildArchetypeMod(arch),
+        todayMod: buildTodayBehaviorMod(liveCtx),
+        feedbackMod: computeFeedbackMod(fbTable),
+      });
+      useMoodFeedbackStore.getState().recordShare(cat.id, dailyMood.id);
+      track({
+        type: 'daily_card_shared',
+        props: {
+          mood: dailyMood.id,
+          cluster: dailyMood.cluster,
+          surface: 'chat',
+          voice_mode_tag: getVoiceModeTag(dailyMood.id),
+        },
+      });
+    } catch {
+      // share-tracking is best-effort
     }
     void shareCard(
       {
@@ -174,12 +231,19 @@ export default function ChatTab() {
     const toSend = (textOverride ?? input).trim();
     if (!toSend) return;
     if (generating) return;
+    // Pro gate — chat is gated entirely (no free turns post-trial,
+    // per the agreed launch model). The history of past replies
+    // remains viewable; only NEW messages require Pro.
+    if (!proGate.check('chat')) return;
     setInput('');
     setError(null);
     track({
       type: 'chat_message_sent',
       props: { length: toSend.length, used_suggested_prompt: !!textOverride },
     });
+    // Unified activation event for marketing-attribution funnels (audit
+    // 2026-05-16). Fires alongside the granular chat_message_sent.
+    track({ type: 'core_feature_used', props: { feature: 'chat' } });
     try {
       await sendMessage(cat.id, toSend);
       track({ type: 'chat_message_received' });
@@ -328,40 +392,26 @@ export default function ChatTab() {
         ) : null}
       </View>
 
-      {/* Daily mood-warning banner — funny one-liner that previews
-          today's mood and reminds the user the cat woke up on a
-          different side of the bed than yesterday. The line itself
-          rotates daily (deterministic per cat) so users get variety
-          alongside the mood reveal. See marketing/chat-as-viral-
-          lever.md — "anticipation loop" pattern from Co-Star. */}
-      {moodBanner ? (
-        <View
-          style={{
-            paddingHorizontal: space[5],
-            paddingVertical: space[3],
-            backgroundColor: t.secondary50,
-            borderBottomWidth: 1,
-            borderBottomColor: t.borderSubtle,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: space[2],
-          }}
-        >
-          <Text style={{ fontSize: 14 }}>⚠️</Text>
-          <Text
-            style={{
-              flex: 1,
-              color: t.secondary900,
-              fontFamily: 'SourceSerif4_500Medium',
-              fontStyle: 'italic',
-              fontSize: 13,
-              lineHeight: 18,
-            }}
-          >
-            {moodBanner}
-          </Text>
-        </View>
-      ) : null}
+      {/* Personality-progress banner — sits above the mood banner so
+          the first thing a new user reads after the header is "yes,
+          the voice may sound generic right now, here's why and how
+          far along she is." Copy varies by Becoming.overallStage and
+          becomes a quiet affirmation at 'fully here'. */}
+      <PersonalityProgressBanner
+        catName={catName}
+        catSex={cat.sex}
+        becoming={becoming}
+        source="chat"
+      />
+
+      {/* Daily mood-warning banner — REMOVED 2026-05-18.
+          Stacking two banners (PersonalityProgressBanner + this)
+          was visually noisy for new users and competed for the same
+          "small italic strip under the header" affordance. The mood
+          reveal still influences chat replies via buildLiveMoodContext
+          below — we just don't surface it as a separate banner.
+          If we ever bring this back, do it as a tap-to-reveal chip
+          inside the progress banner, not as a second stacked strip. */}
 
       {/* Messages */}
       <ScrollView
@@ -584,6 +634,31 @@ function Bubble({
   // becomes free brand recognition.
   //
   // See: marketing/chat-as-viral-lever.md §4.
+  // Failure turns get a completely different render path: muted,
+  // sans-serif, no eyebrow, no share button, no actions. This makes
+  // them visually distinct from real cat replies AND prevents them
+  // from being attributed to the cat's voice. See chatStore.ts where
+  // the failure turn is inserted with `is_failure: true` to keep the
+  // thread balanced when generation errors out.
+  if (turn.is_failure) {
+    return (
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space[3] }}>
+        <View style={{ paddingTop: 4, opacity: 0.4 }}>
+          <CatAvatar uri={catPhotoUri} size={32} />
+        </View>
+        <View style={{ flex: 1, gap: space[1], paddingTop: space[1] }}>
+          <Text
+            token="caption"
+            color="textMuted"
+            style={{ fontStyle: 'italic' }}
+          >
+            {turn.content}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space[3] }}>
       <View style={{ paddingTop: 4 }}>
@@ -735,6 +810,11 @@ function ActionButton({
 
 function TypingIndicator({ catName }: { catName: string }) {
   const t = useTheme();
+  // No ActivityIndicator here — a spinning wheel breaks the illusion
+  // that the cat is typing (it telegraphs "AI is generating"). The
+  // italic "is typing…" text alone reads as human-like ambient
+  // composition. Matches the iMessage / WhatsApp pattern: no spinner,
+  // just the typing-status line.
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
       <View
@@ -747,11 +827,9 @@ function TypingIndicator({ catName }: { catName: string }) {
             borderBottomLeftRadius: 4,
             flexDirection: 'row',
             alignItems: 'center',
-            gap: space[2],
           },
         ]}
       >
-        <ActivityIndicator size="small" color={t.primary700} />
         <Text token="caption" color="textMuted" style={{ fontStyle: 'italic' }}>
           {catName} is typing…
         </Text>

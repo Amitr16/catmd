@@ -1,0 +1,29 @@
+{
+  "subject_model": "gpt-4o-mini",
+  "judge_model": "gpt-4o",
+  "n_prompts": 15,
+  "production_heuristics": {
+    "date_precision": 0.0,
+    "sensory_anchors": 0.4,
+    "approx_time_markers": 0.0,
+    "banned_phrases": 0.27,
+    "length": 243.87,
+    "length_in_band": 0.87,
+    "composite": 0.57
+  },
+  "phase1_heuristics": {
+    "date_precision": 0.0,
+    "sensory_anchors": 1.53,
+    "approx_time_markers": 1.33,
+    "banned_phrases": 0.07,
+    "length": 288.2,
+    "length_in_band": 0.87,
+    "composite": 2.97
+  },
+  "judge_preference": {
+    "production": 6,
+    "phase1": 9,
+    "tie": 0
+  },
+  "judge_phase1_win_rate_pct": 60.0
+}

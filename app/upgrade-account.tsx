@@ -1,5 +1,19 @@
 /**
- * Upgrade-account — email + password → 6-digit OTP verify → confirmed.
+ * Upgrade-account — email-only → 6-digit OTP verify → confirmed.
+ *
+ * NO password (revised 2026-05-12). OTP-only is the entire flow:
+ *   1. User enters email
+ *   2. Tap "Send code" → Supabase emails a 6-digit OTP
+ *   3. User enters the code
+ *   4. Done — email is attached to the account
+ *
+ * Behind the scenes (`addEmailToAccount` in services/auth.ts):
+ *   - Anonymous users get `updateUser({ email })` — preserves all
+ *     their anonymous data (cats, diary, scans) on the same auth.uid
+ *   - "Email already registered" falls through to `signInWithOtp` —
+ *     they sign into the existing account (anonymous data orphaned;
+ *     acceptable tradeoff for the rare returning-user case)
+ *   - No-session users get `signInWithOtp` with create-if-missing
  *
  * We use OTP instead of magic links because mobile magic-link flows have
  * three failure modes that kill conversion:
@@ -14,7 +28,7 @@
  * WhatsApp / Telegram use.
  *
  * State machine:
- *   - `form`  — enter email + password
+ *   - `form`  — enter email (just one field)
  *   - `otp`   — 6 digit boxes + Resend + "use a different email"
  *   - `done`  — success splash, auto-route back
  * The user's auth state (pendingEmail / pendingFlow) seeds the OTP stage
@@ -32,14 +46,16 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CheckCircle, Envelope, LockSimple } from 'phosphor-react-native';
+import { CheckCircle, Envelope } from 'phosphor-react-native';
 import { Button } from '../src/components/Button';
 import { Text } from '../src/components/Text';
 import { useTheme } from '../src/theme/useTheme';
 import { radius, space } from '../src/theme/tokens';
 import {
   addEmailToAccount,
+  EmailAlreadyExistsError,
   resendEmailOtp,
+  signInWithExistingEmail,
   verifyEmailOtp,
   type EmailOtpFlow,
 } from '../src/services/auth';
@@ -63,20 +79,35 @@ export default function UpgradeAccountScreen() {
 
   const [stage, setStage] = useState<Stage>(seededFlow ? 'otp' : 'form');
   const [emailInput, setEmailInput] = useState('');
-  const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [pendingEmail, setPendingEmail] = useState<string>(seededEmail);
   const [flow, setFlow] = useState<EmailOtpFlow | null>(seededFlow);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [resentAt, setResentAt] = useState<number | null>(null);
+  // Conflict state — user typed an email that's already linked to a
+  // different CatMD account. We show an explicit branching UI rather
+  // than silently signing them into the existing account (which would
+  // orphan any anonymous data they've built up). `conflictEmail` is
+  // the literal email they typed; null when there's no conflict.
+  const [conflictEmail, setConflictEmail] = useState<string | null>(null);
+
+  // Change-email path: if the user arrives here ALREADY having a
+  // confirmed email, they came from Settings → tap-to-change. Don't
+  // bounce them to DoneSplash — let them enter a new email. The
+  // bounce-after-success path uses `stage === 'done'` instead, set by
+  // onVerify directly.
+  const isChangeFlow =
+    !auth.loading && auth.hasConfirmedEmail && !auth.pendingFlow;
 
   // When the auth hook loads for the first time (or flips state) and we
   // learn there's a pending email we didn't have at mount, jump to OTP.
   useEffect(() => {
     if (auth.loading) return;
-    if (auth.hasConfirmedEmail) {
-      setStage('done');
+    // Auto-bounce ONLY when we just finished verifying (stage='done'
+    // was set by onVerify). If the user arrived here already-confirmed
+    // from Settings, fall through to the form so they can change it.
+    if (auth.hasConfirmedEmail && stage === 'done') {
       const t = setTimeout(() => router.replace('/(main)'), 600);
       return () => clearTimeout(t);
     }
@@ -87,17 +118,12 @@ export default function UpgradeAccountScreen() {
     }
   }, [auth.loading, auth.hasConfirmedEmail, auth.pendingFlow, auth.pendingEmail, stage, router]);
 
-  if (!auth.loading && auth.hasConfirmedEmail && stage !== 'done') {
-    // Race-condition guard: while the effect above is scheduling, avoid
-    // rendering the form for a confirmed user.
-    return <DoneSplash />;
-  }
-
   if (stage === 'done') return <DoneSplash />;
 
   // ── form stage ──────────────────────────────────────────────────────────
   const onSubmitForm = async () => {
     setErr(null);
+    setConflictEmail(null);
     const check = validateEmail(emailInput);
     if (!check.ok) {
       setErr(check.reason);
@@ -106,22 +132,55 @@ export default function UpgradeAccountScreen() {
       );
       return;
     }
-    if (password.length < 6) {
-      setErr('Password must be at least 6 characters.');
-      return;
-    }
     setBusy(true);
     try {
-      // addEmailToAccount picks updateUser vs signUp based on whether a
-      // session exists. The flow type we'll need for verify is 'email_change'
-      // in the updateUser path, 'signup' in the signUp path.
-      const sessionExisted = !!auth.user;
-      const nextFlow: EmailOtpFlow = sessionExisted ? 'email_change' : 'signup';
       const trimmedEmail = emailInput.trim().toLowerCase();
-      const user = await addEmailToAccount(trimmedEmail, password);
-      if (user?.id) await identifyPurchasesUser(user.id);
+      // Default: attach this email to the current (anonymous)
+      // account via updateUser. Preserves all anonymous data.
+      const result = await addEmailToAccount(trimmedEmail);
+      if (auth.user?.id) {
+        await identifyPurchasesUser(auth.user.id).catch(() => {});
+      }
       setPendingEmail(trimmedEmail);
-      setFlow(nextFlow);
+      setFlow(result.flow);
+      setStage('otp');
+      void import('../src/services/analytics').then(({ track }) =>
+        track({ type: 'email_added', props: {} }),
+      );
+    } catch (e: any) {
+      // One-email-one-account rule: if this email is already linked
+      // to a different CatMD account, surface an explicit choice
+      // instead of silently swapping accounts. The conflict UI gives
+      // the user two paths:
+      //   - Try a different email (recommended)
+      //   - Sign in to that other account (clears current data)
+      if (e instanceof EmailAlreadyExistsError) {
+        setConflictEmail(emailInput.trim().toLowerCase());
+        setErr(null);
+      } else {
+        setErr(e?.message ?? 'Could not send code. Please try again.');
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /**
+   * User explicitly chose to sign in to the existing account that
+   * owns the email they typed (the conflict branch). Calls
+   * signInWithExistingEmail which sends an OTP via signInWithOtp.
+   * After verify, they'll be signed in to that account — their
+   * current anonymous data is orphaned, but they CONSENTED to this.
+   */
+  const onSignInToExisting = async () => {
+    if (!conflictEmail) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const result = await signInWithExistingEmail(conflictEmail);
+      setPendingEmail(conflictEmail);
+      setFlow(result.flow);
+      setConflictEmail(null);
       setStage('otp');
       void import('../src/services/analytics').then(({ track }) =>
         track({ type: 'email_added', props: {} }),
@@ -131,6 +190,18 @@ export default function UpgradeAccountScreen() {
     } finally {
       setBusy(false);
     }
+  };
+
+  /** User chose "use a different email" from the conflict branch —
+   *  clear the conflict + input so they can retype. NOTE: there's a
+   *  separately-named `onUseDifferentEmail` further down (defined in
+   *  the OTP stage block) for restarting the OTP flow after the user
+   *  is already in the OTP stage. Different concerns, different
+   *  callsites. */
+  const onClearConflict = () => {
+    setConflictEmail(null);
+    setEmailInput('');
+    setErr(null);
   };
 
   // ── otp stage ───────────────────────────────────────────────────────────
@@ -233,15 +304,19 @@ export default function UpgradeAccountScreen() {
   const heading =
     stage === 'otp'
       ? 'Enter the 6-digit code'
-      : gate === 'email'
-        ? 'Confirm your email to keep scanning'
-        : 'Create your CatMD account';
+      : isChangeFlow
+        ? 'Change your CatMD email'
+        : gate === 'email'
+          ? 'Confirm your email to keep scanning'
+          : 'Create your CatMD account';
   const subheading =
     stage === 'otp'
       ? `We sent a code to ${pendingEmail}. It expires in an hour.`
-      : gate === 'email'
-        ? 'Free plan gives 3 scans per month \u2014 unlocked after a quick email check.'
-        : 'One email, three free scans per month, data syncs across devices.';
+      : isChangeFlow
+        ? `Current email: ${auth.user?.email ?? ''}. Enter a new one below \u2014 we'll send a 6-digit code to verify it before swapping.`
+        : gate === 'email'
+          ? 'Free plan gives 3 scans per month \u2014 unlocked after a quick email check.'
+          : 'One email, three free scans per month, data syncs across devices.';
 
   return (
     <KeyboardAvoidingView
@@ -271,11 +346,12 @@ export default function UpgradeAccountScreen() {
           <FormStage
             email={emailInput}
             setEmail={setEmailInput}
-            password={password}
-            setPassword={setPassword}
             err={err}
             busy={busy}
             onSubmit={onSubmitForm}
+            conflictEmail={conflictEmail}
+            onSignInToExisting={onSignInToExisting}
+            onClearConflict={onClearConflict}
           />
         ) : (
           <OtpStage
@@ -308,13 +384,87 @@ export default function UpgradeAccountScreen() {
 function FormStage(props: {
   email: string;
   setEmail: (v: string) => void;
-  password: string;
-  setPassword: (v: string) => void;
   err: string | null;
   busy: boolean;
   onSubmit: () => void;
+  conflictEmail: string | null;
+  onSignInToExisting: () => void;
+  onClearConflict: () => void;
 }) {
   const t = useTheme();
+  // When in conflict state (email already linked to another account),
+  // we hide the normal email input + submit button and show an
+  // explicit branching UI instead.
+  //
+  // Security note (added 2026-05-12): both paths still go through OTP
+  // validation. The "Sign in to that account" path uses signInWithOtp
+  // which emails a 6-digit code to the address. Without inbox access,
+  // the user cannot proceed past the OTP stage. The UI copy below
+  // makes that explicit so users don't think this is a one-tap
+  // account hijack \u2014 it isn't.
+  if (props.conflictEmail) {
+    return (
+      <View style={{ marginTop: space[6] }}>
+        <View
+          style={{
+            padding: space[4],
+            borderRadius: 12,
+            backgroundColor: t.surfaceSunken,
+            borderWidth: 1,
+            borderColor: t.warning,
+          }}
+        >
+          <Text token="bodyLg" style={{ color: t.textPrimary, fontFamily: 'Figtree_700Bold' }}>
+            Email already linked
+          </Text>
+          <Text token="body" color="textSecondary" style={{ marginTop: space[2], lineHeight: 21 }}>
+            <Text token="body" style={{ fontFamily: 'Figtree_600SemiBold', color: t.textPrimary }}>
+              {props.conflictEmail}
+            </Text>{' '}
+            is already on another CatMD account. Each email can only be
+            used by one account.
+          </Text>
+        </View>
+
+        <View style={{ marginTop: space[5] }}>
+          <Button
+            label="Use a different email"
+            onPress={props.onClearConflict}
+            size="lg"
+            pill
+            fullWidth
+          />
+        </View>
+
+        <View style={{ marginTop: space[3] }}>
+          <Button
+            label={props.busy ? 'Sending code\u2026' : 'Verify ownership + sign in'}
+            onPress={props.onSignInToExisting}
+            disabled={props.busy}
+            variant="ghost"
+            size="lg"
+            pill
+            fullWidth
+          />
+          <Text
+            token="caption"
+            color="textMuted"
+            style={{ textAlign: 'center', marginTop: space[2], lineHeight: 17 }}
+          >
+            We&apos;ll email a 6-digit code to{' '}
+            <Text token="caption" style={{ fontFamily: 'Figtree_600SemiBold', color: t.textPrimary }}>
+              {props.conflictEmail}
+            </Text>{' '}
+            to confirm you own this address. After verification, you&apos;ll
+            be signed in to that account \u2014 anything on this device that
+            isn&apos;t already in that account will be lost.
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Default form \u2014 single email field + send button.
   return (
     <>
       <View style={{ marginTop: space[6] }}>
@@ -326,15 +476,6 @@ function FormStage(props: {
           keyboardType="email-address"
           autoCapitalize="none"
           autoComplete="email"
-        />
-
-        <Label>Password (6+ chars)</Label>
-        <Input
-          value={props.password}
-          onChangeText={props.setPassword}
-          placeholder="at least 6 characters"
-          secureTextEntry
-          autoComplete="password-new"
         />
       </View>
 
@@ -350,8 +491,7 @@ function FormStage(props: {
           onPress={props.onSubmit}
           disabled={
             props.busy ||
-            props.email.trim().length < 5 ||
-            props.password.length < 6
+            props.email.trim().length < 5
           }
           leftIcon={<Envelope size={16} color={t.textInverse} weight="bold" />}
           size="lg"
@@ -363,7 +503,7 @@ function FormStage(props: {
           color="textMuted"
           style={{ textAlign: 'center', marginTop: space[2] }}
         >
-          We never sell or share your email.
+          We&apos;ll email a 6-digit code. No password needed. We never sell or share your email.
         </Text>
       </View>
     </>
@@ -456,7 +596,7 @@ function OtpStage(props: {
         label={props.busy ? 'Verifying\u2026' : 'Verify'}
         onPress={props.onVerify}
         disabled={props.busy || props.code.length !== 6}
-        leftIcon={<LockSimple size={16} color={t.textInverse} weight="bold" />}
+        leftIcon={<CheckCircle size={16} color={t.textInverse} weight="bold" />}
         size="lg"
         pill
         fullWidth

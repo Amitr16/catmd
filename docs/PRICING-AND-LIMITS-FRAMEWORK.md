@@ -1,9 +1,17 @@
 # CatMD — Pricing & Per-User Limits Framework
 
+> ⚠️ **PRICING UPDATED 2026-05-17.** Current live prices are
+> **$9.99/month and $79.99/year** (not the $12.99/$69 used in the
+> economic model below). The model's math is built on the old
+> assumptions and is preserved as a historical snapshot. When you
+> re-run the analysis with PostHog data, plug in the new prices —
+> the 20%-of-revenue cost-ceiling logic still applies, just the
+> dollar denominators change ($9.99 → $2.00/user LLM ceiling for
+> monthly, $79.99/yr → $13.33/user LLM ceiling for annual).
+>
 > **Purpose**: data-driven approach to designing free / paid tier caps so
 > the cost of LLM calls per user per month stays under 20% of monthly
-> subscription fee. Drafted 2026-05-03; revisit 2026-05-17 once 14 days of
-> PostHog `llm_usage` data have accumulated.
+> subscription fee. Drafted 2026-05-03.
 >
 > **Read first**: `docs/SESSION-CHECKPOINT-2026-05-03.md` §3 — explains
 > the `llm_usage` event, `LLMActivity` enum, and `cost_cents` estimator.

@@ -261,6 +261,8 @@ export type RestoreSummary = {
   appliedNotifPrefs: boolean;
   /** World Memory entries restored (objects, places, toys, environment). */
   appliedWorldEntries: number;
+  /** Mood-feedback rows restored (per cat × mood). Added 2026-05-13. */
+  appliedMoodFeedbackRows: number;
   skipped: 'local_not_empty' | 'cloud_empty' | null;
 };
 
@@ -297,19 +299,22 @@ export async function restoreFromCloudIfNeeded(): Promise<RestoreSummary> {
       appliedReminderCats: 0,
       appliedNotifPrefs: false,
       appliedWorldEntries: 0,
+      appliedMoodFeedbackRows: 0,
       skipped: 'local_not_empty',
     };
   }
 
-  // Pull cats/scans/events AND identity AND Phase B AND world memory in
-  // parallel — independent table queries; bundling cuts post-install
-  // restore latency from sequential.
-  const [pulled, pulledIdentity, pulledPhaseB, pulledWorld] = await Promise.all([
-    pullFromCloud(),
-    pullIdentityFromCloud(),
-    pullPhaseBFromCloud(),
-    pullWorldFromCloud(),
-  ]);
+  // Pull cats/scans/events AND identity AND Phase B AND world memory
+  // AND mood feedback in parallel — independent table queries; bundling
+  // cuts post-install restore latency from sequential.
+  const [pulled, pulledIdentity, pulledPhaseB, pulledWorld, pulledMoodFeedback] =
+    await Promise.all([
+      pullFromCloud(),
+      pullIdentityFromCloud(),
+      pullPhaseBFromCloud(),
+      pullWorldFromCloud(),
+      pullMoodFeedbackFromCloud(),
+    ]);
 
   const identityEmpty =
     pulledIdentity.subjects.length === 0 &&
@@ -325,13 +330,15 @@ export async function restoreFromCloudIfNeeded(): Promise<RestoreSummary> {
     Object.keys(pulledPhaseB.remindersByCat).length === 0 &&
     !pulledPhaseB.notifPrefsEnabled;
   const worldEmpty = pulledWorld.length === 0;
+  const moodFeedbackEmpty = pulledMoodFeedback.length === 0;
   const cloudEmpty =
     pulled.cats.length === 0 &&
     pulled.scans.length === 0 &&
     pulled.events.length === 0 &&
     identityEmpty &&
     phaseBEmpty &&
-    worldEmpty;
+    worldEmpty &&
+    moodFeedbackEmpty;
   if (cloudEmpty) {
     return {
       appliedCats: 0,
@@ -349,6 +356,7 @@ export async function restoreFromCloudIfNeeded(): Promise<RestoreSummary> {
       appliedReminderCats: 0,
       appliedNotifPrefs: false,
       appliedWorldEntries: 0,
+      appliedMoodFeedbackRows: 0,
       skipped: 'cloud_empty',
     };
   }
@@ -396,6 +404,10 @@ export async function restoreFromCloudIfNeeded(): Promise<RestoreSummary> {
   // pattern to avoid the per-mutator cloud-resync feedback loop.
   await applyPulledWorld(pulledWorld);
 
+  // Apply mood feedback (per cat × mood counters). Hydrates the
+  // adaptive lottery's learned preferences across reinstalls.
+  await applyPulledMoodFeedback(pulledMoodFeedback);
+
   return {
     appliedCats: pulled.cats.length,
     appliedScans: pulled.scans.length,
@@ -416,6 +428,7 @@ export async function restoreFromCloudIfNeeded(): Promise<RestoreSummary> {
     appliedReminderCats: Object.keys(pulledPhaseB.remindersByCat).length,
     appliedNotifPrefs: !!pulledPhaseB.notifPrefsEnabled,
     appliedWorldEntries: pulledWorld.length,
+    appliedMoodFeedbackRows: pulledMoodFeedback.length,
     skipped: null,
   };
 }
@@ -1428,4 +1441,108 @@ export async function applyPulledWorld(entries: WorldEntry[]): Promise<void> {
   useWorldStore.setState({
     entriesByCat: byCat,
   } as unknown as Parameters<typeof useWorldStore.setState>[0]);
+}
+
+// ─── Mood Feedback (adaptive daily-mood lottery) ─────────────────────────
+//
+// One row per (user, cat, mood) — the moodFeedbackStore writes to
+// AsyncStorage locally and ALSO upserts to Supabase via the helpers
+// below so the cat's learned preferences survive reinstalls + sync
+// across devices.
+
+/**
+ * Push a single (cat × mood) feedback row to Supabase. Called from the
+ * moodFeedbackStore's mutators (recordExposure / recordChatSession /
+ * recordShare) as fire-and-forget. Idempotent — composite primary key
+ * `(user_id, cat_id, mood_id)` ensures upserts replace cleanly.
+ */
+export async function syncMoodFeedbackToCloud(opts: {
+  catId: string;
+  moodId: string;
+  exposureCount: number;
+  shareCount: number;
+  chatSessionCount: number;
+}): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { error } = await supabase.from('mood_feedback').upsert(
+    {
+      user_id: user.id,
+      cat_id: opts.catId,
+      mood_id: opts.moodId,
+      exposure_count: opts.exposureCount,
+      share_count: opts.shareCount,
+      chat_session_count: opts.chatSessionCount,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id,cat_id,mood_id' },
+  );
+  if (error) console.warn('[CatMD] syncMoodFeedbackToCloud:', error.message);
+}
+
+/**
+ * Pull every mood-feedback row for the authenticated user. Used at
+ * sign-in / restore to hydrate the local moodFeedbackStore from cloud
+ * truth. Empty array when nothing exists yet (new user / never synced).
+ */
+export async function pullMoodFeedbackFromCloud(): Promise<
+  Array<{
+    catId: string;
+    moodId: string;
+    exposureCount: number;
+    shareCount: number;
+    chatSessionCount: number;
+  }>
+> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supabase
+    .from('mood_feedback')
+    .select('cat_id,mood_id,exposure_count,share_count,chat_session_count')
+    .eq('user_id', user.id);
+  if (error) {
+    console.warn('[CatMD] pullMoodFeedbackFromCloud:', error.message);
+    return [];
+  }
+  return (data ?? []).map((r: any) => ({
+    catId: r.cat_id,
+    moodId: r.mood_id,
+    exposureCount: r.exposure_count ?? 0,
+    shareCount: r.share_count ?? 0,
+    chatSessionCount: r.chat_session_count ?? 0,
+  }));
+}
+
+/**
+ * Apply pulled mood-feedback rows to the local store. Bypasses the
+ * store's per-mutation cloud-resync (we don't want a feedback loop
+ * where pulled rows immediately re-upsert) by writing directly via
+ * setState. Called by `restoreFromCloudIfNeeded` on sign-in.
+ */
+export async function applyPulledMoodFeedback(
+  rows: Array<{
+    catId: string;
+    moodId: string;
+    exposureCount: number;
+    shareCount: number;
+    chatSessionCount: number;
+  }>,
+): Promise<void> {
+  if (rows.length === 0) return;
+  const { useMoodFeedbackStore } = await import('../state/moodFeedbackStore');
+  // Build feedback object grouped by cat
+  const feedback: Record<string, Record<string, { exposureCount: number; shareCount: number; chatSessionCount: number }>> = {};
+  for (const r of rows) {
+    (feedback[r.catId] ??= {})[r.moodId] = {
+      exposureCount: r.exposureCount,
+      shareCount: r.shareCount,
+      chatSessionCount: r.chatSessionCount,
+    };
+  }
+  useMoodFeedbackStore.setState({
+    feedback,
+    // seen[] stays empty after restore — we don't re-emit historical
+    // exposures, just hold the totals. The dedup keys only matter for
+    // FUTURE recordExposure calls on this device.
+  } as unknown as Parameters<typeof useMoodFeedbackStore.setState>[0]);
 }

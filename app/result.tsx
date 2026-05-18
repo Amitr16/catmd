@@ -14,7 +14,7 @@
  *   - Disclaimer footer
  */
 import { useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -389,6 +389,73 @@ export default function ResultScreen() {
               </Card>
             ))}
           </View>
+        </Section>
+      )}
+
+      {/* Vet-share nudge — only for monitor / concern tier. Pre-fills a
+          short observation-summary template the owner can WhatsApp /
+          SMS / email to their vet. Pairs with the existing PDF export
+          on the bottom action bar; this is the lighter, faster path.
+          Audit 2026-05-16. */}
+      {(scan.urgency === 'monitor' || scan.urgency === 'concern') && (
+        <Section
+          title="Share with your vet"
+          icon={<Stethoscope size={16} color={t.primary700} />}
+        >
+          <Card>
+            <Text token="body">
+              Would you like to share this with your vet?
+            </Text>
+            <Text token="caption" color="textMuted" style={{ marginTop: space[2] }}>
+              Sends a short observation summary (urgency, score, main concern,
+              what you noticed) as a message. Pick the app on the share sheet —
+              WhatsApp, SMS, email all work. Not a diagnosis.
+            </Text>
+            <Button
+              label="Share scan summary"
+              variant="secondary"
+              onPress={async () => {
+                const topConcern =
+                  scan.differentials?.[0]?.condition || scan.headline;
+                const redFlags =
+                  scan.red_flags.length > 0
+                    ? scan.red_flags.join(', ')
+                    : 'none flagged';
+                const ownerSymptoms = scan.user_input?.trim() || '(none added)';
+                const message = [
+                  `I used CatMD to document something I noticed with ${catForScan?.name ?? 'my cat'}.`,
+                  '',
+                  'Scan result:',
+                  `• Urgency: ${scan.urgency}`,
+                  `• Health score: ${scan.score}/99`,
+                  `• Main concern: ${topConcern}`,
+                  `• Red flags: ${redFlags}`,
+                  `• Notes: ${ownerSymptoms}`,
+                  '',
+                  "I'm sharing this as an observation summary, not a diagnosis. Could you let me know if this is worth a visit?",
+                ].join('\n');
+                try {
+                  await Share.share({
+                    message,
+                    title: `${catForScan?.name ?? 'My cat'} — CatMD observation`,
+                  });
+                  void import('../src/services/analytics').then(({ track }) =>
+                    track({
+                      type: 'scan_shared_pdf',
+                      // Re-use the existing share event for funnel
+                      // continuity; the new event would be over-specced
+                      // for what's effectively the same outcome.
+                    }),
+                  );
+                } catch {
+                  // User cancelled or share failed — no-op.
+                }
+              }}
+              leftIcon={<ShareIcon size={18} color={t.primary700} weight="bold" />}
+              fullWidth
+              style={{ marginTop: space[3] }}
+            />
+          </Card>
         </Section>
       )}
 

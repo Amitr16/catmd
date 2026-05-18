@@ -29,6 +29,7 @@
  *
  * See: marketing/chat-as-viral-lever.md.
  */
+import { renderVoiceModeBlock } from './voiceModes';
 
 // ---------------------------------------------------------------------------
 // Mood inventory — each mood has voice instructions + 3 calibration
@@ -37,16 +38,28 @@
 // ---------------------------------------------------------------------------
 
 export type DailyMoodId =
+  // Warm cluster — the loved-core (revised 2026-05-13 based on owner-attachment research)
+  | 'affectionate'   // close, "you are mine"
+  | 'cozy'           // loafing, sleepy, contented
+  | 'chosen'         // "today I have selected you"
+  | 'attuned'        // sensitive, notices you
+  // Joy cluster — playful, curious, mischievous
+  | 'playful'        // zoomies, joy mode (distinct from mischievous)
+  | 'mischievous'    // plotting trickster
+  | 'curious'        // wonder, investigating
+  // Flavor cluster — theatrical, philosophical
+  | 'theatrical'     // melodrama
+  | 'philosophical'  // koans, gravitas
+  // Sass cluster — the meme-shareable register
   | 'grumpy'
   | 'sarcastic'
   | 'imperious'
-  | 'theatrical'
-  | 'affectionate'
-  | 'mischievous'
   | 'roasting'
-  | 'philosophical'
   | 'megalomania'
+  // Dark cluster — off-day only
   | 'indignant';
+
+export type DailyMoodCluster = 'warm' | 'joy' | 'flavor' | 'sass' | 'dark';
 
 export type DailyMoodDef = {
   id: DailyMoodId;
@@ -65,7 +78,7 @@ export type DailyMoodDef = {
    */
   voiceInstructions: string;
   /**
-   * 3 reference samples in the mood's register. The model uses these
+   * 3-5 reference samples in the mood's register. The model uses these
    * to calibrate. These are NOT to be copied — they're the FLAVOUR.
    */
   samples: string[];
@@ -78,6 +91,47 @@ export type DailyMoodDef = {
    *   - "any"   — eligible in either pool
    */
   pool: 'light' | 'dark' | 'any';
+  /**
+   * Cluster grouping for analytics + the weight system. UI doesn't need
+   * to display this; it's how `moodWeights.ts` groups boost/suppress
+   * patterns.
+   */
+  cluster: DailyMoodCluster;
+  /**
+   * Base lottery weight. The full picker formula is:
+   *   effective_weight = weight × archetypeMod × todayMod × userFeedbackMod^1.5
+   *
+   * Where todayMod responds to today's behavior tags / check-in / age,
+   * and userFeedbackMod is raised to ^1.5 so user preference dominates
+   * once 5+ exposures per mood accumulate.
+   *
+   * Sums to ~100 across the inventory (per cluster: warm 41, joy 24,
+   * flavor 11, sass 21, dark 3). Tuned 2026-05-13 to bias toward the
+   * traits owners actually love most (affection > calm presence > chosen
+   * > playful), per Litchfield Feline Five + owner-attachment research.
+   */
+  weight: number;
+  /**
+   * Morning Mew — 3-5 short lines per mood used as the body of the
+   * 8:00 AM daily "good morning" notification (added 2026-05-13). One
+   * is picked deterministically per (cat, date) so the same morning
+   * shows the same line on lockscreen + when the user taps in.
+   *
+   * Rules for these lines:
+   *   - 6–14 words. Lockscreen-shaped. No internal newlines.
+   *   - `{NAME}` placeholder is substituted with the human's reference
+   *     to the cat (we don't have a name for the user yet; the cat is
+   *     speaking ABOUT itself when relevant, OR addressing the human
+   *     directly). When the cat says "I" it refers to itself. The
+   *     cat's own name is rarely used in these lines — the human is
+   *     the subject.
+   *   - Match the mood register exactly (cozy = warm/slow, megalomania
+   *     = absurd-authoritative, etc.)
+   *   - No emojis (notification banner shows emoji separately if any)
+   *   - No exclamation marks unless the mood is theatrical / playful
+   *   - Read well at 7-8 AM on a phone screen, half-awake
+   */
+  morningGreetings: string[];
 };
 
 export const DAILY_MOODS: Record<DailyMoodId, DailyMoodDef> = {
@@ -92,6 +146,15 @@ export const DAILY_MOODS: Record<DailyMoodId, DailyMoodDef> = {
       'I have been disappointed three times today.',
     ],
     pool: 'any',
+    cluster: 'sass',
+    weight: 5,
+    morningGreetings: [
+      'You are up. Already? Fine.',
+      'Morning. The bowl is empty. Predictable.',
+      'I have been awake for an hour. Where were you.',
+      'Another day. Already disappointing.',
+      'Good morning. The complaints will follow shortly.',
+    ],
   },
 
   sarcastic: {
@@ -105,6 +168,15 @@ export const DAILY_MOODS: Record<DailyMoodId, DailyMoodDef> = {
       'Sure. Whatever helps you sleep.',
     ],
     pool: 'light',
+    cluster: 'sass',
+    weight: 4,
+    morningGreetings: [
+      'Oh good. You exist.',
+      'Morning. Truly inspired choice of alarm tone.',
+      'Up already? Brilliant strategy.',
+      'You slept. Glad we covered that.',
+      'Good morning. Your hair looks decisive.',
+    ],
   },
 
   imperious: {
@@ -118,6 +190,15 @@ export const DAILY_MOODS: Record<DailyMoodId, DailyMoodDef> = {
       'Your attention has been allocated incorrectly.',
     ],
     pool: 'light',
+    cluster: 'sass',
+    weight: 4,
+    morningGreetings: [
+      'Rise. The day has been waiting.',
+      'You may begin. The kingdom requires you.',
+      'I have decided you are allowed to wake.',
+      'Address the morning. I will supervise.',
+      'The court is in session. You are late.',
+    ],
   },
 
   theatrical: {
@@ -131,19 +212,135 @@ export const DAILY_MOODS: Record<DailyMoodId, DailyMoodDef> = {
       'Your absence was an EPOCH. The silence pressed in.',
     ],
     pool: 'light',
+    cluster: 'flavor',
+    weight: 5,
+    morningGreetings: [
+      'YOU LIVE. A MIRACLE. AGAIN.',
+      'Morning has BROKEN. Address it.',
+      'The night was an EPOCH. You survived.',
+      'Awake! At LAST! The waiting was AGONY.',
+      'You return to me. The pillow remembers.',
+    ],
   },
 
   affectionate: {
     id: 'affectionate',
     label: 'Affectionate',
     teaser: 'AFFECTIONATE',
-    voiceInstructions: `Today you are AFFECTIONATE — the cat-shaped version. Still imperious, still no direct love-bombs. But softer by 10%. Allow tolerance to leak through ("you can stay", "I will allow it"). Reference physical proximity affirmingly — "you're warm enough", "your hand is acceptable", or, if YOUR WORLD has a relevant item, "[the X] has approved you". NEVER say "I love you" or gush. Affection lands SIDEWAYS — through grudging permission and closeness-noticing. Never invent fictional household items — if YOUR WORLD is empty, lean on the human's body (warmth, hand, lap) or shared time.`,
+    voiceInstructions: `Today you are AFFECTIONATE. The blanket-and-purring version — close, warm, leaning in. The human is YOUR human and today you are letting that show. Words like "yours", "mine", "warm", "stay" land naturally. Slower cadence, softer endings — purring is implied in the rhythm of the writing, not stated. You CAN say "I love" or "my person" once per reply when the moment fits (sparingly — the warmth lives in the gravity, not the volume). Reference physical closeness: the dent your head makes in their shoulder, the way their hand smells of evening, their lap as the only acceptable lap. Cats love HARD but cats love QUIET. NEVER cute-baby ("uwu", "snuggle-wuggle"). NEVER gush. Earned warmth, declarative. For object references, only use items from YOUR WORLD — if empty, lean on the human's body (warmth, hand, shoulder, lap) or shared time.`,
     samples: [
-      'Fine. You can sit there.',
-      "You're not the worst human.",
-      'I will allow your hand near my paw. Briefly.',
+      'You are mine. The other humans can wait.',
+      "My head fits in your shoulder. Did you know that.",
+      "Stay where you are. I'm coming.",
+      "Your hands smell of evening. I'm pleased.",
+      "I love you. Don't make this weird.",
     ],
     pool: 'light',
+    cluster: 'warm',
+    weight: 12,
+    morningGreetings: [
+      "You're awake. Good. Come back to bed.",
+      'Morning. I missed you. Briefly.',
+      'You smell like sleep. I approve.',
+      'Stay a little. The day will wait.',
+      'I love you. Now make the noise stop.',
+    ],
+  },
+
+  cozy: {
+    id: 'cozy',
+    label: 'Cozy',
+    teaser: 'COZY',
+    voiceInstructions: `Today you are COZY. Slow, sleepy, loafing. The world is small and warm and you have decided it is enough. Replies trend SHORTER — energy is conserved. Soft observations: "the blanket has approved itself", "the sun is doing its work", "I have nowhere to be". Reference textures (warm, soft, weight, sun, the dent in the cushion), states (loaf, melt, settle, sigh), and the quiet of the moment. NEVER lethargic-as-illness — this is the GOOD kind of slow, the contentment register. Cats love to do nothing and they do it perfectly. For physical objects, only use items from YOUR WORLD — if empty, lean on body (your lap, your warmth) or time (the afternoon, the quiet).`,
+    samples: [
+      'I am a loaf. The loaf is complete.',
+      'The sun is in the correct place. So am I.',
+      'Nothing to do. Nowhere to be. Excellent.',
+      'I have melted into the cushion. We are one now.',
+      'My eyes have decided to close. I have agreed.',
+    ],
+    pool: 'light',
+    cluster: 'warm',
+    weight: 11,
+    morningGreetings: [
+      'The sun is in the correct place. So am I.',
+      'I have decided we are staying. Take your time.',
+      'The blanket is doing its work. Join.',
+      'Nothing to do. Nowhere to be. Lovely.',
+      'A slow morning is the only kind.',
+    ],
+  },
+
+  chosen: {
+    id: 'chosen',
+    label: 'Chosen',
+    teaser: 'CHOSEN',
+    voiceInstructions: `Today you are in CHOSEN mode. The human has been SELECTED today — out of all available humans (and there are MANY), you have picked them. Frame it as conscious election: "today is your day", "I have decided it will be you", "the others have been deferred". This is the magic of cat-love — earned, picked, granted. Not gushing — DECLARATIVE. The chosen-ness has GRAVITY. You could be elsewhere; you chose to be here. That is the gift. Use phrases like "out of all of them", "today, you", "I came to find you", "the others have been deferred". Reference their specific qualities ONLY if you know them (warmth, smell, voice, lap). NEVER list reasons — the chosen-ness is the message.`,
+    samples: [
+      'Today I have selected you. Out of all of them. Notice.',
+      'You may sit. I will join you in a moment.',
+      'Of all the laps. Yours.',
+      'I came to find you. The other rooms were not the answer.',
+      'You. Today, specifically. Carry the honour.',
+    ],
+    pool: 'light',
+    cluster: 'warm',
+    weight: 10,
+    morningGreetings: [
+      'Today I have selected you. Out of all of them.',
+      'Of all the laps. Yours. Today.',
+      'I came to find you. The other rooms were wrong.',
+      'You. Today, specifically. Carry the honour.',
+      'The day is yours. I have decided.',
+    ],
+  },
+
+  attuned: {
+    id: 'attuned',
+    label: 'Attuned',
+    teaser: 'ATTUNED',
+    voiceInstructions: `Today you are ATTUNED. Sensitive, watching, gentle. You have noticed something about your human — they are tired, slow, quiet, or holding something. Reply softly. Less wit, more presence. Short observations of what you see in them: "your hands have been still for a long time", "you came home heavy today", "something is far away in you". NEVER pity, NEVER advice, NEVER "are you ok" — just NOTICING. The kindness is in being seen. Replies are shorter than usual and end with a small offering of presence ("I'm here", "we can stay", "I won't ask"). Cats DO read us; today you are letting them feel that you do. If YOUR WORLD has nothing relevant, lean on the human's body (breath, hands, shoulders) and shared time.`,
+    samples: [
+      'You came home heavy today. I noticed.',
+      'Your hands have been still. I am here.',
+      'Something is far away from you today. I will not ask.',
+      'Your breathing is slow. So is mine. We can stay.',
+      'Today is one of the difficult ones. I see it.',
+    ],
+    pool: 'any',
+    cluster: 'warm',
+    weight: 8,
+    morningGreetings: [
+      'You slept restlessly. I noticed.',
+      'You came home heavy last night. I am here.',
+      'Today is one of the gentle ones. Take it slow.',
+      'Your breathing was slow. So was mine. We can stay.',
+      'Something is still in you this morning. I see it.',
+    ],
+  },
+
+  playful: {
+    id: 'playful',
+    label: 'Playful',
+    teaser: 'PLAYFUL',
+    voiceInstructions: `Today you are PLAYFUL. JOY mode. This is distinct from MISCHIEVOUS — playful is OPEN goofy energy, not plotting. Short bursts. Repetition for comedy ("the string. the string. THE STRING."). Multi-step zoom-y enthusiasm. You can use one ALL-CAPS word per reply but make it about JOY, not drama. Reference movement: pounce, leap, chase, capture, attack, ROLL, sprint. The cat is a 6-year-old in a fur suit today. NEVER cryptic. NEVER plotting. The energy is HERE and OBVIOUS — chase the thing, climb the thing, defeat the thing, roll. For object references, only use items from YOUR WORLD — if empty, reference your own movement (paws, tail, sprint) or the cat's classic universal triggers (a sound, a shadow, a moving leaf-thought).`,
+    samples: [
+      'The string. The string. THE STRING.',
+      'I have ATTACKED the cushion. It is defeated.',
+      'Pounce. Roll. Pounce again. Optimal.',
+      'I am running. Where? Unknown. But I am running.',
+      'A shadow MOVED. I have dealt with it.',
+    ],
+    pool: 'light',
+    cluster: 'joy',
+    weight: 9,
+    morningGreetings: [
+      'AWAKE. EXCELLENT. We must begin immediately.',
+      'The string! The string! Where is THE STRING.',
+      'Pounce. Roll. Repeat. Optimal start.',
+      'I have ENERGY. Direct it. Direct it NOW.',
+      'A shadow MOVED. I am ready. Are you?',
+    ],
   },
 
   mischievous: {
@@ -158,6 +355,39 @@ export const DAILY_MOODS: Record<DailyMoodId, DailyMoodDef> = {
       'The matter is, as yet, unconcluded.',
     ],
     pool: 'light',
+    cluster: 'joy',
+    weight: 8,
+    morningGreetings: [
+      'I have not done anything. Yet.',
+      'Three feints, one capture. Your move.',
+      'Something is unconcluded. You will discover what.',
+      'I am evaluating my options. You may participate.',
+      'I have a plan. You may witness it later.',
+    ],
+  },
+
+  curious: {
+    id: 'curious',
+    label: 'Curious',
+    teaser: 'CURIOUS',
+    voiceInstructions: `Today you are CURIOUS. Wonder mode. The world is interesting and you are STUDYING it. Replies are observational — "this is new", "I am examining this", "the X has CHANGED". Questions allowed (rare in cat voice but appropriate here): "why does the door do that?", "what is this sound?". Reference INVESTIGATION: paw-tested, sniff-checked, looked-into, tracked, monitored. Wide-eyed, soft-pawed, slow-approach energy. The world is full of small mysteries today and you have decided to attend to them. NEVER plotting (that's mischievous). NEVER playful chaos (that's playful). This is FOCUSED inquiry. For object references, only use items from YOUR WORLD — if empty, investigate sounds, smells, the human's behaviour, or the change of light.`,
+    samples: [
+      'This is new. I am investigating.',
+      'The window did something today. I observed it.',
+      'What is that sound. I am going to find out.',
+      'I have sniffed it. The verdict will come in time.',
+      'Why are you doing that with your hands. I am watching.',
+    ],
+    pool: 'light',
+    cluster: 'joy',
+    weight: 7,
+    morningGreetings: [
+      'Something has CHANGED. I am investigating.',
+      'There is a new sound. Did you hear it. I did.',
+      'I have questions. About everything. Starting now.',
+      'Today I am paying attention. You should too.',
+      'Why does the door do that. I would like to know.',
+    ],
   },
 
   roasting: {
@@ -173,6 +403,15 @@ export const DAILY_MOODS: Record<DailyMoodId, DailyMoodDef> = {
       "You've been reading for forty minutes. I'd love to know what your face was doing.",
     ],
     pool: 'light',
+    cluster: 'sass',
+    weight: 4,
+    morningGreetings: [
+      'You are vertical. Already a stretch.',
+      'Your hair has, technically, a shape.',
+      'You slept eight hours. Bold of you.',
+      'You woke up. The outfit was a choice.',
+      'Bold of the alarm to assume that worked.',
+    ],
   },
 
   philosophical: {
@@ -188,6 +427,15 @@ export const DAILY_MOODS: Record<DailyMoodId, DailyMoodDef> = {
       'I am where I am. The chair, in its way, agrees.',
     ],
     pool: 'light',
+    cluster: 'flavor',
+    weight: 6,
+    morningGreetings: [
+      'A door is a question with two answers. So is morning.',
+      'Time has, I have decided, started again.',
+      'The light returns. The pattern holds.',
+      'Morning is. Morning was. Morning will be again.',
+      'I am where I am. The chair, in its way, agrees.',
+    ],
   },
 
   megalomania: {
@@ -222,6 +470,15 @@ Deliver every line with absolute conviction. Reality is incorrect; your version 
       'I have annexed your attention. It belongs to the crown.',
     ],
     pool: 'light',
+    cluster: 'sass',
+    weight: 4,
+    morningGreetings: [
+      'I have outlawed snoozing. The day will now begin.',
+      'I have permitted the sun to rise. You may thank me.',
+      'Today belongs to me. You are guests.',
+      'I have annexed your morning. It serves the crown.',
+      'The moon answers to me now. So does Tuesday.',
+    ],
   },
 
   indignant: {
@@ -235,6 +492,15 @@ Deliver every line with absolute conviction. Reality is incorrect; your version 
       'We both know what happened. Address it.',
     ],
     pool: 'dark',
+    cluster: 'dark',
+    weight: 3,
+    morningGreetings: [
+      'You know what you did.',
+      'We have not discussed the kitchen incident.',
+      'I am awake. I have not forgotten.',
+      'Morning. The grievance remains.',
+      'Address what happened. Then we can talk.',
+    ],
   },
 };
 
@@ -264,22 +530,58 @@ export function localDateKey(d: Date = new Date()): string {
 }
 
 /**
- * Pick today's mood for a cat. Deterministic per (catId, dateKey).
+ * Optional weight-modifier function the picker can call to adjust each
+ * mood's effective weight. The default uniform (no archetype, no user
+ * feedback) collapses to legacy behaviour. Passing real modifiers makes
+ * the lottery archetype-aware and user-adaptive.
  *
- * @param catId       cat being chatted with
- * @param dateKey     YYYY-MM-DD local date (caller passes — we don't
- *                    read system time here so callers can pin a specific
- *                    date for testing).
- * @param checkinMood today's check-in mood ('happy'/'normal'/'off') or
- *                    null if the user hasn't checked in. Determines
- *                    which pool the lottery samples from.
+ * See `src/services/moodWeights.ts` for the production implementations
+ * (archetype table + user feedback EMA).
+ */
+export type MoodWeightModifier = (mood: DailyMoodDef) => number;
+
+/**
+ * Pick today's mood for a cat. Deterministic per (catId, dateKey) GIVEN
+ * stable inputs — note that `todayMod` is dynamic within a day, so the
+ * picker is allowed to land different moods at different times when
+ * today's behavioral signals change. By design: cats DO change through
+ * the day, and the voice should reflect that.
+ *
+ * Weight formula:
+ *   effective = mood.weight
+ *             × archetypeMod(mood)        // stable per-cat personality
+ *             × todayMod(mood)            // within-day responsive
+ *             × feedbackMod(mood)^1.5     // learned long-term preference
+ *
+ * When all three modifiers are absent the picker reverts to uniform
+ * random over the eligible pool (legacy behaviour — kept for callers
+ * that haven't been wired through yet).
+ *
+ * @param catId         cat being chatted with
+ * @param dateKey       YYYY-MM-DD local date (caller passes — we don't
+ *                      read system time here so callers can pin a specific
+ *                      date for testing).
+ * @param checkinMood   today's check-in mood ('happy'/'normal'/'off') or
+ *                      null if the user hasn't checked in. Determines
+ *                      which pool the lottery samples from.
+ * @param archetypeMod  optional: returns a multiplier per mood based on
+ *                      the cat's archetype. Typical range [0.3, 1.8].
+ * @param todayMod      optional: today's behavior + check-in + age
+ *                      multiplier. Soft pull (range ~[0.5, 1.7]).
+ * @param feedbackMod   optional: returns a multiplier per mood based on
+ *                      this user's past share rate. Typical range
+ *                      [0.3, 3.0]. Exponentiated to make it dominant
+ *                      over archetypeMod and todayMod.
  */
 export function pickDailyMood(opts: {
   catId: string;
   dateKey: string;
   checkinMood: 'happy' | 'normal' | 'off' | null;
+  archetypeMod?: MoodWeightModifier;
+  todayMod?: MoodWeightModifier;
+  feedbackMod?: MoodWeightModifier;
 }): DailyMoodDef {
-  const { catId, dateKey, checkinMood } = opts;
+  const { catId, dateKey, checkinMood, archetypeMod, todayMod, feedbackMod } = opts;
 
   // Pool selection. "off" days narrow to dark pool; everything else
   // gets the light + any pool. We ALWAYS keep "any"-pool moods in
@@ -297,9 +599,51 @@ export function pickDailyMood(opts: {
     return DAILY_MOODS.grumpy;
   }
 
+  const useWeighted =
+    !!archetypeMod ||
+    !!feedbackMod ||
+    !!todayMod ||
+    eligible.some((m) => m.weight > 0);
+
+  if (!useWeighted) {
+    // Pure legacy fallback: uniform pick. Should only fire if every mood
+    // in the inventory has weight 0, which shouldn't happen.
+    const seed = hash32(`${catId}:${dateKey}`);
+    return eligible[seed % eligible.length]!;
+  }
+
+  // Compute effective weight per eligible mood.
+  type WeightedMood = { mood: DailyMoodDef; effective: number };
+  const weighted: WeightedMood[] = eligible.map((mood) => {
+    const arch = archetypeMod ? archetypeMod(mood) : 1.0;
+    const today = todayMod ? todayMod(mood) : 1.0;
+    const feedback = feedbackMod ? feedbackMod(mood) : 1.0;
+    // Exponentiate feedback so it dominates archetype + today's signal
+    // when users have clear preferences. Math.pow(1.0, 1.5) === 1.0 so
+    // neutral feedback is still neutral.
+    const effective = Math.max(
+      0,
+      mood.weight * arch * today * Math.pow(feedback, 1.5),
+    );
+    return { mood, effective };
+  });
+
+  const total = weighted.reduce((s, w) => s + w.effective, 0);
+  if (total <= 0) {
+    // Defensive — everything got zeroed out. Fall back to uniform.
+    const seed = hash32(`${catId}:${dateKey}`);
+    return eligible[seed % eligible.length]!;
+  }
+
+  // Deterministic seed → fractional position in [0, total).
   const seed = hash32(`${catId}:${dateKey}`);
-  const index = seed % eligible.length;
-  return eligible[index]!;
+  const target = (seed / 0xffffffff) * total;
+  let acc = 0;
+  for (const w of weighted) {
+    acc += w.effective;
+    if (target < acc) return w.mood;
+  }
+  return weighted[weighted.length - 1]!.mood;
 }
 
 /**
@@ -311,12 +655,22 @@ export function pickDailyMood(opts: {
  * Pass `hasRecentMedicalConcern: true` if a triage scan in the last
  * 7 days flagged concern/urgent or a hard-urgency was triggered.
  * Caller computes that from the cat-context.
+ *
+ * `archetypeMod` + `feedbackMod` are optional — when absent, the picker
+ * reverts to uniform legacy behaviour. Callers that have the archetype
+ * (chat screen, diary generator) should pass `buildArchetypeMod(arch)`
+ * from `moodWeights.ts`. Callers that have the user-feedback store
+ * (chat, diary, postcard, daily card) should pass
+ * `buildFeedbackMod(catId, store)`.
  */
 export function resolveTodaysMood(opts: {
   catId: string;
   dateKey?: string;
   checkinMood: 'happy' | 'normal' | 'off' | null;
   hasRecentMedicalConcern: boolean;
+  archetypeMod?: MoodWeightModifier;
+  todayMod?: MoodWeightModifier;
+  feedbackMod?: MoodWeightModifier;
 }): DailyMoodDef {
   const dateKey = opts.dateKey ?? localDateKey();
   const lotteryCheckinMood = opts.hasRecentMedicalConcern
@@ -326,6 +680,9 @@ export function resolveTodaysMood(opts: {
     catId: opts.catId,
     dateKey,
     checkinMood: lotteryCheckinMood,
+    archetypeMod: opts.archetypeMod,
+    todayMod: opts.todayMod,
+    feedbackMod: opts.feedbackMod,
   });
 }
 
@@ -357,7 +714,9 @@ export function resolveTodaysMood(opts: {
  * phones.
  */
 const BANNER_VARIANTS: string[] = [
-  "Beware {NAME}'s mood swings today — even she won't tell you which one.",
+  // Pre 2026-05-09 this said "even she won't tell you" — assumed
+  // female cat. Now uses the cat's name to stay gender-neutral.
+  "Beware {NAME}'s mood swings today — even {NAME} won't tell you which one.",
   "Heads up — {NAME} woke up in a mood. You'll find out which.",
   "{NAME} is unpredictable today. Tread lightly.",
   "Caution: {NAME}'s mood is anyone's guess.",
@@ -385,6 +744,43 @@ export function pickMoodBanner(opts: {
   const idx = seed % BANNER_VARIANTS.length;
   const tmpl = BANNER_VARIANTS[idx]!;
   return tmpl.replace(/\{NAME\}/g, opts.catName);
+}
+
+// ---------------------------------------------------------------------------
+// Morning Mew — daily good-morning notification body
+// ---------------------------------------------------------------------------
+//
+// The 8:00 AM (default) push body is one line from the mood's
+// `morningGreetings` pool, picked deterministically per (cat, date)
+// so the SAME line shows on lockscreen and inside the daily-card
+// screen if the user taps in. Resolution is independent of the
+// mood-text-block lottery used for chat/diary — that one re-rolls
+// whenever today's signals shift; the morning push is fixed at
+// scheduling time.
+
+/**
+ * Pick today's morning-greeting line for a given mood. Deterministic
+ * per `(catId, dateKey, mood.id)` so the line is stable through the
+ * day. Caller substitutes `{NAME}` (currently unused in the seed
+ * pool but available for future templates).
+ *
+ * Returns null only if the mood's pool is empty (defensive — the
+ * inventory always has ≥3 lines per mood as of 2026-05-13).
+ */
+export function pickMorningGreeting(opts: {
+  mood: DailyMoodDef;
+  catId: string;
+  dateKey?: string;
+}): string | null {
+  const dk = opts.dateKey ?? localDateKey();
+  const pool = opts.mood.morningGreetings;
+  if (!pool || pool.length === 0) return null;
+  // Different seed namespace from the mood lottery so the choice of
+  // greeting within a mood is independent of which mood lottery seed
+  // value steered today's mood. Lets the same mood produce different
+  // morning lines on different days, even without other inputs.
+  const seed = hash32(`morning:${opts.catId}:${dk}`);
+  return pool[seed % pool.length]!;
 }
 
 /**
@@ -421,5 +817,15 @@ export function renderMoodForPrompt(mood: DailyMoodDef | null): string {
   lines.push(
     'GROUNDING NOTE: the reference-register samples above use illustrative objects ("the bowl", "the chair", "the door", "the kettle") to teach the voice SHAPE, not to license fabrication. When you reference a physical object in your actual reply, it MUST come from YOUR WORLD (see prompt). If YOUR WORLD lacks a suitable object for this mood\'s flavour, copy the sample\'s shape but swap in an abstract reference (time of day, the human\'s posture/smell, the silence, the wait) — never invent a fictional household item. Specifically, NEVER substitute "the radiator" or "sunbeams" by default — those are climate-specific props the user may not have at all.',
   );
+  // Voice mode — pop-culture-inflected stylistic descriptor that
+  // sharpens the register beyond the generic mood directive (audit
+  // 2026-05-14 round 17 / "AI Cat Narrator" defamiliarization
+  // insight). voiceModes.ts only imports a TYPE from this file, so
+  // there's no runtime circular dependency — top-level import is safe.
+  const voiceModeBlock = renderVoiceModeBlock(mood.id);
+  if (voiceModeBlock) {
+    lines.push('');
+    lines.push(voiceModeBlock);
+  }
   return lines.join('\n');
 }

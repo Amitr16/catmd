@@ -231,15 +231,43 @@ const MAX_OBSERVATIONS_TRACKED = 8;
 const RECURRENCE_THRESHOLD = 2;
 const RECURRENCE_WINDOW_DAYS = 30;
 
+/**
+ * Lightweight per-photo scene caption emitted by worldExtraction.
+ * Local-only, capped at ~30 per cat. Drives the "today's photos" block
+ * the chat / diary prompt reads so the cat can reference what the
+ * camera actually saw today (a posture, a window, afternoon light)
+ * without re-running vision at chat time. Vision-grounded — the
+ * extractor's prompt forbids inventing anything not in frame.
+ */
+export type WorldScene = {
+  /** Source photo URI (file://) — kept for de-dup, not surfaced to AI. */
+  photo_uri: string | null;
+  /** "Lily on the green chair in afternoon light, half-closed eyes." */
+  caption: string;
+  /** ISO timestamp when the photo was observed. */
+  observed_at: string;
+};
+
+const MAX_SCENES_PER_CAT = 30;
+
 type State = {
   entriesByCat: Record<string, WorldEntry[]>;
   /** Candidate pool — silent, not user-visible. */
   candidatesByCat: Record<string, WorldCandidate[]>;
+  /**
+   * Recent photo scene captions (vision-grounded). Newest first. Capped
+   * at MAX_SCENES_PER_CAT so the store doesn't grow unbounded. Local-
+   * only — not synced to cloud (the source photos already are, and
+   * captions are cheap to regenerate if needed).
+   */
+  scenesByCat: Record<string, WorldScene[]>;
 
   // ── Selectors ──────────────────────────────────────────────────
   getEntriesForCat: (catId: string) => WorldEntry[];
   getEntryById: (catId: string, entryId: string) => WorldEntry | null;
   getCandidatesForCat: (catId: string) => WorldCandidate[];
+  /** Get recent scenes — newest first. Default cap 8. */
+  getRecentScenesForCat: (catId: string, limit?: number) => WorldScene[];
 
   // ── Mutators ───────────────────────────────────────────────────
   addEntry: (entry: Omit<WorldEntry, 'id' | 'created_at' | 'updated_at' | 'reference_count'>) => WorldEntry;
@@ -260,6 +288,14 @@ type State = {
    * call so the caller can fire telemetry / surface the moment.
    */
   ingestObservations: (catId: string, observations: WorldObservation[]) => number;
+
+  /**
+   * Append a scene caption to the cat's recent-scenes log. De-dups
+   * by photo_uri (replaces the prior entry for the same photo so
+   * re-runs don't duplicate). Caller is responsible for filtering
+   * empty captions before passing through.
+   */
+  pushScene: (catId: string, scene: WorldScene) => void;
 
   clearForCat: (catId: string) => void;
   clearAll: () => void;
@@ -316,11 +352,29 @@ export const useWorldStore = create<State>()(
     (set, get) => ({
       entriesByCat: {},
       candidatesByCat: {},
+      scenesByCat: {},
 
       getEntriesForCat: (catId) => get().entriesByCat[catId] ?? [],
       getEntryById: (catId, entryId) =>
         (get().entriesByCat[catId] ?? []).find((e) => e.id === entryId) ?? null,
       getCandidatesForCat: (catId) => get().candidatesByCat[catId] ?? [],
+      getRecentScenesForCat: (catId, limit = 8) =>
+        (get().scenesByCat[catId] ?? []).slice(0, limit),
+
+      pushScene: (catId, scene) => {
+        // De-dup by photo_uri so re-runs over the same photo don't
+        // double-log. Newest first; cap at MAX_SCENES_PER_CAT.
+        set((s) => {
+          const prev = s.scenesByCat[catId] ?? [];
+          const filtered = scene.photo_uri
+            ? prev.filter((p) => p.photo_uri !== scene.photo_uri)
+            : prev;
+          const next = [scene, ...filtered].slice(0, MAX_SCENES_PER_CAT);
+          return {
+            scenesByCat: { ...s.scenesByCat, [catId]: next },
+          };
+        });
+      },
 
       addEntry: (input) => {
         const now = nowIso();
@@ -591,13 +645,20 @@ export const useWorldStore = create<State>()(
           delete nextEntries[catId];
           const nextCandidates = { ...s.candidatesByCat };
           delete nextCandidates[catId];
-          return { entriesByCat: nextEntries, candidatesByCat: nextCandidates };
+          const nextScenes = { ...s.scenesByCat };
+          delete nextScenes[catId];
+          return {
+            entriesByCat: nextEntries,
+            candidatesByCat: nextCandidates,
+            scenesByCat: nextScenes,
+          };
         });
         // Cloud cleanup — fire deletes per entry
         for (const e of list) deleteFromCloud(e.id);
       },
 
-      clearAll: () => set({ entriesByCat: {}, candidatesByCat: {} }),
+      clearAll: () =>
+        set({ entriesByCat: {}, candidatesByCat: {}, scenesByCat: {} }),
     }),
     {
       name: 'catmd-world',

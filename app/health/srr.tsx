@@ -89,8 +89,6 @@ export default function SRRScreen() {
     };
   }, []);
 
-  if (!cat) return null;
-
   const start = () => {
     setTaps(0);
     setRemaining(duration);
@@ -118,6 +116,10 @@ export default function SRRScreen() {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     }
   }, [running, remaining, taps, duration]);
+
+  // Hook-order safety (2026-05-14 audit fix): early "no cat" return
+  // used to live before the useEffect above, violating rules-of-hooks.
+  if (!cat) return null;
 
   const stop = () => {
     if (tickRef.current) clearInterval(tickRef.current);

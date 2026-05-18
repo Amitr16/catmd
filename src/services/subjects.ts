@@ -209,6 +209,12 @@ export async function detectSubjectsForPhoto(opts: {
   photoUri: string;
   catName: string;
 }): Promise<DetectedSubjects | null> {
+  // Pro gate (2026-05-12) — silent vision pass ~$0.005/photo. Same
+  // policy as worldExtraction: Pro / trial / whitelisted users get
+  // the silent magic; free post-trial users save the cost.
+  const { getProAccessCached } = await import('./purchases');
+  if (!(await getProAccessCached())) return null;
+
   const b64 = await fileUriToBase64(opts.photoUri);
   if (!b64) return null;
 

@@ -32,49 +32,142 @@ export async function ensureSession() {
   return data.session;
 }
 
-/**
- * Upgrade an anonymous user to email + password WITHOUT losing their data.
- * Under the hood: updateUser attaches credentials to the existing uid.
- */
-export async function upgradeToEmail(email: string, password: string) {
-  const { data, error } = await supabase.auth.updateUser({ email, password });
-  if (error) throw error;
-  return data.user;
-}
-
-/**
- * Add email to the current account, creating the account if there's no
- * session at all (common when anonymous sign-in is disabled or offline).
- * Returns the user on success.
- */
-export async function addEmailToAccount(email: string, password: string) {
-  const existing = await getSession();
-  if (existing) return upgradeToEmail(email, password);
-
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) throw error;
-  return data.user;
-}
-
 export type EmailOtpFlow = 'signup' | 'email_change';
 
 /**
+ * Thrown by `addEmailToAccount` when the email is already linked to a
+ * different CatMD account. The UI should surface this distinctly: NOT
+ * a generic error, but an explicit branching choice — let the user
+ * pick "use a different email" OR "sign in to that account instead
+ * (clears current data)". Silently signing them in would orphan their
+ * current anonymous data without warning.
+ */
+export class EmailAlreadyExistsError extends Error {
+  constructor() {
+    super('Email is already linked to another account.');
+    this.name = 'EmailAlreadyExistsError';
+  }
+}
+
+/**
+ * Add email to the current account using OTP-only auth (no password).
+ *
+ * One-email-one-account rule: rejects emails that are already linked
+ * to other accounts. To get into an existing account, the user must
+ * explicitly call `signInWithExistingEmail` (a separate, conscious
+ * action that clears current anonymous data).
+ *
+ * Paths:
+ *   1. Anonymous user + brand-new email → `updateUser({ email })`
+ *      attaches the email to the existing anonymous auth.uid, sending
+ *      an OTP code for `type: 'email_change'`. **Preserves all
+ *      anonymous data** because the uid stays the same.
+ *
+ *   2. Anonymous user + email already-registered →
+ *      throws `EmailAlreadyExistsError`. UI surfaces explicit choice.
+ *
+ *   3. No session at all (anonymous sign-in disabled / offline) →
+ *      `signInWithOtp` with `shouldCreateUser: true` creates a fresh
+ *      account. If the email IS already registered, Supabase itself
+ *      returns a sign-in OTP for the existing account in this case —
+ *      we let it through since there's no anonymous data at risk.
+ *
+ * Returns the flow that was used so the caller passes the right
+ * `type` to verifyOtp later.
+ *
+ * @throws EmailAlreadyExistsError when email is taken AND we have an
+ *         anonymous session (Path 2). Caller should surface explicit
+ *         "sign in instead" branching UI.
+ */
+export async function addEmailToAccount(email: string): Promise<{
+  flow: EmailOtpFlow;
+}> {
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) throw new Error('Enter an email address.');
+  const existing = await getSession();
+
+  // Path 1+2: anonymous user wants to attach an email.
+  if (existing) {
+    const { error } = await supabase.auth.updateUser({ email: trimmed });
+    if (!error) {
+      // Success — OTP en route for email_change type.
+      return { flow: 'email_change' };
+    }
+    // Detect the "already linked to another account" case. Supabase
+    // returns variations like "User already registered", "A user with
+    // this email address has already been registered", etc.
+    const msg = (error.message ?? '').toLowerCase();
+    const alreadyExists =
+      msg.includes('already') ||
+      msg.includes('exists') ||
+      msg.includes('registered');
+    if (alreadyExists) {
+      throw new EmailAlreadyExistsError();
+    }
+    throw error;
+  }
+
+  // Path 3: no session at all. Either creates or signs in — no
+  // anonymous data to orphan.
+  const { error } = await supabase.auth.signInWithOtp({
+    email: trimmed,
+    options: { shouldCreateUser: true },
+  });
+  if (error) throw error;
+  return { flow: 'signup' };
+}
+
+/**
+ * Explicit "sign in to an existing account" flow. Called when the
+ * user has been told their email is already linked elsewhere AND they
+ * confirmed they want to swap into that account (losing current
+ * anonymous data).
+ *
+ * Uses `signInWithOtp` with `shouldCreateUser: false` so a typo
+ * doesn't accidentally create a fresh account.
+ */
+export async function signInWithExistingEmail(email: string): Promise<{
+  flow: EmailOtpFlow;
+}> {
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed) throw new Error('Enter an email address.');
+  const { error } = await supabase.auth.signInWithOtp({
+    email: trimmed,
+    options: { shouldCreateUser: false },
+  });
+  if (error) throw error;
+  return { flow: 'signup' };
+}
+
+/**
  * Resend the email-confirmation OTP for the current user's pending email.
- * `flow` is 'signup' when the user has no prior session (fresh sign-up),
- * or 'email_change' when upgrading an anonymous session to email. The
- * caller derives this from auth state (see useAuthSession).
+ * `flow` is 'signup' for fresh-account OTP sign-ins, or 'email_change'
+ * for anonymous-to-email upgrades. The caller derives this from the
+ * state returned by addEmailToAccount (or from useAuthSession).
  */
 export async function resendEmailOtp(email: string, flow: EmailOtpFlow): Promise<void> {
   const trimmed = email.trim().toLowerCase();
   if (!trimmed) throw new Error('No email to resend to.');
-  const { error } = await supabase.auth.resend({ type: flow, email: trimmed });
-  if (error) throw error;
+  if (flow === 'email_change') {
+    // updateUser-sent OTP — resend via the same path.
+    const { error } = await supabase.auth.resend({ type: 'email_change', email: trimmed });
+    if (error) throw error;
+  } else {
+    // signInWithOtp-sent code — re-fire signInWithOtp to send a fresh code.
+    const { error } = await supabase.auth.signInWithOtp({
+      email: trimmed,
+      options: { shouldCreateUser: true },
+    });
+    if (error) throw error;
+  }
 }
 
 /**
  * Verify the 6-digit OTP the user entered against the email we sent it
- * to. On success, Supabase marks the email confirmed and (for signup)
- * issues a session. `flow` must match the flow that sent the code.
+ * to. On success, Supabase marks the email confirmed and issues a
+ * session. The `flow` MUST match the flow that originally sent the
+ * code — `verifyOtp.type` is path-dependent (Supabase requires 'email'
+ * for signInWithOtp, 'email_change' for updateUser email changes).
  */
 export async function verifyEmailOtp(
   email: string,
@@ -86,10 +179,16 @@ export async function verifyEmailOtp(
   if (trimmedToken.length !== 6) {
     throw new Error('Enter the 6-digit code from your email.');
   }
+  // Map our internal flow names to Supabase's verifyOtp type values.
+  // The 'signup' flow now sends via signInWithOtp() (was signUp() with
+  // password) → verify type is 'email'. The 'email_change' flow uses
+  // updateUser → verify type stays 'email_change'.
+  const verifyType: 'email' | 'email_change' =
+    flow === 'signup' ? 'email' : 'email_change';
   const { error } = await supabase.auth.verifyOtp({
     email: trimmedEmail,
     token: trimmedToken,
-    type: flow,
+    type: verifyType,
   });
   if (error) throw error;
 }

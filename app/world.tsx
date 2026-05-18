@@ -178,7 +178,7 @@ export default function WorldScreen() {
             The things, places, and toys {cat.name} notices in your photos
             show up here. Once the same item appears a few times, {cat.name}
             starts referencing it in chat and diary entries — instead of
-            inventing props that don't exist.
+            inventing props that don&apos;t exist.
           </Text>
           <Text token="caption" color="textMuted" style={{ marginTop: space[2] }}>
             Tap any item to edit or remove if {cat.name} got something wrong.
@@ -539,7 +539,7 @@ function WeatherOptInCard({ catName }: { catName: string }) {
         <View style={styles.weatherCardHeader}>
           <Cloud size={20} color={t.primary500} weight="duotone" />
           <Text token="body" style={{ marginLeft: space[2], color: t.textPrimary, fontWeight: '600' }}>
-            Today's weather
+            Today&apos;s weather
           </Text>
           <View style={styles.weatherActiveBadge}>
             <Check size={14} color={t.primary700} weight="bold" />
@@ -549,7 +549,7 @@ function WeatherOptInCard({ catName }: { catName: string }) {
           </View>
         </View>
         <Text token="caption" color="textMuted" style={{ marginTop: space[1] }}>
-          {catName} can reference today's real weather. To revoke, open device Settings.
+          {catName} can reference today&apos;s real weather. To revoke, open device Settings.
         </Text>
       </View>
     );
@@ -561,7 +561,7 @@ function WeatherOptInCard({ catName }: { catName: string }) {
         <View style={styles.weatherCardHeader}>
           <Cloud size={20} color={t.textMuted} weight="duotone" />
           <Text token="body" style={{ marginLeft: space[2], color: t.textPrimary, fontWeight: '600' }}>
-            Today's weather
+            Today&apos;s weather
           </Text>
         </View>
         <Text token="caption" color="textMuted" style={{ marginTop: space[1] }}>
@@ -585,12 +585,12 @@ function WeatherOptInCard({ catName }: { catName: string }) {
       <View style={styles.weatherCardHeader}>
         <Cloud size={20} color={t.primary500} weight="duotone" />
         <Text token="body" style={{ marginLeft: space[2], color: t.textPrimary, fontWeight: '600' }}>
-          Let {catName} know today's weather?
+          Let {catName} know today&apos;s weather?
         </Text>
       </View>
       <Text token="caption" color="textMuted" style={{ marginTop: space[1], marginBottom: space[2] }}>
         Approximate location only (rounded to ~10km, never shared).
-        {catName} will reference real conditions ("snow today, I am not pleased")
+        {catName} will reference real conditions (&quot;snow today, I am not pleased&quot;)
         in chat and diary instead of inventing weather.
       </Text>
       <Pressable

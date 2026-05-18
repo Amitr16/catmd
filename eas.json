@@ -44,7 +44,9 @@
       },
       "env": {
         "EXPO_PUBLIC_ENABLE_ANALYTICS": "true",
-        "EXPO_PUBLIC_ENABLE_PAYWALL": "false"
+        "EXPO_PUBLIC_ENABLE_PAYWALL": "true",
+        "EXPO_PUBLIC_FREE_SCANS_PER_MONTH": "0",
+        "EXPO_PUBLIC_TRIAL_LENGTH_DAYS": "14"
       }
     }
   },

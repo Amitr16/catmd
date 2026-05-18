@@ -391,7 +391,7 @@ function ProfileView({ catName, catId }: { catName: string; catId: string }) {
     return (
       <View style={{ paddingTop: space[8], alignItems: 'center' }}>
         <Text token="body" color="textMuted">
-          Computing {catName}'s profile…
+          Computing {catName}&apos;s profile…
         </Text>
       </View>
     );
@@ -438,7 +438,7 @@ function ProfileView({ catName, catId }: { catName: string; catId: string }) {
               token="caption"
               style={{ color: t.secondary700, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: space[2] }}
             >
-              {catName}'s archetype
+              {catName}&apos;s archetype
             </Text>
             <Text
               token="displayLg"
@@ -479,7 +479,7 @@ function ProfileView({ catName, catId }: { catName: string; catId: string }) {
               ${catName}'s voice in chat, diary, daily card. This is
               the explicit "more data → richer voice" message the user
               should see at the moment they care about the profile. */}
-          <SectionHeading>How {catName}'s voice grows</SectionHeading>
+          <SectionHeading>How {catName}&apos;s voice grows</SectionHeading>
           <Card>
             <Text token="body" style={{ lineHeight: 22, marginBottom: space[3] }}>
               {`The archetype above is the starting point. ${catName}'s voice in chat, diary entries and the daily card gets richer with every activity you log — each one is another brushstroke on ${catName}'s portrait.`}
@@ -613,7 +613,7 @@ function BuildingNotice({
         color="textMuted"
         style={{ letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: space[2] }}
       >
-        Building {catName}'s profile
+        Building {catName}&apos;s profile
       </Text>
       <Text token="heading2" style={{ marginBottom: space[3] }}>
         Almost there.

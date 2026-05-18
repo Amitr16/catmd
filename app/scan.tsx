@@ -67,8 +67,12 @@ export default function ScanScreen() {
   const heading = `What's going on with ${cat?.name ?? 'your cat'}?`;
   const subheading =
     'Describe what you\u2019re seeing, or snap a photo — a cat, their litter box, urine, or stool. Include when it started and anything unusual.';
+  // Placeholder uses the cat's name (or "they") so it doesn't pre-
+  // suppose gender. Pre 2026-05-09 this hardcoded "She hasn't eaten"
+  // and felt wrong for users with male cats.
+  const placeholderName = cat?.name ?? 'They';
   const placeholder =
-    "e.g. She hasn't eaten since yesterday and keeps hiding under the bed. Or: straining in the litter box with pink tinge.";
+    `e.g. ${placeholderName} hasn't eaten since yesterday and keeps hiding under the bed. Or: straining in the litter box with pink tinge.`;
   const [text, setText] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -206,6 +210,11 @@ export default function ScanScreen() {
           mode: detectedMode,
         },
       });
+      // Unified activation event for marketing-attribution funnels
+      // (audit 2026-05-16). Fires alongside the granular event so
+      // dashboards can union-filter on `core_feature_used` to measure
+      // activation-by-install-source.
+      analytics.track({ type: 'core_feature_used', props: { feature: 'scan' } });
       if (imageBase64) {
         analytics.track({
           type: 'scan_classified',

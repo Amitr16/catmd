@@ -123,6 +123,13 @@ export const useCatStudioStore = create<State>()(
         const cat = useCatStore.getState().cats.find((c) => c.id === catId);
         if (!cat) return null;
 
+        // Pro gate (2026-05-12) — auto-poster gen costs ~$0.10/poster
+        // (gpt-image-1, the single most expensive AI call we make).
+        // Free post-trial users get no auto-posters. Cached 5 min so
+        // this is cheap even if called frequently.
+        const { getProAccessCached } = await import('../services/purchases');
+        if (!(await getProAccessCached())) return null;
+
         const existing = get().posters[catId] ?? [];
         const anchor = getStudioWeekAnchor();
         const latestAuto = existing.find((p) => p.auto);

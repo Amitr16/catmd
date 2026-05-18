@@ -35,6 +35,7 @@ import { Text } from '../src/components/Text';
 import { useShareableCard } from '../src/components/ShareableCatCard';
 import { useActiveCat } from '../src/hooks/useActiveCat';
 import { useChatThread } from '../src/state/chatStore';
+import { useHealthStore, type HealthEvent } from '../src/state/healthStore';
 import type { ChatTurn } from '../src/services/chat';
 import { useTheme } from '../src/theme/useTheme';
 import { space } from '../src/theme/tokens';
@@ -69,20 +70,99 @@ function scoreShareability(content: string): number {
   return n;
 }
 
-type ScoredReply = { turn: ChatTurn; score: number };
+/**
+ * Shareable hit — unified across CHAT REPLIES and MEOW TRANSLATIONS.
+ * Both surfaces produce screenshot-worthy cat-voice lines; they share
+ * the same scroll so the owner sees ONE Greatest Hits stream rather
+ * than two siloed feeds.
+ *
+ * `kind` differentiates the source for tagging + share-card framing:
+ *   - 'chat' → from /chat (assistant turn)
+ *   - 'translation' → from /translate (cat said it; multimodal)
+ */
+type Hit =
+  | {
+      kind: 'chat';
+      id: string;
+      content: string;
+      created_at: string;
+      score: number;
+    }
+  | {
+      kind: 'translation';
+      id: string;
+      content: string;
+      created_at: string;
+      score: number;
+      /** Vocalization type — surfaces as a small badge ("meow", "purr"). */
+      vocalizationType: string;
+      /** Intent — surfaces as a small badge ("greeting", "demand_food"). */
+      intent: string;
+      confidence: 'high' | 'moderate' | 'low';
+    };
 
-function pickGreatestHits(thread: ChatTurn[], max: number): ChatTurn[] {
-  const scored: ScoredReply[] = thread
-    .filter((t) => t.role === 'assistant')
-    .map((t) => ({ turn: t, score: scoreShareability(t.content) }))
-    .filter((s) => s.score > 0);
+function pickGreatestHits(
+  thread: ChatTurn[],
+  translations: HealthEvent[],
+  max: number,
+): Hit[] {
+  const hits: Hit[] = [];
 
-  // Sort descending by score, then newest-first within same score.
-  scored.sort((a, b) => {
+  // Chat replies — same heuristic as before.
+  for (const turn of thread) {
+    if (turn.role !== 'assistant') continue;
+    const score = scoreShareability(turn.content);
+    if (score <= 0) continue;
+    hits.push({
+      kind: 'chat',
+      id: turn.id,
+      content: turn.content,
+      created_at: turn.created_at,
+      score,
+    });
+  }
+
+  // Meow translations — every translation is by definition meant to
+  // be shareable (the whole feature is calibrated for it). We bias
+  // them up by +5 over the chat baseline so the latest translations
+  // surface first, then re-sort by score + recency. Low-confidence
+  // translations get a -3 penalty so they don't dominate when the
+  // cat hasn't been in clear-signal moods.
+  for (const ev of translations) {
+    if (ev.type !== 'meow_translation') continue;
+    const p = ev.payload as {
+      translation?: string;
+      vocalization_type?: string;
+      intent?: string;
+      confidence?: 'high' | 'moderate' | 'low';
+    };
+    const content = (p.translation ?? '').trim();
+    if (content.length < 10) continue;
+    let score = 5; // base boost for translations
+    if (p.confidence === 'low') score -= 3;
+    if (p.confidence === 'high') score += 1;
+    // Distress translations are hidden from the Greatest Hits scroll —
+    // they're earnest, not screenshottable. Distinct surface in the
+    // future (Today tab banner) will handle them.
+    if (p.intent === 'distress') continue;
+    hits.push({
+      kind: 'translation',
+      id: ev.id,
+      content,
+      created_at: ev.ts,
+      score,
+      vocalizationType: p.vocalization_type ?? 'meow',
+      intent: p.intent ?? 'other',
+      confidence: p.confidence ?? 'moderate',
+    });
+  }
+
+  // Sort: highest score first, then newest within same score.
+  hits.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
-    return b.turn.created_at.localeCompare(a.turn.created_at);
+    return b.created_at.localeCompare(a.created_at);
   });
-  return scored.slice(0, max).map((s) => s.turn);
+  return hits.slice(0, max);
 }
 
 // ────────────────────────────────────────────────────────────────────
@@ -93,19 +173,32 @@ export default function CatSaysScreen() {
   const insets = useSafeAreaInsets();
   const cat = useActiveCat();
   const thread = useChatThread(cat?.id);
+  const allEvents = useHealthStore((s) => s.events);
+  const translations = useMemo(
+    () =>
+      cat?.id
+        ? allEvents.filter(
+            (e) => e.cat_id === cat.id && e.type === 'meow_translation',
+          )
+        : [],
+    [allEvents, cat?.id],
+  );
   const { share: shareCard, Host: ShareCardHost } = useShareableCard();
 
-  const greatestHits = useMemo(() => pickGreatestHits(thread, 30), [thread]);
+  const greatestHits = useMemo(
+    () => pickGreatestHits(thread, translations, 30),
+    [thread, translations],
+  );
   const catName = cat?.name ?? 'your cat';
 
-  const handleShare = (turn: ChatTurn) => {
+  const handleShare = (hit: Hit) => {
     if (!cat) return;
     void shareCard(
       {
         kind: 'chat_reply',
         catName: cat.name,
         catPhotoUri: cat.photo_uri ?? null,
-        headline: turn.content,
+        headline: hit.content,
       },
       { surface: 'cat_says_greatest_hits' },
     );
@@ -160,16 +253,15 @@ export default function CatSaysScreen() {
               color="textMuted"
               style={{ textAlign: 'center', lineHeight: 22 }}
             >
-              {catName} hasn't said much yet. Open Chat and ask
-              {' '}{catName}
-              {' '}something — the punchiest replies will
-              show up here.
+              {catName} hasn&apos;t said much yet. Chat with
+              {' '}{catName} or record a clip in the Voice translator — the
+              punchiest lines from both will show up here.
             </Text>
           </View>
         ) : (
           <View style={{ gap: space[8] }}>
-            {greatestHits.map((turn) => (
-              <View key={turn.id} style={{ gap: space[3] }}>
+            {greatestHits.map((hit) => (
+              <View key={hit.id} style={{ gap: space[3] }}>
                 <Text
                   style={{
                     color: t.textPrimary,
@@ -179,7 +271,7 @@ export default function CatSaysScreen() {
                     lineHeight: 32,
                   }}
                 >
-                  “{turn.content.trim()}”
+                  “{hit.content.trim()}”
                 </Text>
                 <View
                   style={{
@@ -188,20 +280,51 @@ export default function CatSaysScreen() {
                     justifyContent: 'space-between',
                   }}
                 >
-                  <Text
-                    token="caption"
-                    style={{
-                      color: t.textMuted,
-                      letterSpacing: 1.2,
-                      fontSize: 11,
-                      textTransform: 'uppercase',
-                      fontFamily: 'Figtree_600SemiBold',
-                    }}
-                  >
-                    {formatRelative(turn.created_at)}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: space[2] }}>
+                    <Text
+                      token="caption"
+                      style={{
+                        color: t.textMuted,
+                        letterSpacing: 1.2,
+                        fontSize: 11,
+                        textTransform: 'uppercase',
+                        fontFamily: 'Figtree_600SemiBold',
+                      }}
+                    >
+                      {formatRelative(hit.created_at)}
+                    </Text>
+                    {/* Source badge — distinguishes a quoted chat reply
+                        from a multimodal translation. The translator is
+                        a differentiator for the app so we LEAN INTO
+                        the badge ("translated meow") rather than
+                        homogenising. */}
+                    {hit.kind === 'translation' && (
+                      <View
+                        style={{
+                          paddingHorizontal: space[2],
+                          paddingVertical: 2,
+                          borderRadius: 999,
+                          backgroundColor: t.secondary100,
+                          borderWidth: 1,
+                          borderColor: t.borderSubtle,
+                        }}
+                      >
+                        <Text
+                          token="caption"
+                          style={{
+                            color: t.secondary900,
+                            fontSize: 10,
+                            letterSpacing: 0.8,
+                            fontFamily: 'Figtree_600SemiBold',
+                          }}
+                        >
+                          translated {hit.vocalizationType}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                   <Pressable
-                    onPress={() => handleShare(turn)}
+                    onPress={() => handleShare(hit)}
                     hitSlop={8}
                     style={{
                       flexDirection: 'row',

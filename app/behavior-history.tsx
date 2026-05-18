@@ -219,8 +219,8 @@ export default function BehaviorHistoryScreen() {
           </View>
           <Text token="caption" color="textSecondary" style={{ marginTop: space[2], lineHeight: 18 }}>
             Every body-language reading is saved here. {cat.name} pulls
-            from them in chat ("the way I was sitting last week…"), they
-            shape {cat.name}'s personality, and they feed the diary.
+            from them in chat (&quot;the way I was sitting last week…&quot;), they
+            shape {cat.name}&apos;s personality, and they feed the diary.
             Add a private note to any reading to remember the context.
           </Text>
         </View>

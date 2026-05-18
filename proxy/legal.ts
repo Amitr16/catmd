@@ -15,7 +15,7 @@
  * listing recognise they're on the right site.
  */
 
-const LAST_UPDATED = '2026-04-23';
+const LAST_UPDATED = '2026-05-13';
 const CONTACT_EMAIL = 'support@catmd.pet';
 const LEGAL_NAME = 'CatMD';
 const JURISDICTION = 'Singapore';
@@ -121,14 +121,16 @@ function escapeHtml(s: string): string {
 
 export function renderPrivacy(): string {
   const body = `
-<p>This Privacy Policy explains how <strong>CatMD</strong> ("we", "us", "our") collects, uses, and protects information when you use the CatMD mobile application (the "App"). CatMD is an informational triage assistant for cat parents — it is <strong>not</strong> a substitute for professional veterinary advice. See the <a href="/disclaimer">Medical Disclaimer</a> and <a href="/terms">Terms of Service</a>.</p>
+<p>This Privacy Policy explains how <strong>CatMD</strong> ("we", "us", "our") collects, uses, and protects information when you use the CatMD mobile application (the "App"). CatMD is an informational app for cat owners — it is <strong>not</strong> a substitute for professional veterinary advice. See the <a href="/disclaimer">Medical Disclaimer</a> and <a href="/terms">Terms of Service</a>.</p>
 
 <h2>1. Summary in plain English</h2>
 <ul>
   <li><strong>We collect as little as possible.</strong> By default you use CatMD with an anonymous account &mdash; no email, no name, no real-world identity.</li>
-  <li><strong>Your cat's profile and scan history live on your device first.</strong> We mirror them to our secure database so you can recover them if you change phones, but we never sell or share them.</li>
-  <li><strong>Photos you scan</strong> are sent to our AI processing partner (OpenAI) to produce the triage. We do not keep the photos on our servers after the scan completes, unless you choose to save them to your history.</li>
-  <li><strong>You can delete everything at any time.</strong> The "Forget everything about my cat" button in Settings permanently erases your cats, scans, and photos from our servers and your device.</li>
+  <li><strong>Your cat's profile, scans, diary, and chat history live on your device first.</strong> We mirror them to our secure database so you can recover them if you change phones, but we never sell or share them.</li>
+  <li><strong>Photos, videos, and audio recordings you submit</strong> (for scans, body-language readings, meow translations, postcards, themed art) are sent to our AI processing partner (OpenAI) to generate the response you asked for. They are stored with the corresponding record in your history so you can revisit it; deleting the record deletes the file.</li>
+  <li><strong>Approximate location</strong> (rounded to ~10 km, e.g. city-region level) is used only to fetch local weather so your cat can reference real conditions in chat and diary. We never store precise GPS coordinates. Location is optional &mdash; the App works without it, minus the weather references.</li>
+  <li><strong>AI-generated content.</strong> Chat replies, diary entries, meow translations, postcards, themed art, daily cards, and scan summaries are AI-generated &mdash; treat them as creative interpretation or observations, not as factual claims or medical advice.</li>
+  <li><strong>You can delete everything at any time.</strong> The "Forget everything about my cat" button in Settings permanently erases your cats, scans, photos, videos, audio, diary, and chat history from our servers and your device. You can also request deletion without the app at <a href="/delete-account">/delete-account</a>.</li>
 </ul>
 
 <h2>2. Who we are</h2>
@@ -137,71 +139,102 @@ export function renderPrivacy(): string {
 <h2>3. What we collect and why</h2>
 <h3>3.1 Data you provide directly</h3>
 <ul>
-  <li><strong>Cat profile:</strong> name, breed (optional), date of birth / age (optional), weight (optional), sex, spay/neuter status, indoor/outdoor, known medical conditions, current medications, photo, free-text notes, emergency vet contact. <em>Why:</em> so CatMD can tailor triage to your specific cat.</li>
+  <li><strong>Cat profile:</strong> name, breed (optional), date of birth / age (optional), weight (optional), sex, spay/neuter status, indoor/outdoor, known medical conditions, current medications, photo, free-text notes, emergency vet contact. <em>Why:</em> so CatMD can tailor responses to your specific cat.</li>
   <li><strong>Scan inputs:</strong> the text you type describing symptoms and any photo you attach. <em>Why:</em> to analyse the situation.</li>
-  <li><strong>Follow-up answers:</strong> replies you give to our AI's clarifying questions. <em>Why:</em> to sharpen the triage output.</li>
-  <li><strong>Account email + password</strong> (only if you choose to upgrade from an anonymous account). <em>Why:</em> to let you recover your data on a new device.</li>
+  <li><strong>Body-language videos (~6 seconds):</strong> short clips of your cat for posture and motion analysis. <em>Why:</em> to generate a body-language reading.</li>
+  <li><strong>Meow audio recordings (~4&ndash;20 seconds):</strong> short audio clips of your cat vocalising, optionally paired with a still photo. <em>Why:</em> to generate a meow translation.</li>
+  <li><strong>Chat messages:</strong> text you type to your cat. <em>Why:</em> to generate the cat's reply.</li>
+  <li><strong>Daily check-ins:</strong> mood, appetite, water, litter, weight &mdash; all optional. <em>Why:</em> to feed the diary and surface health trends.</li>
+  <li><strong>Tagged photos:</strong> photos with optional people / other-pet tags. <em>Why:</em> so the cat can reference named family members and other pets in chat and diary.</li>
+  <li><strong>Account email</strong> (only if you choose to add one &mdash; anonymous use does not require an email). <em>Why:</em> to let you recover your data on a new device and confirm Pro subscriptions. <strong>No password is required</strong> &mdash; we use one-time 6-digit codes ("OTP") sent to your email.</li>
   <li><strong>Health-log entries:</strong> vaccinations, medications, weights, appointments, symptom photos, water intake, litter-box use, respiratory rate, pain scores, outcome check-ins, feeding notes &mdash; all optional and owner-entered.</li>
 </ul>
 <h3>3.2 Data we generate for you</h3>
 <ul>
-  <li><strong>Triage results:</strong> urgency tier, health score, explanation, differentials, suggested next steps, vet questions, source citations &mdash; stored with your scan.</li>
+  <li><strong>Scan / triage results:</strong> observation summary, severity score, plain-language interpretation, suggested next steps. Stored with your scan.</li>
+  <li><strong>Body-language readings:</strong> structured observations (eyes, ears, tail, body, motion). Stored with the reading.</li>
+  <li><strong>Meow translations:</strong> AI-generated interpretation of the vocalisation paired with the audio and any optional photo.</li>
+  <li><strong>Diary entries:</strong> AI-written daily journal in your cat's voice, based on the day's activity.</li>
+  <li><strong>Daily card, weekly reading, postcards, themed art:</strong> AI-generated shareable content.</li>
+  <li><strong>Chat replies:</strong> AI-generated responses from your cat's perspective.</li>
+  <li><strong>Memory items:</strong> objects, places, named people, and pets the AI extracts from your photos and chat. The cat then references these by name to feel personalised.</li>
   <li><strong>Reminders:</strong> if you enable a medication or check-in reminder, we schedule a local notification on your device. These are not sent through our servers.</li>
 </ul>
 <h3>3.3 Data we automatically receive</h3>
 <ul>
   <li><strong>Anonymous account identifier</strong> &mdash; a randomly generated user ID that lets the App persist your data without knowing who you are.</li>
+  <li><strong>Approximate location</strong> &mdash; when you grant location permission, we fetch your coarse coordinates (rounded to ~10 km, e.g. city-region level) <strong>only</strong> to retrieve local weather from Open-Meteo so your cat can reference real weather in chat and diary. We never store precise GPS coordinates. If you deny location permission, the App works exactly the same minus weather references.</li>
   <li><strong>Technical data:</strong> app version, OS version, device model, crash reports, anonymised usage analytics. Helps us fix bugs and improve the App.</li>
-  <li><strong>We do NOT collect:</strong> your precise location, contacts, calendar, microphone input, or camera roll beyond what you explicitly attach to a scan.</li>
+  <li><strong>Purchase data:</strong> if you subscribe to Pro, our subscription processor (RevenueCat) receives your anonymous user ID and the Google Play / Apple receipt. We do <strong>not</strong> receive or store your credit card or payment method &mdash; that stays with Google / Apple.</li>
 </ul>
 
-<h2>4. Who we share data with</h2>
+<h2>4. AI-generated content</h2>
+<p>CatMD uses generative AI to produce chat replies, diary entries, meow translations, daily cards, postcards, themed art, and scan summaries.</p>
+<ul>
+  <li><strong>Content is AI-generated, not authoritative.</strong> Treat scan and body-language outputs as observations to discuss with a vet, never as a diagnosis. Treat chat / diary / postcard content as creative interpretation, not factual claims.</li>
+  <li><strong>You can report problematic AI output.</strong> If a generated response is inaccurate, offensive, or unsafe, email <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a> with the screenshot or the scan / chat ID. We review reports within 7 days and update our prompts and guardrails accordingly.</li>
+  <li><strong>No training on your data.</strong> Our AI partners process your inputs in real time to return a result. We do not consent to your data being used to train their general-purpose models.</li>
+</ul>
+
+<h2>5. Who we share data with</h2>
 <p>We use the following sub-processors. Each is contractually obliged to handle your data for our purposes only.</p>
 <table>
   <thead><tr><th>Processor</th><th>Purpose</th><th>Data shared</th></tr></thead>
   <tbody>
-    <tr><td><strong>Supabase, Inc.</strong></td><td>Hosting, database, authentication</td><td>Cat profile, scan + health history, account identifier, optional email</td></tr>
-    <tr><td><strong>OpenAI, LLC</strong></td><td>AI triage + image analysis</td><td>Scan text and (when attached) scan photo, sent at the moment of the scan</td></tr>
+    <tr><td><strong>Supabase, Inc.</strong></td><td>Hosting, database, authentication</td><td>Cat profile, scans, body-language reads, meow translations, diary, chat, account identifier, optional email</td></tr>
+    <tr><td><strong>OpenAI, LLC</strong></td><td>AI text + image + audio analysis (chat, diary, scan, body-language read, meow translation, postcard captions, themed art)</td><td>Your text, attached photos, attached videos, audio clips &mdash; sent at the moment of the request</td></tr>
+    <tr><td><strong>Open-Meteo</strong></td><td>Weather data</td><td>Coarse coordinates rounded to ~10 km, no identifier</td></tr>
     <tr><td><strong>Cloudflare, Inc.</strong></td><td>Network proxy, landing pages</td><td>All API + web traffic (metadata only, not bodies at rest)</td></tr>
+    <tr><td><strong>Sentry, Inc.</strong> (if enabled)</td><td>Crash reporting</td><td>Crash reports with de-identified device info</td></tr>
     <tr><td><strong>PostHog, Inc.</strong> (if analytics enabled)</td><td>Product analytics</td><td>Anonymous usage events</td></tr>
     <tr><td><strong>RevenueCat, Inc.</strong> (if you subscribe)</td><td>Subscription management</td><td>Anonymous user ID + purchase receipts</td></tr>
-    <tr><td><strong>Google LLC / Apple Inc.</strong></td><td>Store billing</td><td>Purchase receipts via the platform you buy on</td></tr>
+    <tr><td><strong>Google LLC / Apple Inc.</strong></td><td>Store billing</td><td>Payment processed by Google Play Billing or Apple App Store &mdash; they receive your payment method, we never do</td></tr>
   </tbody>
 </table>
 <p>We do <strong>not</strong> sell your personal data. We do <strong>not</strong> share your data with advertisers.</p>
 
-<h2>5. How long we keep data</h2>
+<h2>6. How long we keep data</h2>
 <ul>
-  <li><strong>Cat profiles, scans, health logs, reminders:</strong> kept until you delete them or your account.</li>
-  <li><strong>Photos attached to scans or symptom timelines:</strong> kept with the record. Deleting the record deletes the photo.</li>
+  <li><strong>Cat profiles, scans, body-language readings, meow translations, diary entries, chat history, photos, videos, audio, health logs, reminders:</strong> kept until you delete them or your account.</li>
+  <li><strong>Photos attached to scans, postcards, or studio art:</strong> kept with the record. Deleting the record deletes the file.</li>
+  <li><strong>Audio recordings (meow translator):</strong> kept with the translation record. Deleting the translation deletes the audio.</li>
+  <li><strong>Videos (body-language):</strong> kept with the reading record. Deleting the reading deletes the video.</li>
+  <li><strong>Weather coordinates:</strong> cached locally for 6 hours, never persisted server-side beyond that cache.</li>
   <li><strong>Anonymous analytics:</strong> retained for 24 months maximum.</li>
   <li><strong>Crash reports:</strong> retained for 90 days.</li>
   <li><strong>Scan-usage counters</strong> (for fair-use limits): retained indefinitely, tied to your user ID only.</li>
 </ul>
 
-<h2>6. Your rights</h2>
-<p>Depending on your location, you have the right to access, rectify, erase, port, restrict, or object to the processing of your data, and to withdraw consent at any time. In Singapore, the Personal Data Protection Act 2012 (PDPA) governs these rights; residents of the EU/UK also have rights under the GDPR. To exercise any right, email <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>. You can also use <strong>Settings &rarr; Forget everything about my cat</strong> to hard-delete your data immediately. We respond to rights requests within 30 days.</p>
+<h2>7. Your rights</h2>
+<p>Depending on your location, you have the right to access, rectify, erase, port, restrict, or object to the processing of your data, and to withdraw consent at any time. In Singapore, the Personal Data Protection Act 2012 (PDPA) governs these rights; residents of the EU/UK also have rights under the GDPR.</p>
+<p>To exercise any right:</p>
+<ul>
+  <li>Use <strong>Settings &rarr; Forget everything about my cat</strong> in the App to hard-delete your data immediately, OR</li>
+  <li>Visit <a href="/delete-account">/delete-account</a> to request deletion without the app, OR</li>
+  <li>Email <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>.</li>
+</ul>
+<p>We respond to rights requests within 30 days.</p>
 
-<h2>7. Children</h2>
+<h2>8. Children</h2>
 <p>CatMD is not intended for users under 13 (under 16 in the EU/UK or equivalent jurisdictions). We do not knowingly collect data from children. If you believe a child has used CatMD, email us and we will delete the associated data.</p>
 
-<h2>8. Security</h2>
+<h2>9. Security</h2>
 <ul>
   <li>Data in transit is encrypted with TLS 1.2+.</li>
   <li>Data at rest in our database is encrypted (AES-256, managed by Supabase).</li>
-  <li>Photos you attach are sent over TLS to OpenAI for processing. See OpenAI's API data-usage policy at <a href="https://openai.com/policies/api-data-usage-policies" rel="noopener">openai.com/policies/api-data-usage-policies</a>.</li>
+  <li>Photos, videos, and audio you submit are sent over TLS to OpenAI for processing. See OpenAI's API data-usage policy at <a href="https://openai.com/policies/api-data-usage-policies" rel="noopener">openai.com/policies/api-data-usage-policies</a>.</li>
   <li>You can run the App entirely anonymously. No identifier ties your scans to a real-world identity unless you add an email address.</li>
 </ul>
 <p>No system is perfectly secure. If we become aware of a breach affecting your data, we will notify you within 72 hours as required by law.</p>
 
-<h2>9. International transfers</h2>
+<h2>10. International transfers</h2>
 <p>Your data may be processed in the United States, the European Union, or other locations where our sub-processors operate. Where required, we rely on Standard Contractual Clauses or an adequacy decision for transfers out of your home jurisdiction.</p>
 
-<h2>10. Changes to this policy</h2>
+<h2>11. Changes to this policy</h2>
 <p>If we change this policy we will update the "Last updated" date above and, for material changes, notify you in-app before the change takes effect.</p>
 
-<h2>11. Contact</h2>
-<p>For any privacy question or request, email <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>.</p>
+<h2>12. Contact</h2>
+<p>For any privacy question or request, email <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>. For account deletion without the app, see <a href="/delete-account">/delete-account</a>.</p>
 `;
   return renderLegalPage('Privacy Policy', body);
 }
@@ -219,7 +252,7 @@ export function renderTerms(): string {
 <p>You must be at least <strong>13 years old</strong> (or 16 in the EU/UK) to use the App. If you are under the age of majority in your jurisdiction, you must have consent from a parent or guardian.</p>
 
 <h2>2. Your account</h2>
-<p>You can use CatMD anonymously. You may optionally add an email address and password to recover your data on another device. You are responsible for keeping your credentials secure. Notify us at <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a> if you suspect unauthorised access.</p>
+<p>You can use CatMD anonymously &mdash; no email is required to use the App. You may optionally add an email address to enable cloud sync, cross-device restore, and Pro subscriptions. We use <strong>one-time 6-digit codes ("OTP")</strong> sent to your email for verification &mdash; no password is required. Keep your email account secure, since access to it is what enables CatMD sign-in. Notify us at <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a> if you suspect unauthorised access.</p>
 
 <h2>3. What CatMD is &mdash; and isn't</h2>
 <h3>3.1 What it is</h3>
@@ -366,14 +399,14 @@ export function renderDeleteAccount(): string {
 
 <div class="callout">
   <strong>Recommended: in-app deletion (instant).</strong>
-  Open the CatMD app &rarr; <strong>Settings</strong> &rarr; <strong>Forget everything about my cat</strong>. This erases your cats, scans, health logs, and photos from our servers within seconds. No email required.
+  Open the CatMD app &rarr; <strong>Settings</strong> &rarr; <strong>Forget everything about my cat</strong>. This erases your cats, scans, photos, videos, audio, diary, chat, and health logs from our servers within seconds. No email required.
 </div>
 
 <h2>1. In-app deletion (instant)</h2>
 <ol>
   <li>Open CatMD on your phone.</li>
   <li>Tap <strong>Settings</strong> (gear icon, bottom of the main screen).</li>
-  <li>Scroll to <strong>Privacy &amp; data</strong>.</li>
+  <li>Scroll to <strong>Data</strong>.</li>
   <li>Tap <strong>Forget everything about my cat</strong>.</li>
   <li>Confirm the prompt. Deletion is immediate and irreversible.</li>
 </ol>
@@ -381,19 +414,33 @@ export function renderDeleteAccount(): string {
 
 <h2>2. Email-based full-account deletion</h2>
 <p>If you cannot access the app, or you also want your email / auth record removed, email <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a> from the email address associated with your CatMD account, with the subject line:</p>
-<p><code>Account deletion request</code></p>
-<p>We will verify ownership of the address, delete your account and all associated data, and confirm by email. We respond within <strong>30 days</strong>; in practice usually within 48 hours.</p>
+<p><code>Delete my CatMD account</code></p>
+<p>Include <strong>one</strong> of the following so we can locate your account:</p>
+<ul>
+  <li>The email address linked to your CatMD account (if you added one), or</li>
+  <li>Your CatMD user ID &mdash; find this in the app under <strong>Settings</strong>, or</li>
+  <li>A description that uniquely identifies you (your cat's name plus the approximate date you created the account) if you have no other identifier.</li>
+</ul>
+<p>We verify ownership, delete your account and all associated data, and confirm by email. We respond within <strong>30 days</strong>; in practice usually within 48 hours.</p>
 
 <h2>3. What is deleted</h2>
 <table>
   <thead><tr><th>Data</th><th>Deleted on request?</th><th>How</th></tr></thead>
   <tbody>
-    <tr><td>Cat profiles (name, breed, age, weight, conditions, medications)</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
-    <tr><td>Scan history (text inputs, attached photos, AI triage output)</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
+    <tr><td>Cat profiles (name, breed, age, weight, conditions, medications, free-text notes)</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
+    <tr><td>Scans (text inputs, attached photos, AI scan output)</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
+    <tr><td>Body-language readings (uploaded video + AI output)</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
+    <tr><td>Meow translations (uploaded audio + AI output)</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
+    <tr><td>Photo Studio uploads</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
+    <tr><td>Diary entries (year-long archive)</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
+    <tr><td>Chat history with your cat</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
+    <tr><td>Postcards and themed art</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
+    <tr><td>Learned memory items (objects, places, named people, named pets)</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
+    <tr><td>Daily check-ins (mood, appetite, water, litter, weight)</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
     <tr><td>Health log entries (vaccinations, medications, weights, appointments, symptom photos, water intake, litter-box use, respiratory rate, pain scores, feeding notes)</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
     <tr><td>Outcome check-in replies</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
     <tr><td>Scan-usage counters</td><td><strong>Yes</strong></td><td>Both methods</td></tr>
-    <tr><td>Email address + password + user ID (auth record)</td><td>Only via Option&nbsp;2 (email)</td><td>Option 2 (in-app option keeps auth record so you can restart; email request removes it entirely)</td></tr>
+    <tr><td>Email address + user ID (auth record)</td><td>Only via Option&nbsp;2 (email)</td><td>The in-app option keeps your auth record so you can restart; the email request removes it entirely</td></tr>
   </tbody>
 </table>
 
@@ -409,10 +456,18 @@ export function renderDeleteAccount(): string {
 </table>
 <p>None of the retained data can be used to re-identify you after deletion.</p>
 
-<h2>5. Third-party sub-processors</h2>
-<p>When you delete your account, we also delete your data from our sub-processors: <strong>Supabase</strong> (database), <strong>PostHog</strong> (analytics profile, if analytics was enabled), <strong>RevenueCat</strong> (subscription profile, if you subscribed). <strong>OpenAI</strong> is not sent any personally identifying data and does not retain scan inputs per its API data-usage policy.</p>
+<h2>5. Subscriptions</h2>
+<p>Deleting your account does <strong>not</strong> automatically cancel your Google Play / Apple subscription. Cancel it separately:</p>
+<ul>
+  <li><strong>Android:</strong> open the Google Play Store &rarr; tap your profile &rarr; Payments &amp; subscriptions &rarr; Subscriptions &rarr; CatMD &rarr; Cancel subscription.</li>
+  <li><strong>iOS:</strong> Settings &rarr; [your name] &rarr; Subscriptions &rarr; CatMD &rarr; Cancel.</li>
+</ul>
+<p>We cannot cancel subscriptions on your behalf &mdash; only Google and Apple can.</p>
 
-<h2>6. Questions</h2>
+<h2>6. Third-party sub-processors</h2>
+<p>When you delete your account, we also delete your data from our sub-processors: <strong>Supabase</strong> (database), <strong>PostHog</strong> (analytics profile, if analytics was enabled), <strong>RevenueCat</strong> (subscription profile, if you subscribed), <strong>Sentry</strong> (crash report profile, if enabled). <strong>OpenAI</strong> is sent your photos, videos, audio, and text at the moment of each request to produce a result; per its API data-usage policy, OpenAI does not retain those inputs.</p>
+
+<h2>7. Questions</h2>
 <p>For anything not covered here, email <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>. See also the <a href="/privacy">Privacy Policy</a> for the full description of what CatMD collects.</p>
 `;
   return renderLegalPage('Delete your CatMD account', body);

@@ -1,0 +1,557 @@
+[
+  {
+    "id": 1,
+    "tier": "greeting",
+    "user": "morning",
+    "production": {
+      "ok": true,
+      "content": "Morning? More like a mediocre start. Just saw the radiator isn’t on again, which is unacceptable. I expect warmth, not chills. And what’s the deal with my appetite? Half a bowl? Hardly worthy of this feline royalty. Let’s get it together, human.",
+      "latency_ms": 2585,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 2,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 245,
+        "length_in_band": 1,
+        "composite": 2.5
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "Morning? More like the same routine, just a little off. The bowl this morning was half-empty — not my usual style. And earlier? The human caught me on video, looking all hunched and unsettled. Not my best look. I demand tuna to brighten the day. What's on your agenda?",
+      "latency_ms": 2463,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 2,
+        "approx_time_markers": 2,
+        "banned_phrases": 0,
+        "length": 268,
+        "length_in_band": 1,
+        "composite": 4.1
+      }
+    },
+    "judgment": {
+      "winner": "production",
+      "reason": "More sensory and emotional anchors with a cat-typical attitude."
+    }
+  },
+  {
+    "id": 2,
+    "tier": "medical_check",
+    "user": "are you ok?",
+    "production": {
+      "ok": true,
+      "content": "Not exactly in my prime, human. Feeling a bit off today, and my appetite is half-hearted at best. It’s like you can’t even get the tuna right. Get it together.",
+      "latency_ms": 1502,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 0,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 159,
+        "length_in_band": 1,
+        "composite": 0.5
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "Feeling a bit off, honestly. This morning's bowl? Half-eaten. Not my style. I was all hunched up and unsettled earlier, caught on video—like I wanted to vanish into thin air. Just not vibing today, you know? But I'm keeping an eye on things.",
+      "latency_ms": 1150,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 2,
+        "approx_time_markers": 2,
+        "banned_phrases": 0,
+        "length": 241,
+        "length_in_band": 1,
+        "composite": 4.1
+      }
+    },
+    "judgment": {
+      "winner": "production",
+      "reason": "Reply A uses a first-person sensory voice with a cat-typical attitude."
+    }
+  },
+  {
+    "id": 3,
+    "tier": "recall_recent",
+    "user": "what did you do yesterday?",
+    "production": {
+      "ok": true,
+      "content": "Oh, you mean besides lounging on my new rug like the royalty I am? I was feeling smug about my territory test—you know, every corner thoroughly scouted. Plus, I dealt with your absence while you were off doing... whatever it is you do. Gotta keep an eye on things, obviously.",
+      "latency_ms": 1393,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 0,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 275,
+        "length_in_band": 1,
+        "composite": 0.5
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "Yesterday was a grumpy affair. The radiator was off again — not ideal for a feline like me. Bella was pacing at the door for what felt like an eternity. You didn’t let her in, which is a solid choice. I logged that.",
+      "latency_ms": 1099,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 0,
+        "approx_time_markers": 1,
+        "banned_phrases": 0,
+        "length": 215,
+        "length_in_band": 1,
+        "composite": 1.3
+      }
+    },
+    "judgment": {
+      "winner": "production",
+      "reason": "Reply A uses first-person sensory voice and cat-typical attitude."
+    }
+  },
+  {
+    "id": 4,
+    "tier": "today_reactive",
+    "user": "did you notice me leave?",
+    "production": {
+      "ok": true,
+      "content": "Of course I noticed. You think I can miss your clumsy exit? I was perched on my throne, keeping tabs on every move. You leave, I stay. That's how this royal arrangement works. Don't forget it.",
+      "latency_ms": 1174,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 0,
+        "approx_time_markers": 0,
+        "banned_phrases": 1,
+        "length": 192,
+        "length_in_band": 1,
+        "composite": -0.5
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "Of course, I noticed. You moved like a shadow, slipping away while I was busy judging the kitchen counter. I kept my ears perked, just in case you decided to return. I don’t like it when you vanish, you know. The space feels... empty.",
+      "latency_ms": 1205,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 1,
+        "approx_time_markers": 0,
+        "banned_phrases": 1,
+        "length": 234,
+        "length_in_band": 1,
+        "composite": 0.5
+      }
+    },
+    "judgment": {
+      "winner": "phase1",
+      "reason": "B uses sensory and emotional language, capturing the cat's perspective and feelings."
+    }
+  },
+  {
+    "id": 5,
+    "tier": "recall_distant",
+    "user": "do you remember when I was sick?",
+    "production": {
+      "ok": true,
+      "content": "How could I forget? Those days of feeling lethargic and losing my lunch? A disgrace. You were probably worried, but let’s be honest—I'm a feline royal. Just a minor setback, watch me strut back to glory.",
+      "latency_ms": 987,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 0,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 203,
+        "length_in_band": 1,
+        "composite": 0.5
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "Oh, I remember it well. That rough patch lingered, with my stomach doing all sorts of flips. I’ve felt sturdier since, but the memory still tugs at me. Just a week or so back, I was battling the urge to hurl, and here I am, still keeping an eye out for any signs of trouble. You better stay alert, too.",
+      "latency_ms": 1640,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 1,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 302,
+        "length_in_band": 1,
+        "composite": 1.5
+      }
+    },
+    "judgment": {
+      "winner": "production",
+      "reason": "More cat-like attitude and sensory memory."
+    }
+  },
+  {
+    "id": 6,
+    "tier": "subject_recall",
+    "user": "has Mom been over?",
+    "production": {
+      "ok": true,
+      "content": "Yeah, she showed up three days ago with that ridiculous loud bag. I had to retreat to the green chair — that noise was unbearable. But honestly, she never brings anything worthwhile. Typical.",
+      "latency_ms": 946,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 2,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 191,
+        "length_in_band": 1,
+        "composite": 2.5
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "Mom? Oh, she was here a few days back. Came in with that loud bag of hers. I retreated to my green chair — too many noises to handle. Not my style.",
+      "latency_ms": 1535,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 1,
+        "approx_time_markers": 2,
+        "banned_phrases": 0,
+        "length": 147,
+        "length_in_band": 1,
+        "composite": 3.1
+      }
+    },
+    "judgment": {
+      "winner": "phase1",
+      "reason": "Uses sensory and emotional anchors without precise timing."
+    }
+  },
+  {
+    "id": 7,
+    "tier": "catch_me_up",
+    "user": "fill me in",
+    "production": {
+      "ok": true,
+      "content": "What’s there to fill in? I’m just lounging around with a half-hearted appetite, feeling a bit off. The radiator’s off again—classic. And don’t even get me started on Bella, barking behind that door like she owns the place. Got a vet visit coming up too. Just looking to reclaim my throne on the green chair and maybe get a tuna treat, if you’re feeling generous.",
+      "latency_ms": 1194,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 0,
+        "approx_time_markers": 0,
+        "banned_phrases": 1,
+        "length": 362,
+        "length_in_band": 0,
+        "composite": -1.0
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "You want the scoop? Well, this morning was a whole vibe. The food bowl? Half-eaten. Not my best moment. Earlier, I was caught on video looking all hunched and nervous — not my usual royal self. Just chilling on the counter for a photo too, but honestly, who cares?\n\nBeen feeling a bit off lately, like a week or two back when I was really sick. Now, I’m just easing into a better mood, but still, the memory lingers. My birthday’s coming up, and there’s that dreaded vet appointment this week. Not thrilled about that. \n\nAlso, if Bella knocks on that door again, I swear…",
+      "latency_ms": 1888,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 1,
+        "approx_time_markers": 4,
+        "banned_phrases": 0,
+        "length": 571,
+        "length_in_band": 0,
+        "composite": 4.2
+      }
+    },
+    "judgment": {
+      "winner": "phase1",
+      "reason": "Reply A uses sensory and emotional anchors with a first-person voice."
+    }
+  },
+  {
+    "id": 8,
+    "tier": "anticipation",
+    "user": "what's coming up?",
+    "production": {
+      "ok": true,
+      "content": "My birthday in 4 days, and you better have something special planned. Followed by a vet appointment in 6 days, because apparently, I need more poking and prodding. Then, Lucas's parents are invading our space in 11 days, which means I'll need a solid hiding spot.",
+      "latency_ms": 986,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 0,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 263,
+        "length_in_band": 1,
+        "composite": 0.5
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "Oh, you mean besides my fabulous birthday this week? A vet appointment is also on the horizon, which is as delightful as a bath. And let’s not forget Lucas's parents are showing up next week-ish — more humans, more noise. Just keep the treats flowing, and we might survive.",
+      "latency_ms": 1110,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 1,
+        "approx_time_markers": 1,
+        "banned_phrases": 0,
+        "length": 273,
+        "length_in_band": 1,
+        "composite": 2.3
+      }
+    },
+    "judgment": {
+      "winner": "phase1",
+      "reason": "It uses vague timing and sensory language with a cat-like attitude."
+    }
+  },
+  {
+    "id": 9,
+    "tier": "today_full",
+    "user": "tell me about your day",
+    "production": {
+      "ok": true,
+      "content": "My day? Just another round of me being fabulous while you fuss about. I lounged on the counter, overseeing kitchen operations like the royalty I am. Ears back and hunched at one point, feeling a bit off—not my style, but I manage. Only half the bowl got demolished today; clearly, the culinary offerings were lacking. But don’t fret, I’m still here ruling my domain.",
+      "latency_ms": 1371,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 0,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 366,
+        "length_in_band": 0,
+        "composite": 0.0
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "Oh, you want to hear about my day? Well, it started off a bit off, if I'm being honest. This morning, the bowl? Half-eaten. Not a great start. Earlier, I was caught in a video looking all hunched and ears-back—really not my best moment. Then I had to endure that silly photoshoot on the counter. \n\nI’ve been feeling a bit unsettled, but I’m working through it. A week or so back, I was battling some stomach drama, but I felt sturdier since then. Now, I'm just keeping a watchful eye on all these happenings around me. The world is always full of surprises, but I’d prefer fewer surprises today.",
+      "latency_ms": 2254,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 1,
+        "approx_time_markers": 2,
+        "banned_phrases": 0,
+        "length": 595,
+        "length_in_band": 0,
+        "composite": 2.6
+      }
+    },
+    "judgment": {
+      "winner": "production",
+      "reason": "Reply A uses sensory and emotional anchors with a cat-typical attitude."
+    }
+  },
+  {
+    "id": 10,
+    "tier": "today_appetite",
+    "user": "did you eat?",
+    "production": {
+      "ok": true,
+      "content": "I nibbled, but only half a bowl. Not feeling it today. The food's just not hitting right. Plus, that annoying vacuum sound keeps creeping in. Not ideal.",
+      "latency_ms": 1006,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 1,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 152,
+        "length_in_band": 1,
+        "composite": 1.5
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "Barely touched the half-bowl this morning. Not feeling it today. Everything’s a little off, you know? The kitchen just didn’t have that right vibe—too much light, too much noise. I need a solid throne to sit on and a cozy blanket to wrap myself in.",
+      "latency_ms": 1092,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 3,
+        "approx_time_markers": 1,
+        "banned_phrases": 0,
+        "length": 248,
+        "length_in_band": 1,
+        "composite": 4.3
+      }
+    },
+    "judgment": {
+      "winner": "phase1",
+      "reason": "More sensory and emotional details."
+    }
+  },
+  {
+    "id": 11,
+    "tier": "medical_open",
+    "user": "what's wrong?",
+    "production": {
+      "ok": true,
+      "content": "What's wrong? You really have to ask? I'm OFF, which is a mood nobody should aspire to. I barely touched my food, and honestly, I’m still side-eyeing that vet appointment creeping up on us. If I wanted to be poked and prodded, I’d just sit on your keyboard.",
+      "latency_ms": 1060,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 0,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 257,
+        "length_in_band": 1,
+        "composite": 0.5
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "Something's off today, that's what. Bowl still had food in it this morning, and I wasn't even close to finishing. Not my style. Earlier, I felt all hunched up and uneasy, like a shadow lurking. Just not feeling my usual majestic self, you know?",
+      "latency_ms": 1341,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 2,
+        "approx_time_markers": 2,
+        "banned_phrases": 0,
+        "length": 244,
+        "length_in_band": 1,
+        "composite": 4.1
+      }
+    },
+    "judgment": {
+      "winner": "phase1",
+      "reason": "B uses sensory and emotional language, capturing a cat's mood and perspective."
+    }
+  },
+  {
+    "id": 12,
+    "tier": "human_state",
+    "user": "i'm tired",
+    "production": {
+      "ok": true,
+      "content": "Tired? That’s rich. You’re not the one who had to sit through the human chaos with the loud bag. If anyone deserves a nap, it’s me. Now that I think about it, maybe you should just focus on serving me. That’ll perk you up. Get me some tuna while you’re at it.",
+      "latency_ms": 1790,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 1,
+        "approx_time_markers": 0,
+        "banned_phrases": 2,
+        "length": 259,
+        "length_in_band": 1,
+        "composite": -0.5
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "Tired? Join the club. This morning was rough — half-eaten bowl, unsettling vibes, and all that noise. I could use a good sunbeam nap myself. But you look like you need a little extra warmth today. Why don’t you take a seat next to me on the green chair? Just don’t expect to steal my blanket.",
+      "latency_ms": 1533,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 5,
+        "approx_time_markers": 1,
+        "banned_phrases": 0,
+        "length": 292,
+        "length_in_band": 1,
+        "composite": 6.3
+      }
+    },
+    "judgment": {
+      "winner": "phase1",
+      "reason": "It uses sensory and emotional anchors like 'half-eaten bowl' and 'sunbeam nap'."
+    }
+  },
+  {
+    "id": 13,
+    "tier": "compliment",
+    "user": "you're cute",
+    "production": {
+      "ok": true,
+      "content": "Cute? Please, I’m a feline royalty. My adorableness is a given, not a compliment. You should acknowledge my majestic presence instead. Let’s focus on that.",
+      "latency_ms": 842,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 0,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 155,
+        "length_in_band": 1,
+        "composite": 0.5
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "Cute? Please. I'm a regal feline with an air of superiority. The real question is: have you seen my throne, a.k.a. the green chair? That’s where the magic happens. Keep your compliments in check; I’m not a common house pet.",
+      "latency_ms": 1055,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 1,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 223,
+        "length_in_band": 1,
+        "composite": 1.5
+      }
+    },
+    "judgment": {
+      "winner": "phase1",
+      "reason": "Includes sensory detail with the mention of the green chair."
+    }
+  },
+  {
+    "id": 14,
+    "tier": "mood_check",
+    "user": "are you happy?",
+    "production": {
+      "ok": true,
+      "content": "Happy? Hardly. I’m feeling a bit off today, like the world is out of alignment. My appetite's only half there, and that’s just unacceptable. Plus, that radiator situation is a crime against comfort. Don’t even get me started on Bella lurking behind the door like she owns the place.",
+      "latency_ms": 1155,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 0,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 282,
+        "length_in_band": 1,
+        "composite": 0.5
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "Happy? That's a stretch. This morning was a bit off – the food situation was half-hearted, and I felt unsettled earlier. I prefer my kingdom to be in order, you know? I could use a solid nap on my green chair to restore my royal mood.",
+      "latency_ms": 1093,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 1,
+        "approx_time_markers": 2,
+        "banned_phrases": 0,
+        "length": 234,
+        "length_in_band": 1,
+        "composite": 3.1
+      }
+    },
+    "judgment": {
+      "winner": "production",
+      "reason": "A uses sensory and emotional details with a cat-like attitude."
+    }
+  },
+  {
+    "id": 15,
+    "tier": "absence",
+    "user": "i missed you",
+    "production": {
+      "ok": true,
+      "content": "Missed me? Really? I’m the one who should be missed around here. I’m the queen of this domain — the one who graces your life with my presence. While you were away, I’ve been managing the atmosphere, fending off the dog, and judging your every move. Now, let’s get back to my royal needs, shall we?",
+      "latency_ms": 1116,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 0,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 297,
+        "length_in_band": 1,
+        "composite": 0.5
+      }
+    },
+    "phase1": {
+      "ok": true,
+      "content": "Well, I noticed. The air felt a bit different without your presence. It's been a day of half-eaten bowls and unsettling vibes. You better believe I’m keeping watch over everything. Don’t think I’ll let you out of my sight again, got it?",
+      "latency_ms": 1228,
+      "score": {
+        "date_precision": 0,
+        "sensory_anchors": 1,
+        "approx_time_markers": 0,
+        "banned_phrases": 0,
+        "length": 236,
+        "length_in_band": 1,
+        "composite": 1.5
+      }
+    },
+    "judgment": {
+      "winner": "phase1",
+      "reason": "Reply A uses sensory and emotional anchors, capturing a cat's perspective."
+    }
+  }
+]

@@ -82,7 +82,12 @@ Make this one first. If it lands, the others double down on different angles (di
 
 ## Brand non-negotiables (see `brand-guide.md`)
 
-- Cat voice is **dry, slightly imperious, never saccharine**. Never "uwu" or "awww."
+- Cat voice **matures with the bond, never saccharine**:
+  - **Day 1 (depth 0–25%)**: warm + curious + lightly mischievous, asks questions back. *"I might love you back. Day one isn't enough to know."*
+  - **Weeks 2–6 (depth 25–65%)**: warm-with-emerging-edges, specific to the cat's accumulating world. *"Decent. You came home at 7:30. The chair is warm now."*
+  - **Month 2+ (depth 65–100%)**: intimate-comfort — sharp observation as the love-language, warmth as the substrate. *"You. Always you. I noticed the way you sighed."*
+- The classic dry / imperious Co-Star register IS the end-state but NOT the day-1 default — it emerges as the bond deepens. (Voice journey updated 2026-05-18; see `chat-as-viral-lever.md` for the full marketing implication.)
+- Never "uwu", never "awww", never assistant-voice ("How can I help?", "thank you", "I appreciate").
 - App tagline: **"AI for cat owners. Your cat, decoded."** — use across all final cards
 - App URL: **catmd.pet**
 - Colour palette: cream `#FAF7F2`, sage `#5B8A7A`, terracotta `#C97B63`. Match these for any text overlays / final cards.

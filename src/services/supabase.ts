@@ -6,6 +6,20 @@
  *
  * Uses the publishable (anon) key. RLS enforces per-user access on user tables.
  * knowledge_cards is read-only for all authenticated/anon users.
+ *
+ * WEB EXPORT NOTE (audit 2026-05-14):
+ *   `npx expo export --platform web` fails during static rendering with
+ *   "ReferenceError: window is not defined" — @supabase/auth-js +
+ *   @react-native-async-storage/async-storage both touch `window` at
+ *   module load, which doesn't exist when this file is imported in
+ *   Node during SSR / static-export. Since we ship Android-only via
+ *   EAS (no web build profile in `eas.json`), this is currently a
+ *   non-issue. catmd.pet is served by the standalone Cloudflare Worker
+ *   (`proxy/worker.ts`) and does NOT bundle the RN app.
+ *
+ *   If we ever want to ship `app.catmd.pet` as a React Native Web
+ *   build, fix by gating the createClient call behind a Platform.OS
+ *   check + returning a no-op stub on web during SSR. ~30 min job.
  */
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';

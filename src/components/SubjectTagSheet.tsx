@@ -229,9 +229,14 @@ function SubjectTagSheetInner({ visible, photo, catId, catName, onClose }: Props
     return list.find((p) => p.id === photo.id) ?? photo;
   });
 
-  if (!photo || !livePhoto) return null;
-
-  const tagged = livePhoto.subjects ?? [];
+  // Hook-order safety (2026-05-14 audit fix): the early-return for
+  // null photo / livePhoto used to live HERE, before the six hooks
+  // below (4× useMemo + 2× useState). Moved to AFTER all hooks so
+  // every render path runs the same sequence. The interim variable
+  // accessors below use optional chaining + ?? [] so they stay safe
+  // when livePhoto is null — the early return then bails out of the
+  // render path cleanly.
+  const tagged = livePhoto?.subjects ?? [];
   const taggedIds = new Set(tagged.map((t) => t.subject_id));
 
   // Filter directory by current draft name (autocomplete).
@@ -250,7 +255,7 @@ function SubjectTagSheetInner({ visible, photo, catId, catName, onClose }: Props
   // Quick-tap chips: top subjects NOT already tagged on this photo.
   const quickChips = topSubjects.filter((e) => !taggedIds.has(e.id));
 
-  const detected = livePhoto.detected_subjects ?? null;
+  const detected = livePhoto?.detected_subjects ?? null;
 
   // ── AUTO-MATCH ──
   // For each vision-detected person/pet in this photo, try to match
@@ -339,6 +344,11 @@ function SubjectTagSheetInner({ visible, photo, catId, catName, onClose }: Props
   // tag on the same photo gets the SECOND unmatched description.
   const [unmatchedPersonCursor, setUnmatchedPersonCursor] = useState(0);
   const [unmatchedPetCursor, setUnmatchedPetCursor] = useState(0);
+
+  // Hook-order-safe early return (moved from above per 2026-05-14
+  // audit). All hooks above this point run on every render; the bail
+  // happens during the render-output phase only.
+  if (!photo || !livePhoto) return null;
 
   const applyTag = (
     name: string,

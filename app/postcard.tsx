@@ -39,6 +39,7 @@ import {
 import { Button } from '../src/components/Button';
 import { Text } from '../src/components/Text';
 import { useActiveCat } from '../src/hooks/useActiveCat';
+import { useEntitlement } from '../src/hooks/useEntitlement';
 import {
   usePostcardGenerating,
   usePostcardStore,
@@ -54,6 +55,22 @@ import { POSTCARD_CAPTION_PROMPT_VERSION } from '../src/services/postcard';
 import { usePhotoStudioStore } from '../src/state/photoStudioStore';
 import { localDateKey } from '../src/services/photoStudio';
 import { track } from '../src/services/analytics';
+import { getVoiceModeTag } from '../src/services/voiceModes';
+import { useMoodFeedbackStore } from '../src/state/moodFeedbackStore';
+import {
+  resolveTodaysMood,
+  localDateKey as moodLocalDateKey,
+} from '../src/services/dailyMood';
+import {
+  buildArchetypeMod,
+  buildLiveMoodContext,
+  buildTodayBehaviorMod,
+  computeFeedbackMod,
+  hasMedicalConcernToday,
+} from '../src/services/moodWeights';
+import { usePersonalityStore } from '../src/state/personalityStore';
+import { useHealthStore } from '../src/state/healthStore';
+import { resolveCatAgeMonths } from '../src/state/catStore';
 import { useNotifPrefsStore } from '../src/state/notifPrefsStore';
 import {
   cancelNotification,
@@ -70,6 +87,7 @@ export default function PostcardScreen() {
   const todaysPostcard = useTodaysPostcard(cat?.id);
   const allPostcards = usePostcardsForCat(cat?.id); // newest-first, cached up to 90 days
   const generating = usePostcardGenerating(cat?.id);
+  const { hasProAccess } = useEntitlement();
   const generateForToday = usePostcardStore((s) => s.generateForToday);
   const updateCaption = usePostcardStore((s) => s.updateCaption);
 
@@ -244,6 +262,11 @@ export default function PostcardScreen() {
     if (!cat?.id) return;
     if (todaysPostcard) return;
     if (generating) return;
+    // Pro gate — silent skip for non-Pro users. Same pattern as
+    // diary.tsx: history (previous postcards) stays viewable; only
+    // today's generation is gated. The empty-state CTA below routes
+    // explicitly to /paywall.
+    if (!hasProAccess) return;
     setError(null);
     void generateForToday(cat.id)
       .then((p) => {
@@ -257,8 +280,10 @@ export default function PostcardScreen() {
             : "Couldn't generate a postcard — try again.",
         );
       });
+    // hasProAccess in deps so the auto-gen fires when entitlement
+    // resolves post-mount (cold-start anonymous race fix).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cat?.id]);
+  }, [cat?.id, hasProAccess]);
 
   // Sync the editable text field with whatever postcard is active —
   // either today's (default) or a past postcard the user tapped from
@@ -320,6 +345,10 @@ export default function PostcardScreen() {
   const [refreshingPhotos, setRefreshingPhotos] = useState(false);
   const onRefreshPhotos = async () => {
     if (!cat?.id || refreshingPhotos) return;
+    if (!hasProAccess) {
+      router.push({ pathname: '/paywall', params: { source: 'postcard' } } as never);
+      return;
+    }
     setRefreshingPhotos(true);
     setError(null);
     try {
@@ -427,6 +456,38 @@ export default function PostcardScreen() {
         dialogTitle: `Share ${catName}'s postcard`,
         mimeType: 'image/jpeg',
       });
+      // Attribute this share to the cat's current mood (audit
+      // 2026-05-14 round 10 P2 #4: now uses shared
+      // `buildLiveMoodContext` for consistency with chat/diary).
+      // Failures are silent — the share already succeeded.
+      try {
+        const arch = usePersonalityStore.getState().getProfile(cat.id)?.archetype ?? null;
+        const fbTable = useMoodFeedbackStore.getState().getFeedback(cat.id);
+        const liveCtx = await buildLiveMoodContext({
+          catId: cat.id,
+          ageMonths: resolveCatAgeMonths(cat) ?? null,
+        });
+        const dailyMood = resolveTodaysMood({
+          catId: cat.id,
+          checkinMood: liveCtx.checkinMood ?? null,
+          hasRecentMedicalConcern: hasMedicalConcernToday(cat.id),
+          archetypeMod: buildArchetypeMod(arch),
+          todayMod: buildTodayBehaviorMod(liveCtx),
+          feedbackMod: computeFeedbackMod(fbTable),
+        });
+        useMoodFeedbackStore.getState().recordShare(cat.id, dailyMood.id);
+        track({
+          type: 'daily_card_shared',
+          props: {
+            mood: dailyMood.id,
+            cluster: dailyMood.cluster,
+            surface: 'native_share',
+            voice_mode_tag: getVoiceModeTag(dailyMood.id),
+          },
+        });
+      } catch {
+        // share-tracking is best-effort; never block UI on it
+      }
       track({
         type: 'postcard_shared',
         props: {

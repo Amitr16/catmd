@@ -20,6 +20,7 @@
 import { completeJson } from '../ai/client';
 import { classifyPhotoFull } from '../ai/classify';
 import { trackLLMUsage } from './analytics';
+import { getPronounDirective } from './pronouns';
 import type { CatContext } from './catContext';
 
 /**
@@ -607,6 +608,18 @@ export async function analyzeBehaviorWithContext(
   else if (profile?.sex === 'female') meta.push('female');
   if (profile?.breed) meta.push(profile.breed);
   if (meta.length > 0) userLines.push(`Cat profile: ${meta.join(', ')}.`);
+
+  // Pronoun directive — overrides "she/her" defaults baked into the
+  // SYSTEM_PROMPT examples ("She wants company", "Leave her alone",
+  // etc.). Real bug 2026-05-09: tester set cat as male, body-
+  // language read still output "she". The examples in the system
+  // prompt were biasing the model. The directive sits right after
+  // the cat profile line so it's anchored to the cat we're reading.
+  if (profile?.name) {
+    userLines.push(
+      `Pronouns: ${getPronounDirective(profile.name, profile.sex ?? 'unknown')}`,
+    );
+  }
 
   if (profile?.conditions?.length) {
     userLines.push(`Known conditions: ${profile.conditions.join(', ')}.`);

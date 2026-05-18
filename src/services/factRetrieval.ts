@@ -558,10 +558,16 @@ export function buildFactsFromChatContext(opts: {
 }): Fact[] {
   const facts: Fact[] = [];
 
-  // ── Today's mood + appetite ──
+  // ── Today's mood + appetite (audit 2026-05-14 round 11 cleanup) ──
+  // Pre-fix: this used `mostRecentMood` while LABELLING the fact as
+  // "Today's check-in:" — same leak the chat fix closed. A yesterday
+  // 'off' check-in with no check-in today would still surface to the
+  // fact-retrieval layer as if it were today. Now uses the
+  // CheckinPattern's `todayMood`/`todayAppetite` fields which are
+  // null when no check-in landed today.
   const cp = opts.ctx.checkinPatterns;
-  const todayMood = cp?.mostRecentMood ?? null;
-  const todayAppetite = cp?.mostRecentAppetite ?? null;
+  const todayMood = cp?.todayMood ?? null;
+  const todayAppetite = cp?.todayAppetite ?? null;
   if (todayMood || todayAppetite) {
     const parts: string[] = [];
     if (todayMood) parts.push(`mood ${todayMood}`);

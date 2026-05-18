@@ -292,6 +292,9 @@ export const usePostcardStore = create<State>()(
               forced_regenerate: force,
             },
           });
+          // Unified activation event for marketing-attribution funnels
+          // (audit 2026-05-16). Fires alongside postcard_generated.
+          track({ type: 'core_feature_used', props: { feature: 'postcard' } });
 
           return postcard;
         } catch (e) {

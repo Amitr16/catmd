@@ -34,6 +34,7 @@ import { LineChart } from '../../src/components/LineChart';
 import { Text } from '../../src/components/Text';
 import { scorePainFromPhoto, type FGSResult, type FGSUnit } from '../../src/ai/fgs';
 import { useActiveCat } from '../../src/hooks/useActiveCat';
+import { useProGate } from '../../src/services/paywallGate';
 import {
   useHealthStore,
   type HealthEvent,
@@ -56,6 +57,7 @@ export default function PainScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const cat = useActiveCat();
+  const proGate = useProGate();
   const events = useHealthStore((s) => s.events);
   const addEvent = useHealthStore((s) => s.addEvent);
   const deleteEvent = useHealthStore((s) => s.deleteEvent);
@@ -78,8 +80,6 @@ export default function PainScreen() {
       )
       .sort((a, b) => b.ts.localeCompare(a.ts));
   }, [events, cat]);
-
-  if (!cat) return null;
 
   const pickPhoto = async (source: 'camera' | 'library') => {
     const perm = source === 'camera'
@@ -104,7 +104,11 @@ export default function PainScreen() {
   };
 
   const runScore = async () => {
-    if (!photoB64) return;
+    if (!photoB64 || !cat) return;
+    // Pro gate — FGS is research-grade vision AI (~$0.004/run). Hard
+    // gate before spending. Photo stays loaded so they can resume
+    // after subscribing.
+    if (!proGate.check('pain')) return;
     setScoring(true);
     setErrorMsg(null);
     try {
@@ -137,6 +141,11 @@ export default function PainScreen() {
     if (!finalUnits) return null;
     return Object.values(finalUnits).reduce((a, b) => a + b, 0);
   }, [finalUnits]);
+
+  // Hook-order safety (2026-05-14 audit fix): early "no cat" return
+  // used to live before the useMemo above, violating rules-of-hooks.
+  // Moved here so every render runs the same hook sequence.
+  if (!cat) return null;
 
   const save = () => {
     if (!result || !finalUnits || finalComposite == null) return;
@@ -200,7 +209,7 @@ export default function PainScreen() {
         <Text token="heading1" style={{ flex: 1 }}>Pain check</Text>
       </View>
       <Text token="body" color="textSecondary" style={{ marginTop: space[1] }}>
-        Feline Grimace Scale — Evangelista et al.'s validated facial-expression
+        Feline Grimace Scale — Evangelista et al.&apos;s validated facial-expression
         pain scale. Snap a clear face photo while {cat.name} is calm.
         The AI scores 5 action units (ears, eyes, muzzle, whiskers, head)
         the same way the published rubric does, with a one-line rationale

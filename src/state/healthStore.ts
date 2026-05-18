@@ -32,7 +32,8 @@ export type HealthEventType =
   | 'outcome_check'
   | 'feeding'
   | 'daily_checkin'
-  | 'behavior_observation';
+  | 'behavior_observation'
+  | 'meow_translation';
 
 // ── Per-type payload shapes ────────────────────────────────────────────────
 export type VaccinationPayload = {
@@ -162,6 +163,43 @@ export type BehaviorObservationPayload = {
   observed_at: string;            // ISO timestamp
 };
 
+/**
+ * Meow translation event — one row per /translate run. Saves the
+ * shareable translation the cat "said", the underlying classification,
+ * and the audio transcript so the cat-says greatest-hits scroll can
+ * surface the line later. The catContext builder reads this type to
+ * populate `recentMeowSignals` (empty placeholder before this event
+ * type existed).
+ *
+ * `intent: 'distress'` is the vet-flag cousin — when the translator
+ * classifies a clip as distress, downstream surfaces (Today tab
+ * banner, push) can pick it up the same way they pick up hard-urgency
+ * triage events. distinct from a triage scan: a meow_translation is
+ * cheap + advisory, not a clinical record.
+ */
+export type MeowTranslationPayload = {
+  vocalization_type:
+    | 'meow' | 'trill' | 'chirp' | 'purr' | 'hiss'
+    | 'growl' | 'yowl' | 'chatter' | 'silent' | 'other';
+  intent:
+    | 'greeting' | 'demand_food' | 'demand_attention' | 'annoyed'
+    | 'playful' | 'comfort_seeking' | 'warning' | 'distress'
+    | 'curious' | 'self_soothing' | 'other';
+  confidence: 'high' | 'moderate' | 'low';
+  /** The shareable cat-voice line (40-160 chars). */
+  translation: string;
+  /** One-sentence technical reasoning. */
+  why: string;
+  /** Whether Whisper produced a non-empty transcript. */
+  had_audio: boolean;
+  /** Whisper transcript when present. */
+  audio_transcript: string | null;
+  /** AI model that produced the translation (e.g. "gpt-4o-mini"). */
+  model: string;
+  /** ISO timestamp of when the cat actually vocalised (capture time). */
+  observed_at: string;
+};
+
 type PayloadByType = {
   vaccination: VaccinationPayload;
   medication_dose: MedicationDosePayload;
@@ -176,6 +214,7 @@ type PayloadByType = {
   feeding: FeedingPayload;
   daily_checkin: DailyCheckinPayload;
   behavior_observation: BehaviorObservationPayload;
+  meow_translation: MeowTranslationPayload;
 };
 
 export type HealthEvent<T extends HealthEventType = HealthEventType> = {

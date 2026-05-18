@@ -2,6 +2,19 @@ import {
   ADDITIONAL_ARTICLES,
   ADDITIONAL_IMAGE_ALTS,
 } from './library-additions-2026-05-09';
+import {
+  ADDITIONAL_ARTICLES_2026_05_16,
+  ADDITIONAL_IMAGE_ALTS_2026_05_16,
+} from './library-additions-2026-05-16';
+import {
+  ADDITIONAL_ARTICLES_2026_05_17,
+  ADDITIONAL_IMAGE_ALTS_2026_05_17,
+} from './library-additions-2026-05-17';
+import {
+  buildPlayStoreUrl,
+  renderAnalyticsScripts,
+  renderSearchConsoleMeta,
+} from './seoAndAnalytics';
 
 /**
  * CatMD knowledge library — catmd.pet/library
@@ -56,6 +69,8 @@ const IMAGE_HEIGHT = 630;
 /** Per-article alt text — descriptive, keyword-aware, accessibility-safe. */
 const IMAGE_ALT_BY_SLUG: Record<string, string> = {
   ...ADDITIONAL_IMAGE_ALTS,
+  ...ADDITIONAL_IMAGE_ALTS_2026_05_16,
+  ...ADDITIONAL_IMAGE_ALTS_2026_05_17,
   'cat-vomiting-when-to-see-vet':
     'Tabby cat sitting next to a clean ceramic water bowl, looking thoughtful — illustrative hero for a guide on cat vomiting urgency',
   'cat-not-eating':
@@ -205,6 +220,8 @@ function renderArticlePage(article: Article): string {
 <title>${escapeHtml(article.title)} — CatMD</title>
 <meta name="description" content="${escapeHtml(article.description)}" />
 <link rel="canonical" href="${canonicalUrl}" />
+${renderSearchConsoleMeta()}
+${renderAnalyticsScripts()}
 <meta property="og:title" content="${escapeHtml(article.title)}" />
 <meta property="og:description" content="${escapeHtml(article.description)}" />
 <meta property="og:type" content="article" />
@@ -318,6 +335,29 @@ ${jsonLd
     font-weight:500;color:var(--ink);margin-bottom:4px;line-height:1.35;}
   .related-card .rd{font-size:13px;color:var(--muted);line-height:1.5;}
 
+  /* Prominent "Read next" footer — intercepts readers before they hit the
+     conversion CTA + sources block, so library visitors do not dead-end
+     after one article. Single-card design (most curated next pick) keeps
+     attention focused; secondary recs live in the bottom grid. */
+  .read-next{margin:40px 0 0;}
+  .read-next-card{display:block;padding:28px 28px 26px;background:var(--sage-soft);
+    border:1px solid var(--sage);border-radius:14px;text-decoration:none;color:inherit;
+    transition:transform .18s ease,box-shadow .18s ease,background .18s ease;}
+  .read-next-card:hover{transform:translateY(-2px);background:#D2E0D5;
+    box-shadow:0 6px 22px -10px rgba(63,100,86,.32);}
+  .read-next-card .rn-kicker{display:inline-block;font-size:12px;letter-spacing:0.14em;
+    text-transform:uppercase;font-weight:700;color:var(--sage-dark);
+    margin-bottom:10px;}
+  .read-next-card .rn-title{font-family:var(--ff-serif);font-size:22px;line-height:1.25;
+    margin:0 0 8px;font-weight:500;color:var(--ink);
+    font-variation-settings:"opsz" 48,"wght" 500;}
+  .read-next-card .rn-desc{font-size:15px;line-height:1.55;margin:0 0 14px;
+    color:var(--ink-2);}
+  .read-next-card .rn-cta{display:inline-flex;align-items:center;gap:6px;
+    font-size:14px;font-weight:600;color:var(--sage-dark);}
+  .read-next-card .rn-arrow{transition:transform .18s ease;}
+  .read-next-card:hover .rn-arrow{transform:translateX(4px);}
+
   footer{border-top:1px solid var(--border);padding:32px 24px;background:var(--cream);
     font-size:13px;color:var(--muted);}
   footer .wrap{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;
@@ -382,10 +422,20 @@ ${jsonLd
 
   ${faqHtml}
 
+  ${related.length > 0 ? `
+  <aside class="read-next" aria-label="Read next">
+    <a class="read-next-card" href="/library/${related[0]!.slug}">
+      <span class="rn-kicker">Read next &rarr;</span>
+      <h3 class="rn-title">${escapeHtml(related[0]!.title)}</h3>
+      <p class="rn-desc">${escapeHtml(related[0]!.description)}</p>
+      <span class="rn-cta">Continue reading<span class="rn-arrow" aria-hidden="true">&rarr;</span></span>
+    </a>
+  </aside>` : ''}
+
   <div class="app-cta">
     <h3>Triage your cat in under 60 seconds</h3>
     <p>Not sure if this is an emergency? CatMD runs feline-specific triage on symptoms or photos and returns a 0–99 health score with urgency tier, differentials, and a vet-ready summary.</p>
-    <a href="/#get">Get the app</a>
+    <a href="${buildPlayStoreUrl('library', article.slug)}">Get the app</a>
   </div>
 
   <div class="sources">
@@ -393,11 +443,12 @@ ${jsonLd
     <div class="disclaimer">In a medical emergency, contact a licensed veterinarian immediately.</div>
   </div>
 
-  ${related.length > 0 ? `
+  ${related.length > 1 ? `
   <div class="related">
-    <h3>Related reading</h3>
+    <h3>More related reading</h3>
     <div class="related-grid">
       ${related
+        .slice(1)
         .map(
           (r) => `
       <a class="related-card" href="/library/${r.slug}">
@@ -459,7 +510,7 @@ const LIBRARY_SECTIONS: LibrarySection[] = [
         id: 'body-language',
         title: 'Body language fundamentals',
         blurb: 'The five channels every cat owner can learn to read: tail, ears, whiskers, eyes, and posture. With a printable cheat-sheet at the end of each.',
-        slugs: ['cat-tail-language', 'cat-body-language-ears-whiskers-eyes', 'cat-vocalizations-decoded'],
+        slugs: ['cat-tail-language', 'cat-body-language-ears-whiskers-eyes', 'cat-vocalizations-decoded', 'why-does-my-cat-meow-at-me', 'how-meow-translators-work', 'how-body-language-readers-work'],
       },
     ],
   },
@@ -522,7 +573,7 @@ const LIBRARY_SECTIONS: LibrarySection[] = [
         id: 'general-signs',
         title: 'General wellness signals',
         blurb: 'Cats are evolutionary prey animals — they mask weakness. These are the subtle full-body signals that often appear before any organ-specific sign.',
-        slugs: ['cat-hiding-illness', 'cat-lethargy', 'cat-gum-color'],
+        slugs: ['cat-hiding-illness', 'cat-lethargy', 'cat-gum-color', 'do-cats-hide-pain', 'cat-not-jumping', 'cat-grooming-less'],
       },
     ],
   },
@@ -643,6 +694,8 @@ export function renderLibraryIndex(): string {
 <title>The CatMD Library — Read your cat. Decode their personality. Live well together.</title>
 <meta name="description" content="Vet-sourced guides for cat parents. Body language, personality, the good cat life, health & triage, and life-stage care — all in plain English, all backed by Merck, Cornell, AAFP, ISFM, and the Litchfield Feline Five." />
 <link rel="canonical" href="${canonicalUrl}" />
+${renderSearchConsoleMeta()}
+${renderAnalyticsScripts()}
 <meta property="og:title" content="The CatMD Library — your cat's MD" />
 <meta property="og:description" content="The complete cat library: body language, personality, lifestyle, health, and life-stage care. Vet-sourced, plain English, no fluff." />
 <meta property="og:type" content="website" />
@@ -1088,7 +1141,7 @@ const ARTICLES: Article[] = [
     dateModified: '2026-04-24',
     readMinutes: 4,
     primaryKeyword: 'cat hiding',
-    relatedSlugs: ['cat-not-eating', 'cat-lethargy', 'cat-body-language-ears-whiskers-eyes'],
+    relatedSlugs: ['do-cats-hide-pain', 'cat-grooming-less', 'cat-not-eating', 'cat-lethargy', 'cat-body-language-ears-whiskers-eyes'],
     bodyHtml: `
 <p>A cat hiding under the bed for a few hours is normal. A cat hiding for a day is a question. A cat hiding for two days is a problem.</p>
 <p>The difficulty is that cats use the same behavior — withdrawing from visibility — to signal "I want to be alone right now" <em>and</em> "I'm in pain but I don't want you to know." Generic "wait and see" advice doesn't work because by the time a cat's hiding is obvious enough to alarm you, they may have been sick for days.</p>
@@ -1263,7 +1316,7 @@ const ARTICLES: Article[] = [
     dateModified: '2026-04-24',
     readMinutes: 5,
     primaryKeyword: 'cat lethargy',
-    relatedSlugs: ['cat-hiding-illness', 'cat-ate-lily-emergency', 'cat-not-eating'],
+    relatedSlugs: ['cat-hiding-illness', 'cat-not-jumping', 'cat-ate-lily-emergency', 'cat-not-eating'],
     bodyHtml: `
 <p>Cats sleep 12–16 hours a day. That's normal. What's not normal is a cat who stops responding to their usual triggers — food bowl, toy, owner returning home, a bird at the window — and just lies there. That's not tiredness. That's lethargy. In cats, lethargy is usually a medical sign, not a mood.</p>
 
@@ -1280,7 +1333,7 @@ const ARTICLES: Article[] = [
 
 <h2>Causes by age</h2>
 <h3>Kitten (under 1 year)</h3>
-<p>Kittens have very little physiologic reserve. Lethargy in a kitten is a fast-moving medical situation.</p>
+<p>Kittens have very little physiologic reserve — their bodies are still rapidly forming during the <a href="/library/kitten-development-windows">first sixteen weeks of kitten development</a>, and they crash from problems that an adult cat would shake off. Lethargy in a kitten is a fast-moving medical situation.</p>
 <ul>
 <li><strong>Panleukopenia</strong> (feline parvovirus) — deadly without fast treatment</li>
 <li><strong><a href="/library/cat-sneezing">URI</a></strong> — congested kittens stop eating and crash fast</li>
@@ -1944,7 +1997,7 @@ const ARTICLES: Article[] = [
     datePublished: '2026-05-01',
     dateModified: '2026-05-01',
     readMinutes: 9,
-    relatedSlugs: ['cat-body-language-ears-whiskers-eyes', 'feline-five-personality-framework', 'what-is-my-cat-thinking-ai-apps'],
+    relatedSlugs: ['cat-body-language-ears-whiskers-eyes', 'how-body-language-readers-work', 'feline-five-personality-framework'],
     primaryKeyword: 'cat tail meaning',
     faqs: [
       {
@@ -2027,18 +2080,18 @@ const ARTICLES: Article[] = [
 <h2>What this lets you do</h2>
 <p>Once you can read the tail, three things change. First, you stop misreading "wagging" as friendly — your cat will stop biting you mid-pet, because you’ll back off when the twitch starts. Second, you start spotting fear earlier — a tucked tail at the vet’s office is a cue to slow the handling, not push through. And third, you notice when the baseline shifts — a normally tail-up cat that suddenly starts tail-tucking is telling you something is wrong, often before any other symptom appears.</p>
 
-<p>The tail is just one channel. The next piece in this series covers the other four — ears, whiskers, eyes, and posture — and how to put them together into a complete read of your cat.</p>
+<p>The tail is just one channel. The next piece in this series covers the other four — ears, whiskers, eyes, and posture — and how to put them together into a complete read of your cat. (Curious how AI does this from a photo? See <a href="/library/how-body-language-readers-work">how body-language reader apps work</a>.)</p>
 `,
   },
 
   {
     slug: 'cat-body-language-ears-whiskers-eyes',
-    title: 'Beyond the tail — reading ears, whiskers, eyes, and posture',
-    description: 'The tail is half the picture. Ears, whiskers, eyes, and posture are the other half. How to read all five channels and put them together into a confident, accurate read of your cat.',
+    title: 'Cat Body Language Meaning: What Ears, Eyes, Whiskers, and Tails Tell You',
+    description: 'Cat body language meaning, decoded. What ears, eyes, whiskers, tail, and posture each tell you about how your cat feels — with a quick-reference table and side-by-side photos.',
     datePublished: '2026-05-01',
     dateModified: '2026-05-01',
     readMinutes: 10,
-    relatedSlugs: ['cat-tail-language', 'feline-five-personality-framework', 'cat-hiding-illness'],
+    relatedSlugs: ['do-cats-hide-pain', 'cat-tail-language', 'how-body-language-readers-work', 'feline-five-personality-framework'],
     primaryKeyword: 'cat body language',
     faqs: [
       {
@@ -2237,7 +2290,7 @@ const ARTICLES: Article[] = [
 
 <p>Knowing your cat’s archetype reframes everything. A Skittish-Sensitive cat that hides under the bed when guests come isn’t broken — it’s being a Skittish-Sensitive cat correctly. The work is to build the environment that lets that personality thrive: hides, height, quiet, predictability.</p>
 
-<p>An Affectionate-Lap cat left alone for 12-hour workdays isn’t happy with its own company — it’s suffering from a mismatch between its personality and its life. The fix is a companion cat, a midday visitor, or a job change.</p>
+<p>An Affectionate-Lap cat left alone for 12-hour workdays isn’t happy with its own company — it’s suffering from a mismatch between its personality and its life. The fix is a companion cat, a midday visitor, or a job change. (For the rituals that actually deepen a cat-human bond, see our guide on <a href="/library/how-to-bond-with-cat">how to bond with your cat properly</a>.)</p>
 
 <p>And a Hunter-Athlete in a small apartment with no daily play and no vertical territory will turn its energy into furniture destruction — not from spite but from a genuinely unmet need. The fix is wand toys and catification, not punishment.</p>
 
@@ -2278,7 +2331,7 @@ const ARTICLES: Article[] = [
       },
     ],
     bodyHtml: `
-<p>An indoor cat’s welfare isn’t about love alone — it’s about <strong>environmental design</strong>. Cats evolved to spend their lives navigating a 100-acre territory full of vertical space, hiding spots, prey, and choices. We move them indoors and ask them to be happy in 700 square feet. They can be — but only when we design the space to give back what the outdoors took away.</p>
+<p>An indoor cat’s welfare isn’t about love alone — it’s about <strong>environmental design</strong>. Cats evolved to spend their lives navigating a 100-acre territory full of vertical space, hiding spots, prey, and choices. We move them indoors and ask them to be happy in 700 square feet. They can be — but only when we design the space to give back what the outdoors took away. (If you’re raising a kitten right now, the environment you create during the <a href="/library/kitten-development-windows">first sixteen weeks of kitten development</a> will shape who they become — design accordingly.)</p>
 
 <p>The American Association of Feline Practitioners (AAFP) and International Society of Feline Medicine (ISFM) jointly published the <strong>5 Pillars of a Healthy Feline Environment</strong> in 2013, and it’s been the welfare gold standard ever since. Every feline-friendly veterinary practice in the world is built around these five needs. This guide walks through each pillar, what it means in practice, and how to audit your home in 15 minutes.</p>
 
@@ -2338,7 +2391,7 @@ const ARTICLES: Article[] = [
     datePublished: '2026-05-01',
     dateModified: '2026-05-01',
     readMinutes: 9,
-    relatedSlugs: ['cat-losing-weight', 'cat-breathing-fast-sleeping', 'cat-litter-box-changes'],
+    relatedSlugs: ['cat-losing-weight', 'cat-not-jumping', 'cat-grooming-less', 'cat-breathing-fast-sleeping', 'cat-litter-box-changes'],
     primaryKeyword: 'senior cat care',
     faqs: [
       {
@@ -2366,7 +2419,7 @@ const ARTICLES: Article[] = [
 <h2>The 12 markers worth tracking</h2>
 
 <h3>Weight</h3>
-<p>The single most useful number in senior cat health. Weigh monthly using a digital baby scale or by weighing yourself with and without the cat on a regular scale. Drift down >5% in 3 months is significant. Causes include hyperthyroidism (often paired with increased appetite), CKD, diabetes, dental pain, and cancer.</p>
+<p>The single most useful number in senior cat health. Weigh monthly using a digital baby scale or by weighing yourself with and without the cat on a regular scale. Drift down >5% in 3 months is significant. Causes include hyperthyroidism (often paired with increased appetite), CKD, diabetes, dental pain, and cancer. For the full diagnostic workup — what each likely cause means and the minimum lab panel to ask for — see our guide on <a href="/library/cat-losing-weight">unexplained weight loss in cats</a>.</p>
 
 <h3>Water intake</h3>
 <p>Increased thirst is one of the earliest signs of CKD and diabetes. Watch the water bowl — if it goes from "topping up every other day" to "topping up daily," that’s a flag. Some owners mark the level with a sticker for two weeks to quantify.</p>
@@ -2438,7 +2491,7 @@ const ARTICLES: Article[] = [
     datePublished: '2026-05-01',
     dateModified: '2026-05-01',
     readMinutes: 9,
-    relatedSlugs: ['cat-tail-language', 'cat-body-language-ears-whiskers-eyes', 'feline-five-personality-framework'],
+    relatedSlugs: ['why-does-my-cat-meow-at-me', 'cat-tail-language', 'cat-body-language-ears-whiskers-eyes', 'how-meow-translators-work'],
     primaryKeyword: 'cat sounds meaning',
     faqs: [
       {
@@ -2464,7 +2517,7 @@ const ARTICLES: Article[] = [
 <h2>The eight everyday sounds</h2>
 
 <h3>1. Meow</h3>
-<p>The all-purpose request. Pitch and length carry meaning: a short clipped meow is usually attention-asking, a long drawn-out meow is complaint or distress, a high-pitched chirpy meow is greeting. Most owners learn their own cat’s specific meow vocabulary within months — it tends to be remarkably consistent per individual.</p>
+<p>The all-purpose request. Pitch and length carry meaning: a short clipped meow is usually attention-asking, a long drawn-out meow is complaint or distress, a high-pitched chirpy meow is greeting. Most owners learn their own cat’s specific meow vocabulary within months — it tends to be remarkably consistent per individual. Worth noting: adult cats almost never meow at each other — they keep the meow channel almost exclusively for humans (see <a href="/library/why-does-my-cat-meow-at-me">why your cat meows at you specifically</a>).</p>
 
 <h3>2. Chirp / trill</h3>
 <p>A short rolled "brrrr" or "prrrrt", mouth closed. Originally a mother-to-kitten "come here" call; adult cats use it as a friendly greeting toward bonded humans and friendly cats. Almost always a positive signal.</p>
@@ -2750,4 +2803,6 @@ const ARTICLES: Article[] = [
 `,
   },
   ...ADDITIONAL_ARTICLES,
+  ...ADDITIONAL_ARTICLES_2026_05_16,
+  ...ADDITIONAL_ARTICLES_2026_05_17,
 ];

@@ -182,7 +182,7 @@ export default function CatsScreen() {
         {adding ? (
           <Card>
             <Text token="caption" color="textMuted" style={{ marginBottom: space[1] }}>
-              Cat's name
+              Cat&apos;s name
             </Text>
             <TextInput
               autoFocus

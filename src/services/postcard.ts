@@ -31,6 +31,20 @@ import { completeJson } from '../ai/client';
 import { ARCHETYPE_META, type PersonalityArchetype } from './personality';
 import type { CatProfile } from '../state/catStore';
 import type { PhotoStudioPhoto } from './photoStudio';
+import {
+  resolveTodaysMood,
+  renderMoodForPrompt,
+} from './dailyMood';
+import {
+  buildArchetypeMod,
+  buildTodayBehaviorMod,
+  computeBodyTrendSignals,
+  computeFeedbackMod,
+} from './moodWeights';
+import { getVoiceModeTag } from './voiceModes';
+import { useMoodFeedbackStore } from '../state/moodFeedbackStore';
+import { resolveCatAgeMonths } from '../state/catStore';
+import { useScanStore } from '../state/scanStore';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -92,6 +106,10 @@ export type Postcard = {
    *
    *   1 = original prompt (long, "Today, I..." failures common)
    *   2 = 2026-05-02 prompt (≤12 words, no temporal openers)
+   *   3 = 2026-05-13 prompt (mood-shaped via daily lottery)
+   *   4 = 2026-05-14 (memory infusion + deterministic quality guard
+   *       + retry-and-trim fallback — caption uses self-facts, world
+   *       objects, named subjects, recent diary highlight)
    *
    * Postcards with `undefined` are treated as v1.
    */
@@ -100,7 +118,7 @@ export type Postcard = {
 
 /** The current postcard caption prompt version. Bump on every prompt
  *  rewrite so cached postcards auto-migrate on next view. */
-export const POSTCARD_CAPTION_PROMPT_VERSION = 3;
+export const POSTCARD_CAPTION_PROMPT_VERSION = 4;
 
 // ---------------------------------------------------------------------------
 // Photo aggregator
@@ -349,6 +367,341 @@ const WEEKDAYS = [
   'Saturday',
 ];
 
+// ---------------------------------------------------------------------------
+// Caption quality guard (audit 2026-05-14 — P2 fix #4)
+// ---------------------------------------------------------------------------
+//
+// The prompt says "ONE sentence, 12 words max, never start with Today".
+// The model violates these ~5-10% of the time. Without a deterministic
+// guard, those captions ship to the postcard surface where they're the
+// share-target — the highest-stakes line in the app.
+//
+// Strategy:
+//   1. Parse the caption and check each hard rule.
+//   2. If any fail, return a `violations[]` array for retry.
+//   3. Caller does ONE retry with violations injected into the prompt
+//      as explicit fix instructions.
+//   4. If retry still violates, mechanically trim (last-resort fallback)
+//      so the user never sees an essay-length caption.
+
+/**
+ * Lowercased forbidden phrases that nuke the cat-voice register.
+ * Mirror of the prompt's FORBIDDEN PHRASES list — kept in sync manually
+ * so a phrase the model slips past the prompt still gets caught here.
+ */
+const FORBIDDEN_PHRASES = [
+  'i appreciate',
+  'thank you',
+  'i find joy',
+  'of course',
+  'i love',
+  'such a',
+  'so much',
+];
+
+/**
+ * Forbidden openers — caption MUST NOT start with any of these (case-
+ * insensitive). Re-states the prompt's "never start with Today / This
+ * morning / Yesterday" rule.
+ */
+const FORBIDDEN_OPENERS = [
+  'today',
+  'this morning',
+  'this afternoon',
+  'this evening',
+  'tonight',
+  'yesterday',
+  'tomorrow',
+  'hey friends',
+  'look at',
+  'here i am',
+];
+
+/**
+ * Validate a generated caption against the hard rules in VOICE_RULES.
+ * Returns null if clean, or an array of human-readable violations the
+ * model should fix on retry.
+ */
+function validateCaption(caption: string): string[] | null {
+  const violations: string[] = [];
+  const trimmed = caption.trim();
+  const lower = trimmed.toLowerCase();
+
+  // 1. Word count cap (12 words max). Splits on whitespace; punctuation
+  //    attached to a word doesn't double-count.
+  const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+  if (wordCount > 12) {
+    violations.push(`Caption is ${wordCount} words — must be 12 or fewer.`);
+  }
+
+  // 2. Sentence count cap (ONE sentence). Approximate via terminal
+  //    punctuation followed by space + capital, OR multiple terminal
+  //    marks. Allows a closing period or no terminal at all.
+  //    Heuristic: count the . ! ? characters that aren't trailing.
+  const sentenceTerminals = (trimmed.match(/[.!?]+(\s|$)/g) ?? []).length;
+  if (sentenceTerminals > 1) {
+    violations.push(
+      'Caption has multiple sentences — must be ONE sentence only.',
+    );
+  }
+
+  // 3. Forbidden opener (e.g. "Today, I...").
+  for (const opener of FORBIDDEN_OPENERS) {
+    if (lower.startsWith(opener)) {
+      violations.push(
+        `Caption starts with forbidden opener "${opener}" — start with something else.`,
+      );
+      break; // one is enough
+    }
+  }
+
+  // 4. Forbidden phrases anywhere in the caption.
+  for (const phrase of FORBIDDEN_PHRASES) {
+    if (lower.includes(phrase)) {
+      violations.push(
+        `Caption contains forbidden phrase "${phrase}" — rewrite without it.`,
+      );
+    }
+  }
+
+  // 5. Emoji / hashtag detection.
+  if (/#\w/.test(trimmed)) {
+    violations.push('Caption contains a hashtag — strip them.');
+  }
+  // Basic emoji range (covers most common pictographic emoji). Won't
+  // catch ZWJ-sequenced fancy emoji but catches the common cases.
+  if (/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(trimmed)) {
+    violations.push('Caption contains an emoji — strip them.');
+  }
+
+  // 6. All-caps shouting (more than one word in all-caps).
+  const allCapsWords = trimmed
+    .split(/\s+/)
+    .filter((w) => w.length >= 2 && w === w.toUpperCase() && /[A-Z]/.test(w));
+  if (allCapsWords.length > 1) {
+    violations.push(
+      'Caption has multiple ALL-CAPS words — limit emphasis to one word max.',
+    );
+  }
+
+  return violations.length > 0 ? violations : null;
+}
+
+/**
+ * Mechanical fallback: if a caption STILL violates after retry, trim it
+ * down to a passable shape. Last-resort only — we want the model to fix
+ * its own output, not paper over it. Strategy:
+ *   - Take only up to the first sentence-terminal mark.
+ *   - Cap at 12 words.
+ *   - Lowercase any leading FORBIDDEN_OPENER's start (replace the word).
+ */
+function trimToShape(caption: string): string {
+  let s = caption.trim();
+  // First sentence only
+  const firstTerm = s.match(/^[^.!?]*[.!?]/);
+  if (firstTerm) s = firstTerm[0];
+  // Strip leading "Today, " etc.
+  for (const opener of FORBIDDEN_OPENERS) {
+    if (s.toLowerCase().startsWith(opener)) {
+      s = s.slice(opener.length).replace(/^[,\s]+/, '');
+      // Re-capitalise first letter so it reads natural
+      s = s.charAt(0).toUpperCase() + s.slice(1);
+      break;
+    }
+  }
+  // Word cap
+  const words = s.split(/\s+/).filter(Boolean);
+  if (words.length > 12) {
+    s = words.slice(0, 12).join(' ');
+    // Ensure terminal punctuation
+    if (!/[.!?]$/.test(s)) s += '.';
+  }
+  return s;
+}
+
+// ---------------------------------------------------------------------------
+// Memory infusion (audit 2026-05-14 — P2 fix #5)
+// ---------------------------------------------------------------------------
+//
+// Postcards used to know only: cat name, archetype, today's check-in,
+// today's body-language tags, milestones. NOT the cat's accumulated
+// self-knowledge ("I love tuna"), recent diary highlights, world
+// objects ("the green chair"), or named people/pets ("Mom is here").
+// This made captions stylish but not deeply "this exact cat over time."
+//
+// Memory context is gathered from the existing stores at generation
+// time and rendered into the user prompt as a compact MEMORY block.
+// All slices are CAPPED so the prompt stays under ~700 tokens. Empty
+// memory (cold-start cat) renders nothing — no penalty for first-day
+// users.
+
+/**
+ * Compact memory snapshot used by the caption prompt. All optional —
+ * postcard generation works without any of these. Cap sizes here
+ * (3 facts, 1 diary line, 3 world objects, 3 subjects) chosen so the
+ * memory block stays under ~250 tokens.
+ */
+type PostcardMemoryContext = {
+  selfFacts: string[];
+  recentDiaryHighlight: string | null;
+  worldObjects: string[];
+  subjectsToday: string[];
+};
+
+/**
+ * Gather memory context for a cat. Reads from the existing stores
+ * directly (lazy import to avoid circular deps). Always returns a
+ * valid context — fields may be empty arrays / null for cold-start
+ * cats. Failures swallowed; postcard generation never breaks on
+ * missing memory.
+ */
+async function gatherMemoryContext(
+  catId: string,
+  catName: string,
+): Promise<PostcardMemoryContext> {
+  const empty: PostcardMemoryContext = {
+    selfFacts: [],
+    recentDiaryHighlight: null,
+    worldObjects: [],
+    subjectsToday: [],
+  };
+  try {
+    const [{ useSelfFactsStore }, { useDiaryStore }, { useWorldStore }, { useSubjectDirectoryStore }] =
+      await Promise.all([
+        import('../state/selfFactsStore'),
+        import('../state/diaryStore'),
+        import('../state/worldStore'),
+        import('../state/subjectDirectoryStore'),
+      ]);
+
+    // Top 3 self-facts by assertion_count (most-reasserted = most
+    // confidently held). Skip very-low-confidence facts.
+    const facts = (useSelfFactsStore.getState().facts[catId] ?? [])
+      .filter((f) => f.confidence >= 0.6)
+      .sort(
+        (a, b) =>
+          (b.assertion_count ?? 1) - (a.assertion_count ?? 1) ||
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+      )
+      .slice(0, 3)
+      .map((f) => f.fact);
+
+    // Recent diary highlight — the most-recent entry's punchy line.
+    // pickCatVoiceHighlight is already the heuristic used by the
+    // 7pm push, so this stays consistent across surfaces.
+    const diaryEntries = useDiaryStore.getState().getEntriesForCat(catId);
+    const recentEntry = diaryEntries
+      .slice()
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .find((e) => !e.is_empty_day);
+    let diaryHighlight: string | null = null;
+    if (recentEntry) {
+      try {
+        const { pickCatVoiceHighlight } = await import('./diary');
+        diaryHighlight = pickCatVoiceHighlight(recentEntry);
+      } catch {
+        // fall through
+      }
+    }
+
+    // Top 3 world objects ranked by emotional WEIGHT (audit 2026-05-14
+    // P2 fix). Earlier code checked `sentiment === 'hates'` which never
+    // matched — the actual WorldSentiment enum is `loves | likes |
+    // curious | tolerates | dislikes | fears` (no `hates`). That meant
+    // emotionally loaded objects ("the vacuum is feared", "the green
+    // chair is loved") weren't prioritised correctly.
+    //
+    // We rank by ABSOLUTE emotional weight because BOTH ends of the
+    // sentiment spectrum are caption gold — a strongly-loved chair and
+    // a strongly-feared vacuum are both "very this cat" props. Neutral
+    // `tolerates` objects are background and rank low. Recency
+    // tie-breaks.
+    const SENTIMENT_WEIGHT: Record<string, number> = {
+      loves: 3,
+      fears: 3,    // negative pole symmetric to loves — equally
+                   // characterful and caption-worthy
+      likes: 2,
+      dislikes: 2, // mild negative — same rank as `likes`
+      curious: 1,
+      tolerates: 0,
+    };
+    const world = (useWorldStore.getState().entriesByCat[catId] ?? [])
+      .slice()
+      .sort((a, b) => {
+        const aw = SENTIMENT_WEIGHT[a.sentiment ?? 'tolerates'] ?? 0;
+        const bw = SENTIMENT_WEIGHT[b.sentiment ?? 'tolerates'] ?? 0;
+        if (aw !== bw) return bw - aw;
+        return (b.last_referenced_at ?? '').localeCompare(
+          a.last_referenced_at ?? '',
+        );
+      })
+      .slice(0, 3)
+      .map((e) => e.name);
+
+    // Named subjects (people / pets) seen in TODAY's photos. Pulls
+    // from the directory entries' appearances list.
+    //
+    // Audit 2026-05-14 round 14 P2: apply `filterOutActiveCat` before
+    // computing today's subjects. Pre-fix, if old polluted subject
+    // data tagged the active cat as a subject of itself, the postcard
+    // caption could reference the cat as a named person/pet in its
+    // own world ("with Lily today" — where Lily IS the cat). Chat and
+    // diary already had this guard; postcard didn't.
+    const todayKey = localDateKey(new Date());
+    const { filterOutActiveCat } = await import('../state/subjectDirectoryStore');
+    const rawDirectory = useSubjectDirectoryStore.getState().entries[catId] ?? [];
+    const directory = filterOutActiveCat(rawDirectory, catName);
+    const subjectsToday = directory
+      .filter((entry) =>
+        (entry.appearances ?? []).some((a) => a.date === todayKey),
+      )
+      .slice(0, 3)
+      .map((entry) => entry.name);
+
+    return {
+      selfFacts: facts,
+      recentDiaryHighlight: diaryHighlight,
+      worldObjects: world,
+      subjectsToday,
+    };
+  } catch (e) {
+    console.warn('[postcard] gatherMemoryContext failed:', e);
+    return empty;
+  }
+}
+
+/**
+ * Render the memory block for the caption prompt. Returns empty
+ * string when no memory has accumulated — cold-start cats get
+ * nothing extra rather than a "memory: (none)" placeholder that
+ * primes the model to lean on absence.
+ */
+function renderMemoryBlock(memory: PostcardMemoryContext): string {
+  const lines: string[] = [];
+  if (memory.selfFacts.length > 0) {
+    lines.push(
+      `What you know about yourself (true; you may riff on one):\n- ${memory.selfFacts.join('\n- ')}`,
+    );
+  }
+  if (memory.recentDiaryHighlight) {
+    lines.push(
+      `Recent line you wrote in your diary (tone reference, do NOT copy):\n"${memory.recentDiaryHighlight}"`,
+    );
+  }
+  if (memory.worldObjects.length > 0) {
+    lines.push(
+      `Real items in your world (use one if it fits — never invent):\n- ${memory.worldObjects.join('\n- ')}`,
+    );
+  }
+  if (memory.subjectsToday.length > 0) {
+    lines.push(
+      `Named humans/pets seen in today's photos: ${memory.subjectsToday.join(', ')}.`,
+    );
+  }
+  if (lines.length === 0) return '';
+  return `\nMEMORY (your accumulated reality — favour these over invented details):\n${lines.join('\n\n')}`;
+}
+
 /**
  * Generate today's postcard for the cat. Pulls together the day's
  * photos + an AI-generated short caption. The caller is responsible
@@ -396,7 +749,15 @@ export async function generatePostcard(opts: {
   // base64 read fails.
   const referenceBase64 = photos.length > 0 ? await fileUriToBase64(photos[0]?.uri) : null;
 
-  const user = buildCaptionUserPrompt({
+  // Memory infusion (2026-05-14 P2 fix #5) — pull the cat's accumulated
+  // self-knowledge, recent diary highlight, world objects, and named
+  // subjects-seen-today. All optional; empty for cold-start cats.
+  // Appended to the user prompt as a MEMORY block so the captioner
+  // can lean on real cat reality instead of inventing details.
+  const memory = await gatherMemoryContext(cat.id, cat.name);
+  const memoryBlock = renderMemoryBlock(memory);
+
+  const userBase = buildCaptionUserPrompt({
     catName: cat.name,
     photoCount: photos.length,
     archetype,
@@ -410,12 +771,178 @@ export async function generatePostcard(opts: {
     ...(isBirthday !== undefined ? { isBirthday } : {}),
     ...(isAdoptionIversary !== undefined ? { isAdoptionIversary } : {}),
   });
+  const user = memoryBlock ? `${userBase}\n${memoryBlock}` : userBase;
+
+  // Today's daily mood (2026-05-13) — same picker as chat + diary so
+  // the postcard caption tonally matches the day's voice. Four-layer
+  // lottery: archetype × today-behavior × user-feedback^1.5. Prepended
+  // to the static VOICE_RULES so the model has both the long-form
+  // voice rules AND today's mood tilt. Postcards are short (≤12 words)
+  // so we keep the mood injection compact via renderMoodForPrompt.
+  const archetypeMod = buildArchetypeMod(archetype);
+  // Convert the loose `todaysMood` (string like 'happy'/'normal'/'off')
+  // into the strict union the picker expects.
+  const checkinForLottery: 'happy' | 'normal' | 'off' | null =
+    todaysMood === 'happy' || todaysMood === 'normal' || todaysMood === 'off'
+      ? todaysMood
+      : null;
+  // Live mood signals (audit 2026-05-14 architectural expansion).
+  // Postcard's mood reflects the day's full live state, not just
+  // body-language tags + check-in mood. Pulls meow intents + pain +
+  // litter from healthStore, weather from getWeatherSnapshot. All
+  // wrapped in try/catch so missing data degrades gracefully.
+  const liveSignalsPostcard: Parameters<typeof buildTodayBehaviorMod>[0] = {
+    todayTags: bodyLanguageTags ?? [],
+    checkinMood: checkinForLottery,
+    ageMonths: resolveCatAgeMonths(cat) ?? null,
+  };
+  if (checkinForLottery === 'off') {
+    // The check-in `mood === 'off'` already pulls dark; we don't
+    // have appetite/litter at the postcard call signature, but if
+    // the check-in is `off` that's signal enough.
+  }
+  try {
+    const { useHealthStore } = await import('../state/healthStore');
+    const events = useHealthStore.getState().events;
+    const dayKey = localDateKey(today);
+    const todaysForCat = events.filter((e) => {
+      if (e.cat_id !== cat.id) return false;
+      try {
+        return localDateKey(new Date(e.ts)) === dayKey;
+      } catch {
+        return false;
+      }
+    });
+    // Meow intents
+    const intents: string[] = [];
+    for (const e of todaysForCat) {
+      if (e.type !== 'meow_translation') continue;
+      const p = e.payload as { intent?: string };
+      if (p?.intent) intents.push(p.intent);
+    }
+    if (intents.length > 0) liveSignalsPostcard.meowIntents = intents;
+    // Pain
+    const painHit = todaysForCat.some((e) => {
+      if (e.type !== 'pain_score') return false;
+      const p = e.payload as { composite?: number };
+      return typeof p?.composite === 'number' && p.composite >= 4;
+    });
+    if (painHit) liveSignalsPostcard.hasPainToday = true;
+    // Water + weight body-trend signals (audit 2026-05-14 round 15).
+    // Pre-fix the postcard path collected meow / pain / appetite /
+    // litter but skipped water + weight, so the caption voice didn't
+    // react to body-state shifts. Now routed through the same shared
+    // helper as diary + chat + `buildLiveMoodContext`.
+    const trends = computeBodyTrendSignals(events, cat.id, dayKey);
+    if (trends.waterDirection != null) liveSignalsPostcard.waterDirection = trends.waterDirection;
+    if (trends.weightTrendDirection != null) liveSignalsPostcard.weightTrendDirection = trends.weightTrendDirection;
+    // Appetite + litter from check-in
+    for (const e of todaysForCat) {
+      if (e.type !== 'daily_checkin') continue;
+      const p = e.payload as { appetite?: string; litter?: string };
+      if (p?.appetite === 'partial' || p?.appetite === 'none') {
+        liveSignalsPostcard.hasAppetiteOff = true;
+      }
+      if (p?.litter === 'abnormal') {
+        liveSignalsPostcard.hasLitterAbnormal = true;
+      }
+      break;
+    }
+  } catch {
+    // ignore
+  }
+  try {
+    const { getWeatherSnapshot } = await import('./weatherContext');
+    const snap = await getWeatherSnapshot();
+    if (snap) {
+      if (typeof snap.weather_code === 'number') liveSignalsPostcard.weatherCode = snap.weather_code;
+      if (typeof snap.apparent_c === 'number') liveSignalsPostcard.apparentTempC = snap.apparent_c;
+    }
+  } catch {
+    // skip weather signal
+  }
+  const todayMod = buildTodayBehaviorMod(liveSignalsPostcard);
+  const feedbackTable = useMoodFeedbackStore.getState().getFeedback(cat.id);
+  const feedbackMod = computeFeedbackMod(feedbackTable);
+  // Same-day medical concern routing (2026-05-14 audit P1) — if a
+  // scan today flagged 'urgent' or 'concern', force the mood lottery
+  // into the dark pool so the postcard caption doesn't read playful /
+  // cute on a medically serious day. Mirrors chat and deep diary.
+  // Scans live in scanStore (not healthStore) — same direct-store-
+  // access pattern as the existing mood lottery wiring below.
+  const todayKey = localDateKey(today);
+  const hasMedicalConcernToday = (() => {
+    try {
+      return useScanStore
+        .getState()
+        .scans.some(
+          (s) =>
+            s.cat_id === cat.id &&
+            localDateKey(new Date(s.created_at)) === todayKey &&
+            (s.urgency === 'urgent' || s.urgency === 'concern'),
+        );
+    } catch {
+      return false;
+    }
+  })();
+  const dailyMood = resolveTodaysMood({
+    catId: cat.id,
+    checkinMood: checkinForLottery,
+    hasRecentMedicalConcern: hasMedicalConcernToday,
+    archetypeMod,
+    todayMod,
+    feedbackMod,
+  });
+  // Idempotent exposure record so the feedback layer learns the
+  // postcard's contribution to this mood's "user saw it" tally. Share
+  // tracking happens elsewhere (the share-sheet handler in the
+  // postcard screen).
+  try {
+    useMoodFeedbackStore
+      .getState()
+      .recordExposure(cat.id, dailyMood.id);
+    void import('./analytics').then(({ track }) => {
+      try {
+        track({
+          type: 'mood_exposed',
+          props: {
+            mood: dailyMood.id,
+            cluster: dailyMood.cluster,
+            archetype: archetype ?? null,
+            voice_mode_tag: getVoiceModeTag(dailyMood.id),
+          },
+        });
+      } catch {
+        // analytics failures must never break postcard
+      }
+    });
+  } catch {
+    // never block postcard generation on store writes
+  }
+  const moodBlock = renderMoodForPrompt(dailyMood);
+  const systemWithMood = moodBlock
+    ? `${VOICE_RULES}\n\n${moodBlock}`
+    : VOICE_RULES;
 
   type LlmResult = { caption: string; mood_word: string };
 
+  const llmSchema = {
+    name: 'cat_postcard_caption',
+    strict: true,
+    schema: {
+      type: 'object' as const,
+      additionalProperties: false,
+      required: ['caption', 'mood_word'],
+      properties: {
+        caption: { type: 'string' as const },
+        mood_word: { type: 'string' as const },
+      },
+    },
+  };
+
   const result = await completeJson<LlmResult>({
     activity: 'postcard_caption',
-    system: VOICE_RULES,
+    system: systemWithMood,
     user,
     imageBase64: referenceBase64,
     imageDetail: 'low',
@@ -427,23 +954,151 @@ export async function generatePostcard(opts: {
                          // even if it wanted to. 12-word caption ≈ 30 tokens
                          // + JSON wrapper + mood_word ≈ 50 tokens; 80 has
                          // headroom but blocks essay-length drift.
-    jsonSchema: {
-      name: 'cat_postcard_caption',
-      strict: true,
-      schema: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['caption', 'mood_word'],
-        properties: {
-          caption: { type: 'string' },
-          mood_word: { type: 'string' },
-        },
-      },
-    },
+    jsonSchema: llmSchema,
   });
 
-  const caption = result.caption.trim();
-  const moodWord = (result.mood_word ?? '').trim().toLowerCase() || undefined;
+  // Caption quality guard (2026-05-14 P2 fix #4) — validate the model's
+  // output against the hard rules. ~5-10% of first-pass captions violate
+  // (word count, two sentences, "Today, I..." openers, forbidden phrases).
+  // Without this, those captions ship to the highest-stakes share surface
+  // in the app. Strategy: ONE retry with violations in the prompt; if
+  // still bad, mechanical trim. Never throw — caller already has a
+  // fallback path for AI errors and we don't want to confuse it with
+  // a quality-failure throw.
+  //
+  // Audit 2026-05-14 round 7 addition: also run the shared
+  // `evaluateCatVoiceLine` from voiceQuality.ts to catch banned
+  // phrases + unsupported named entities (a caption naming "Mom" or
+  // "the kitchen" when those aren't in the cat's known memory).
+  let caption = result.caption.trim();
+  let moodWord = (result.mood_word ?? '').trim().toLowerCase() || undefined;
+
+  // Run shared voiceQuality evaluator as a second pass — catches
+  // hallucinated names and assistant-voice slips that validateCaption
+  // doesn't see.
+  let voiceResult: import('./voiceQuality').VoiceQualityResult | null = null;
+  try {
+    const { evaluateCatVoiceLine } = await import('./voiceQuality');
+    const knownSubjects = memory.subjectsToday;
+    const knownObjects = memory.worldObjects;
+    voiceResult = evaluateCatVoiceLine(caption, 'postcard', {
+      catName: cat.name,
+      knownSubjects,
+      knownObjects,
+      allowedFacts: memory.selfFacts,
+      isMedicalContext: hasMedicalConcernToday,
+      moodTag: dailyMood.id,
+    });
+    void import('./analytics').then(({ track }) => {
+      try {
+        track({
+          type: 'voice_quality_eval',
+          props: {
+            surface: 'postcard',
+            score: voiceResult!.score,
+            ok: voiceResult!.ok,
+            reasons: voiceResult!.reasons.length,
+          },
+        });
+      } catch {
+        // silent
+      }
+    });
+  } catch {
+    // voiceQuality unavailable — fall through with validateCaption only
+  }
+
+  const firstViolations = validateCaption(caption);
+  // Combine: validateCaption rules + voiceQuality rules. Retry if
+  // EITHER pass flags issues.
+  const combinedViolations: string[] = [
+    ...(firstViolations ?? []),
+    ...(voiceResult && !voiceResult.ok ? voiceResult.reasons : []),
+  ];
+  if (combinedViolations.length > 0) {
+    try {
+      const retryUserPrompt =
+        `${user}\n\n` +
+        `Your previous attempt was rejected. Here is what you wrote:\n` +
+        `"${caption}"\n\n` +
+        `Why it failed (fix ALL of these):\n` +
+        combinedViolations.map((v) => `- ${v}`).join('\n') +
+        `\n\nWrite a NEW caption that fixes every violation above. JSON only.`;
+      const retry = await completeJson<LlmResult>({
+        activity: 'postcard_caption',
+        system: systemWithMood,
+        user: retryUserPrompt,
+        imageBase64: referenceBase64,
+        imageDetail: 'low',
+        temperature: 0.7, // slightly tighter than the first pass
+        maxTokens: 80,
+        jsonSchema: llmSchema,
+      });
+      const retryCaption = retry.caption.trim();
+      const retryRuleViolations = validateCaption(retryCaption);
+      const { evaluateCatVoiceLine: evalQuality } = await import('./voiceQuality');
+      const retryVoiceResult = evalQuality(retryCaption, 'postcard', {
+        catName: cat.name,
+        knownSubjects: memory.subjectsToday,
+        knownObjects: memory.worldObjects,
+        allowedFacts: memory.selfFacts,
+        isMedicalContext: hasMedicalConcernToday,
+        moodTag: dailyMood.id,
+      });
+      const retryStillBad =
+        !!retryRuleViolations || !retryVoiceResult.ok;
+      void import('./analytics').then(({ track }) => {
+        try {
+          track({
+            type: 'voice_quality_retried',
+            props: {
+              surface: 'postcard',
+              original_score: voiceResult?.score ?? 0,
+              repaired_score: retryVoiceResult.score,
+              recovered: !retryStillBad,
+            },
+          });
+        } catch {
+          // silent
+        }
+      });
+      if (!retryStillBad) {
+        caption = retryCaption;
+        const rmw = (retry.mood_word ?? '').trim().toLowerCase();
+        if (rmw) moodWord = rmw;
+      } else if (retryVoiceResult.repaired) {
+        // Voice eval offered a mechanical repair (length/banned-phrase
+        // strip) — use it.
+        caption = retryVoiceResult.repaired;
+        void import('./analytics').then(({ track }) => {
+          try {
+            track({
+              type: 'voice_quality_fallback',
+              props: { surface: 'postcard', kind: 'mechanical_repair' },
+            });
+          } catch {
+            // silent
+          }
+        });
+      } else {
+        // Last resort: mechanical trim as before.
+        caption = trimToShape(retryCaption || caption);
+        void import('./analytics').then(({ track }) => {
+          try {
+            track({
+              type: 'voice_quality_fallback',
+              props: { surface: 'postcard', kind: 'mechanical_repair' },
+            });
+          } catch {
+            // silent
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('[postcard] caption retry failed; mechanical trim:', e);
+      caption = trimToShape(caption);
+    }
+  }
 
   return {
     id: `pc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,

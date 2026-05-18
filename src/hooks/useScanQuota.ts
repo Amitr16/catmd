@@ -34,7 +34,11 @@ export type ScanQuota = {
 };
 
 export function useScanQuota(): ScanQuota {
-  const { isPro } = useEntitlement();
+  // 2026-05-12: gate on the unified `hasProAccess` flag (paid OR
+  // in-trial OR whitelisted) — not raw isPro. Otherwise trial users
+  // would hit the 3/month cap on day 1.
+  const { hasProAccess } = useEntitlement();
+  const isPro = hasProAccess; // alias preserved for the rest of this hook
   const [used, setUsed] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
 

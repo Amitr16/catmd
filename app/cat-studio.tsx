@@ -45,6 +45,7 @@ import {
 import { Button } from '../src/components/Button';
 import { Text } from '../src/components/Text';
 import { useActiveCat } from '../src/hooks/useActiveCat';
+import { useProGate } from '../src/services/paywallGate';
 import {
   useCatStudioGenerating,
   useCatStudioPosters,
@@ -73,6 +74,7 @@ export default function CatStudioScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const cat = useActiveCat();
+  const proGate = useProGate();
   const posters = useCatStudioPosters(cat?.id);
   const generating = useCatStudioGenerating(cat?.id);
   const generate = useCatStudioStore((s) => s.generate);
@@ -189,6 +191,9 @@ export default function CatStudioScreen() {
 
   const onGenerate = async () => {
     if (!cat?.id || !selectedGenreId || generating) return;
+    // Pro gate — generation costs ~$0.10/poster (gpt-image-1), the
+    // most expensive AI call we make. Hard gate before spending.
+    if (!proGate.check('cat_studio')) return;
     const genre = GENRES.find((g) => g.id === selectedGenreId);
     if (!genre) return;
 
@@ -828,7 +833,7 @@ function ResultView({
         >
           <WarningCircle size={28} color={t.warning} weight="duotone" />
           <Text token="body" style={{ marginTop: space[2] }}>
-            Couldn't generate the poster.
+            Couldn&apos;t generate the poster.
           </Text>
           <Text token="caption" color="textMuted" style={{ marginTop: space[1], textAlign: 'center' }}>
             {error}

@@ -5,7 +5,7 @@
  *   1. Hero — emotional hook ("Unlock everything for {Luna}")
  *   2. Trust stats — factual social proof (not fake testimonials)
  *   3. Benefits — 4 key differentiators
- *   4. Plans — annual selected by default, lifetime flagged "Limited"
+ *   4. Plans — annual selected by default (with 7-day trial), monthly
  *   5. CTA — trial-first for annual, subscribe otherwise
  *   6. Trust badges + Restore
  *
@@ -16,7 +16,17 @@
  *     trial → paid transition spelled out.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Linking,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -27,20 +37,29 @@ import {
   ShieldCheck,
   Stethoscope,
   Sparkle,
+  Tag,
   X,
 } from 'phosphor-react-native';
 import { Button } from '../src/components/Button';
 import { Text } from '../src/components/Text';
 import { useActiveCat } from '../src/hooks/useActiveCat';
 import { useAuthSession } from '../src/hooks/useAuthSession';
+import { useChatStore } from '../src/state/chatStore';
+import { useDiaryStore } from '../src/state/diaryStore';
+import { useHealthStore } from '../src/state/healthStore';
+import { useScanStore } from '../src/state/scanStore';
 import { useTheme } from '../src/theme/useTheme';
 import { radius, space } from '../src/theme/tokens';
 import {
+  findPackageByProductId,
+  invalidateProAccessCache,
   listOfferings,
   purchasePackage,
   restorePurchases,
+  setPartnerCodeAttribute,
   type CatMdPackage,
 } from '../src/services/purchases';
+import { validatePartnerCode } from '../src/services/partnerCode';
 
 const BENEFITS: { title: string; body: string; Icon: any }[] = [
   {
@@ -75,8 +94,40 @@ const TRUST_STATS: { big: string; caption: string }[] = [
   { big: 'Cat', caption: 'only — no dog dilution' },
 ];
 
-type PaywallSource = 'scan_quota' | 'settings' | 'cats';
-const VALID_SOURCES: readonly PaywallSource[] = ['scan_quota', 'settings', 'cats'] as const;
+// 2026-05-12: source enum expanded to cover every AI feature the new
+// universal `requireProAccess()` gate routes through. Keeps PostHog
+// `paywall_viewed` event cardinality bounded.
+type PaywallSource =
+  | 'scan_quota'
+  | 'settings'
+  | 'cats'
+  | 'scan'
+  | 'behavior'
+  | 'translate'
+  | 'diary'
+  | 'postcard'
+  | 'cat_studio'
+  | 'chat'
+  | 'pain'
+  | 'pdf_export'
+  | 'multi_cat'
+  | 'day_14_soft';
+const VALID_SOURCES: readonly PaywallSource[] = [
+  'scan_quota',
+  'settings',
+  'cats',
+  'scan',
+  'behavior',
+  'translate',
+  'diary',
+  'postcard',
+  'cat_studio',
+  'chat',
+  'pain',
+  'pdf_export',
+  'multi_cat',
+  'day_14_soft',
+] as const;
 
 export default function PaywallScreen() {
   const t = useTheme();
@@ -92,6 +143,26 @@ export default function PaywallScreen() {
   const [selected, setSelected] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // ── Partner code state (audit 2026-05-17) ─────────────────────────
+  // When a code is applied, we override the user's selected package
+  // with the discounted partner product (`pro_annual_partner`) and tag
+  // the RC user with the code id so the webhook can attribute the
+  // resulting purchase to the right partner.
+  type AppliedCode = {
+    codeId: string;
+    productId: string;
+    partnerName: string;
+    code: string;
+  };
+  const [appliedCode, setAppliedCode] = useState<AppliedCode | null>(null);
+  const [codeModalOpen, setCodeModalOpen] = useState(false);
+  const [codeInput, setCodeInput] = useState('');
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [codeApplying, setCodeApplying] = useState(false);
+  // When a code is applied, this package overrides `selectedPkg` at
+  // purchase time. Loaded lazily from the RC offering after validation.
+  const [partnerPackage, setPartnerPackage] = useState<CatMdPackage | null>(null);
 
   useEffect(() => {
     listOfferings()
@@ -117,10 +188,104 @@ export default function PaywallScreen() {
     () => packages.find((p) => p.identifier === selected) ?? null,
     [packages, selected],
   );
-  const isTrialEligible = selectedPkg?.period === 'ANNUAL';
+  // When a partner code is applied, the partner package overrides the
+  // user-selected one at purchase time. The plan cards stay visible
+  // (so the user understands what they're getting) but the CTA points
+  // at the discounted product.
+  const effectivePkg = appliedCode && partnerPackage ? partnerPackage : selectedPkg;
+  const isTrialEligible = effectivePkg?.period === 'ANNUAL';
+
+  // Apply a code: validate via Supabase, then resolve the RC package
+  // for the discounted product. If either step fails, surface a clear
+  // error and leave the UI in its previous state.
+  const applyPartnerCode = async () => {
+    setCodeApplying(true);
+    setCodeError(null);
+    const codeLen = codeInput.trim().length;
+    try {
+      const result = await validatePartnerCode(codeInput);
+      if (!result.ok) {
+        setCodeError(result.message);
+        // Telemetry: which failure modes are most common? (audit P2-1)
+        void import('../src/services/analytics').then(({ track }) =>
+          track({
+            type: 'partner_code_apply_attempted',
+            props: { code_length: codeLen, outcome: result.reason },
+          }),
+        );
+        return;
+      }
+      // Find the discounted product in the current RC offering. If it
+      // isn't there, the store side isn't fully set up yet — fail
+      // gracefully with an actionable error.
+      const pkg = await findPackageByProductId(result.productId);
+      if (!pkg) {
+        setCodeError(
+          'This code is valid, but the discounted plan isn\'t available right now. Try again in a moment.',
+        );
+        void import('../src/services/analytics').then(({ track }) =>
+          track({
+            type: 'partner_code_apply_attempted',
+            props: { code_length: codeLen, outcome: 'product_unavailable' },
+          }),
+        );
+        return;
+      }
+      // Tag the RC user so the webhook can attribute the purchase.
+      // Fire-and-forget — the actual write happens server-side and the
+      // SDK caches the attribute until the next sync.
+      await setPartnerCodeAttribute(result.codeId);
+      const upperCode = codeInput.trim().toUpperCase();
+      setAppliedCode({
+        codeId: result.codeId,
+        productId: result.productId,
+        partnerName: result.partnerName,
+        code: upperCode,
+      });
+      setPartnerPackage(pkg);
+      // P1-2 fix: auto-select the annual plan card so the radio/UI
+      // matches what the user will actually be charged. Codes today
+      // unlock annual only. If we ever ship monthly partner codes,
+      // this needs to read from the package period.
+      const annualPkg = packages.find((p) => p.period === 'ANNUAL');
+      if (annualPkg) setSelected(annualPkg.identifier);
+
+      void import('../src/services/analytics').then(({ track }) => {
+        track({
+          type: 'partner_code_apply_attempted',
+          props: { code_length: codeLen, outcome: 'valid' },
+        });
+        track({
+          type: 'partner_code_applied',
+          props: {
+            code: upperCode,
+            partner_name: result.partnerName,
+            product_id: result.productId,
+          },
+        });
+      });
+
+      setCodeModalOpen(false);
+      setCodeInput('');
+    } finally {
+      setCodeApplying(false);
+    }
+  };
+
+  const removePartnerCode = async () => {
+    // Clear the RC attribute too — important so a user who applies and
+    // then removes the code doesn't get attributed when they buy at
+    // full price.
+    await setPartnerCodeAttribute(null);
+    setAppliedCode(null);
+    setPartnerPackage(null);
+  };
 
   const onBuy = async () => {
-    if (!selectedPkg) return;
+    // When a partner code is applied, purchase the discounted product
+    // (effectivePkg); otherwise the user-selected one.
+    const pkgToBuy = effectivePkg;
+    if (!pkgToBuy) return;
     setErr(null);
 
     // Email gate (added 2026-05-03). Pro users MUST have a verified
@@ -145,12 +310,17 @@ export default function PaywallScreen() {
 
     setBusy(true);
     try {
-      const ok = await purchasePackage(selectedPkg);
+      const ok = await purchasePackage(pkgToBuy);
       if (ok) {
+        // Invalidate the silent-background entitlement cache so the
+        // next photo-add / clip / chat turn picks up the new Pro
+        // state immediately. useEntitlement on the next screen will
+        // also re-fire on AppState foreground.
+        invalidateProAccessCache();
         void import('../src/services/analytics').then(({ track, flushAnalytics }) => {
           track({
             type: 'paywall_converted',
-            props: { period: selectedPkg.period },
+            props: { period: pkgToBuy.period },
           });
           void flushAnalytics();
         });
@@ -168,8 +338,12 @@ export default function PaywallScreen() {
     setErr(null);
     try {
       const ok = await restorePurchases();
-      if (ok) router.replace('/(main)');
-      else setErr('No active subscription found on this account.');
+      if (ok) {
+        invalidateProAccessCache();
+        router.replace('/(main)');
+      } else {
+        setErr('No active subscription found on this account.');
+      }
     } catch (e: any) {
       setErr(e?.message ?? 'Restore failed.');
     } finally {
@@ -211,12 +385,19 @@ export default function PaywallScreen() {
           </Text>
         </View>
         <Text token="displayLg" style={{ marginTop: space[2] }}>
-          Unlock everything
-          {cat?.name ? ` for ${cat.name}` : ''}.
+          {source === 'day_14_soft'
+            ? `Keep going with ${cat?.name ?? 'your cat'}.`
+            : `Unlock everything${cat?.name ? ` for ${cat.name}` : ''}.`}
         </Text>
         <Text token="bodyLg" color="textSecondary" style={{ marginTop: space[3] }}>
-          Cats hide pain. Pro gives you every tool to catch what they don&rsquo;t show —
-          before it becomes an emergency.
+          {source === 'day_14_soft' ? (
+            <PersonalisedHeroBody catName={cat?.name ?? 'your cat'} catId={cat?.id ?? null} />
+          ) : (
+            <>
+              Cats hide pain. Pro gives you every tool to catch what they don&rsquo;t show —
+              before it becomes an emergency.
+            </>
+          )}
         </Text>
       </View>
 
@@ -259,19 +440,34 @@ export default function PaywallScreen() {
         {packages.map((pkg) => {
           const isSelected = pkg.identifier === selected;
           const isAnnual = pkg.period === 'ANNUAL';
-          const isLifetime = pkg.period === 'LIFETIME';
+          // Lifetime tier removed 2026-05-12 per strategy doc — keeps
+          // recurring engine intact. Annual + Monthly only.
+          //
+          // P1-2 fix (audit 2026-05-17): when a partner code is applied,
+          // the monthly card is non-tappable. Codes today unlock annual
+          // only; allowing the user to "select" monthly while applied
+          // creates a confusing state where the radio dot disagrees
+          // with what gets charged. We dim + ignore taps on non-annual
+          // cards while a code is active.
+          const codeLockedOut = !!appliedCode && !isAnnual;
           return (
             <Pressable
               key={pkg.identifier}
-              onPress={() => setSelected(pkg.identifier)}
+              onPress={
+                codeLockedOut
+                  ? undefined
+                  : () => setSelected(pkg.identifier)
+              }
+              disabled={codeLockedOut}
               accessibilityRole="radio"
-              accessibilityState={{ selected: isSelected }}
+              accessibilityState={{ selected: isSelected, disabled: codeLockedOut }}
               style={[
                 styles.plan,
                 {
                   backgroundColor: t.surfaceElevated,
                   borderColor: isSelected ? t.primary700 : t.borderSubtle,
                   borderWidth: isSelected ? 2 : 1,
+                  opacity: codeLockedOut ? 0.5 : 1,
                 },
               ]}
             >
@@ -282,13 +478,6 @@ export default function PaywallScreen() {
                     <View style={[styles.badge, { backgroundColor: t.primary700 }]}>
                       <Text token="caption" style={{ color: t.textInverse, fontFamily: 'Figtree_700Bold' }}>
                         BEST VALUE
-                      </Text>
-                    </View>
-                  )}
-                  {isLifetime && (
-                    <View style={[styles.badge, { backgroundColor: t.warning }]}>
-                      <Text token="caption" style={{ color: t.textInverse, fontFamily: 'Figtree_700Bold' }}>
-                        ★ LIMITED
                       </Text>
                     </View>
                   )}
@@ -303,13 +492,9 @@ export default function PaywallScreen() {
                   <Text token="caption" color="textMuted">
                     per year
                   </Text>
-                ) : pkg.period === 'MONTHLY' ? (
-                  <Text token="caption" color="textMuted">
-                    per month
-                  </Text>
                 ) : (
                   <Text token="caption" color="textMuted">
-                    one-time
+                    per month
                   </Text>
                 )}
               </View>
@@ -327,6 +512,66 @@ export default function PaywallScreen() {
           );
         })}
       </View>
+
+      {/* ── Partner code (audit 2026-05-17) ───────────────────────
+          Below the plan cards: "Have a partner code?" link, or the
+          applied-code badge if a code is active. Tap opens a modal
+          for code entry. Applying swaps the purchase target to the
+          discounted partner product. */}
+      {appliedCode ? (
+        <View
+          style={{
+            marginTop: space[4],
+            padding: space[3],
+            borderRadius: radius.md,
+            backgroundColor: t.primary100,
+            borderWidth: 1,
+            borderColor: t.primary700,
+            flexDirection: 'row',
+            gap: space[2],
+            alignItems: 'center',
+          }}
+        >
+          <Tag size={18} color={t.primary700} weight="fill" />
+          <View style={{ flex: 1 }}>
+            <Text token="body" style={{ fontWeight: '600' }}>
+              {appliedCode.code} applied · 30% off
+            </Text>
+            <Text token="caption" color="textMuted">
+              Partner: {appliedCode.partnerName}
+              {partnerPackage?.product?.priceString
+                ? ` · ${partnerPackage.product.priceString}`
+                : ''}
+            </Text>
+          </View>
+          <Pressable
+            onPress={removePartnerCode}
+            hitSlop={10}
+            accessibilityLabel="Remove partner code"
+          >
+            <X size={18} color={t.textSecondary} />
+          </Pressable>
+        </View>
+      ) : (
+        <Pressable
+          onPress={() => {
+            setCodeError(null);
+            setCodeInput('');
+            setCodeModalOpen(true);
+            // Funnel telemetry — top of the coupon sub-funnel (audit P2-1)
+            void import('../src/services/analytics').then(({ track }) =>
+              track({ type: 'partner_code_modal_opened' }),
+            );
+          }}
+          hitSlop={8}
+          style={{ marginTop: space[3], alignItems: 'center' }}
+          accessibilityRole="button"
+        >
+          <Text token="caption" color="primary700">
+            Have a partner code?
+          </Text>
+        </Pressable>
+      )}
 
       {err ? (
         <Text token="caption" style={{ color: t.error, marginTop: space[3], textAlign: 'center' }}>
@@ -372,9 +617,7 @@ export default function PaywallScreen() {
                 ? 'Pick a plan'
                 : isTrialEligible
                   ? 'Start 7-day free trial'
-                  : selectedPkg.period === 'LIFETIME'
-                    ? 'Get lifetime access'
-                    : 'Subscribe'
+                  : 'Subscribe'
           }
           onPress={onBuy}
           disabled={busy || !selectedPkg}
@@ -388,10 +631,8 @@ export default function PaywallScreen() {
           style={{ marginTop: space[2], textAlign: 'center' }}
         >
           {isTrialEligible
-            ? `Then ${selectedPkg?.product.priceString}/year. Cancel anytime in Play Store settings \u2014 no charge if you cancel before day 7.`
-            : selectedPkg?.period === 'LIFETIME'
-              ? 'One-time payment. No recurring charges.'
-              : 'Renews monthly. Cancel anytime in Play Store settings.'}
+            ? `Then ${effectivePkg?.product.priceString}/year. Cancel anytime in Play Store settings \u2014 no charge if you cancel before day 7.`
+            : 'Renews monthly. Cancel anytime in Play Store settings.'}
         </Text>
       </View>
 
@@ -421,7 +662,179 @@ export default function PaywallScreen() {
           </Pressable>
         </View>
       </View>
+
+      {/* Partner code entry modal (audit 2026-05-17) */}
+      <Modal
+        visible={codeModalOpen}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setCodeModalOpen(false)}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1, backgroundColor: t.surface }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View
+            style={{
+              paddingTop: insets.top + space[3],
+              paddingHorizontal: space[5],
+              paddingBottom: space[1],
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <Pressable
+              onPress={() => setCodeModalOpen(false)}
+              hitSlop={12}
+              accessibilityLabel="Close"
+            >
+              <X size={22} color={t.textSecondary} />
+            </Pressable>
+          </View>
+          <View style={{ paddingHorizontal: space[5], paddingTop: space[2] }}>
+            <Text token="heading1">Have a partner code?</Text>
+            <Text token="body" color="textSecondary" style={{ marginTop: space[2] }}>
+              Enter the code from your favourite cat creator to unlock
+              30% off the annual plan.
+            </Text>
+            <TextInput
+              value={codeInput}
+              onChangeText={(v) => {
+                setCodeInput(v);
+                if (codeError) setCodeError(null);
+              }}
+              placeholder="e.g. NALA30"
+              placeholderTextColor={t.textMuted}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              autoComplete="off"
+              maxLength={32}
+              style={{
+                marginTop: space[5],
+                padding: space[3],
+                borderRadius: radius.sm,
+                borderWidth: 1,
+                borderColor: codeError ? t.error : t.borderStrong,
+                backgroundColor: t.surface,
+                color: t.textPrimary,
+                fontFamily: 'JetBrainsMono_500Medium',
+                fontSize: 18,
+                letterSpacing: 1.5,
+              }}
+            />
+            {codeError ? (
+              <Text
+                token="caption"
+                style={{ color: t.error, marginTop: space[2] }}
+              >
+                {codeError}
+              </Text>
+            ) : null}
+            <Button
+              label={codeApplying ? 'Checking…' : 'Apply code'}
+              onPress={applyPartnerCode}
+              disabled={codeApplying || codeInput.trim().length < 3}
+              size="lg"
+              pill
+              fullWidth
+              style={{ marginTop: space[5] }}
+            />
+            <Text
+              token="caption"
+              color="textMuted"
+              style={{ marginTop: space[3], textAlign: 'center', lineHeight: 18 }}
+            >
+              Codes are case-insensitive. One code per purchase.
+              Codes can&apos;t be combined with other offers.
+            </Text>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </ScrollView>
+  );
+}
+
+/**
+ * PersonalisedHeroBody — reads the cat's real usage numbers from the
+ * stores and weaves them into a screenshot-worthy hero copy block.
+ *
+ * Only used when `source === 'day_14_soft'` — the auto-shown end-of-
+ * trial paywall. SoSA finding: specific personal numbers convert
+ * meaningfully better than generic feature lists. The numbers are
+ * factual (logged events) so the copy can't lie.
+ *
+ * Hidden gracefully when the user has no usage at all (cold launch
+ * edge case) — falls back to a generic line.
+ */
+function PersonalisedHeroBody({
+  catName,
+  catId,
+}: {
+  catName: string;
+  catId: string | null;
+}) {
+  const thread = useChatStore((s) => (catId ? (s.threads[catId] ?? []) : []));
+  const diaryEntries = useDiaryStore((s) =>
+    catId ? s.getEntriesForCat(catId) : [],
+  );
+  const events = useHealthStore((s) => s.events);
+  const scans = useScanStore((s) => s.scans);
+
+  const chatTurns = thread.filter((t) => t.role === 'user').length;
+  const diaryCount = diaryEntries.length;
+  const translations = catId
+    ? events.filter((e) => e.cat_id === catId && e.type === 'meow_translation').length
+    : 0;
+  const bodyLanguageReads = catId
+    ? events.filter((e) => e.cat_id === catId && e.type === 'behavior_observation').length
+    : 0;
+  const scanCount = catId ? scans.filter((s) => s.cat_id === catId).length : 0;
+
+  // Fire telemetry once per render with the personalised numbers — lets
+  // us segment converters vs non-converters by activation level.
+  useEffect(() => {
+    void import('../src/services/analytics').then(({ track }) =>
+      track({
+        type: 'paywall_day14_shown',
+        props: {
+          chat_turns_used: chatTurns,
+          diary_entries: diaryCount,
+          translations,
+          body_language_reads: bodyLanguageReads,
+          scans: scanCount,
+        },
+      }),
+    );
+    // Eslint: we intentionally fire once per mount — not on every count change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Pick the strongest 2-3 numbers — order by which is most likely to
+  // emotionally land. Chat turns > translations > diary > body-lang > scans.
+  const beats: string[] = [];
+  if (chatTurns >= 5) beats.push(`${chatTurns} messages you sent ${catName}`);
+  if (translations >= 1) beats.push(`${translations} meow${translations === 1 ? '' : 's'} translated`);
+  if (diaryCount >= 2) beats.push(`${diaryCount} diary entries ${catName} has written`);
+  if (bodyLanguageReads >= 1)
+    beats.push(`${bodyLanguageReads} body-language read${bodyLanguageReads === 1 ? '' : 's'}`);
+  if (scanCount >= 1) beats.push(`${scanCount} scan${scanCount === 1 ? '' : 's'} on file`);
+
+  // If somehow no usage at all, fall back to generic.
+  if (beats.length === 0) {
+    return (
+      <>
+        Your 14-day trial is up. Pick a plan to keep chat, diary, the
+        meow translator, body-language reads, and triage scans for {catName}.
+      </>
+    );
+  }
+
+  const list = beats.slice(0, 3).join(', ');
+  return (
+    <>
+      Two weeks with {catName} so far — {list}. Pick a plan to keep
+      it all going.
+    </>
   );
 }
 

@@ -50,7 +50,8 @@ export type LLMActivity =
   | 'self_facts_extraction'   // Text: pull "you love tuna" facts out of chat turns
   | 'weekly_human_reading'    // Text: weekly Co-Star-style "the cat reads YOU" line
   | 'world_extraction'        // Vision: extract objects/places/environment from a photo (silent world memory)
-  | 'embedding_fact_score';  // Embedding: per-fact relevance ranking for chat fact pinning (flagged-on alt to keyword scorer)
+  | 'embedding_fact_score'    // Embedding: per-fact relevance ranking for chat fact pinning (flagged-on alt to keyword scorer)
+  | 'meow_translation';      // Multimodal: Meow Translator (audio + 4 frames + cat memory → cat-voice translation)
 
 /**
  * Pricing snapshot in USD per 1M tokens (chat/embed) or per call/minute
@@ -113,6 +114,125 @@ export function estimateLLMCostCents(args: {
 export type AnalyticsEvent =
   | { type: 'app_opened'; props?: Record<string, unknown> }
   | { type: 'onboarding_completed'; props?: { seconds_spent?: number } }
+  // ── Core feature activation (audit 2026-05-16 marketing attribution) ──
+  // Unified "user did a core action" event fired ALONGSIDE the granular
+  // feature event (scan_submitted, chat_message_sent, etc.) at every
+  // core-feature firing site. Lets the marketing-attribution funnel
+  // measure activation-by-channel with a single event-type filter:
+  //   exposed (mood_exposed)
+  //     -> activated (core_feature_used)
+  //       -> retained (core_feature_used count > N over 7d)
+  // The `feature` enum is closed so PostHog cardinality stays bounded.
+  | {
+      type: 'core_feature_used';
+      props: {
+        feature:
+          | 'scan'
+          | 'chat'
+          | 'diary'
+          | 'postcard'
+          | 'behavior'
+          | 'translate';
+      };
+    }
+  // ── Daily mood lottery (Bond pillar — chat/diary/postcard voice) ──
+  // Added 2026-05-13 alongside the weighted-mood + archetype-aware +
+  // user-feedback-adaptive lottery rework. Three events feed the
+  // analytics dashboards that surface which moods land for which user
+  // segments (Bond engagement = warm moods; viral = sass moods):
+  //   mood_exposed         — fired once per cat per day per mood the
+  //                          first time the lottery resolves it (chat
+  //                          and diary both call recordExposure; the
+  //                          store dedupes the analytics fire too).
+  //   chat_session_in_mood — chat opened on a day with this mood.
+  //                          One per cat per day (idempotent by key).
+  //   daily_card_shared    — STRONGEST preference signal. Fired every
+  //                          time the user shares a postcard / daily
+  //                          card / story attributed to this mood. Not
+  //                          idempotent — repeat shares are signal.
+  //
+  // `cluster` is the mood's high-level group (warm/joy/flavor/sass/dark).
+  // Lets dashboards filter without joining to the mood inventory table.
+  | {
+      type: 'mood_exposed';
+      props: {
+        mood: string;
+        cluster: 'warm' | 'joy' | 'flavor' | 'sass' | 'dark';
+        archetype: string | null;
+        /**
+         * Voice mode tag (audit 2026-05-14 round 17). Pop-culture-
+         * inflected stylistic descriptor layered on top of the mood
+         * directive. Carries through to share-rate analysis so
+         * dashboards can compare e.g. `petty_grievance` vs
+         * `wes_anderson_deadpan` share rates per cat.
+         */
+        voice_mode_tag?: string | null;
+      };
+    }
+  | {
+      type: 'chat_session_in_mood';
+      props: {
+        mood: string;
+        cluster: 'warm' | 'joy' | 'flavor' | 'sass' | 'dark';
+        voice_mode_tag?: string | null;
+      };
+    }
+  | {
+      type: 'daily_card_shared';
+      props: {
+        mood: string;
+        cluster: 'warm' | 'joy' | 'flavor' | 'sass' | 'dark';
+        surface: 'native_share' | 'story' | 'chat' | 'copy_link' | 'other';
+        voice_mode_tag?: string | null;
+      };
+    }
+  // ── Voice quality gate (audit 2026-05-14 round 7) ──
+  // Fired by the shared voiceQuality evaluator wired into chat,
+  // diary cardLine, and postcard caption surfaces. Lets us track:
+  //   - generation-pass rate (voice_quality_eval ok=true fraction)
+  //   - retry effectiveness (voice_quality_retried recovered=true fraction)
+  //   - mechanical-repair frequency (voice_quality_fallback)
+  // Threshold + retry logic is in src/services/voiceQuality.ts.
+  | {
+      type: 'voice_quality_eval';
+      props: {
+        surface: 'chat' | 'diary_card' | 'postcard';
+        score: number;
+        ok: boolean;
+        reasons: number;
+      };
+    }
+  | {
+      type: 'voice_quality_retried';
+      props: {
+        surface: 'chat' | 'diary_card' | 'postcard';
+        original_score: number;
+        repaired_score: number;
+        recovered: boolean;
+      };
+    }
+  | {
+      type: 'voice_quality_fallback';
+      props: {
+        surface: 'chat' | 'diary_card' | 'postcard';
+        kind: 'mechanical_repair' | 'safe_neutral' | 'body_highlight';
+      };
+    }
+  // ── Self-facts contradiction resolution (audit 2026-05-14 P2 #7) ──
+  // Fires when the resolver detects an opposing-sentiment contradiction
+  // and supersedes the older fact with the newer one. Lets us tune the
+  // antonym dictionary + similarity thresholds against real data — if
+  // the trigger rate is too high (false positives), expand the dual-
+  // polarity guard; if too low (misses), add LLM disambiguation.
+  | {
+      type: 'self_fact_contradiction_resolved';
+      props: {
+        old_fact: string;        // first 120 chars
+        new_fact: string;        // first 120 chars
+        similarity: number;      // cosine, 3 decimal places
+        category: string;        // SelfFactCategory
+      };
+    }
   | {
       type: 'scan_submitted';
       props: {
@@ -198,6 +318,74 @@ export type AnalyticsEvent =
   | {
       type: 'behavior_observation_deleted';
       props?: Record<string, unknown>;
+    }
+  // Owner opened the "how it works" article from inside the body-language
+  // reader. Trust-building signal — parallels the meow-translator
+  // explainer open event. Source distinguishes mode_picker (pre-record
+  // curiosity) from done_stage (post-result trust-check).
+  | {
+      type: 'behavior_how_it_works_opened';
+      props: { source: 'mode_picker' | 'done_stage' };
+    }
+  // ── Meow Translator (Bond pillar — multimodal cat-voice) ────────
+  // The meow-interpreter flow. One row per translate run. Captures
+  // the funnel:
+  //   started → completed → shared
+  // plus failures (no_cat, AI error). Keeps cardinality bounded:
+  // intent/vocalization_type are 10-class enums, confidence is 3-class.
+  | {
+      type: 'translation_started';
+      props?: { source?: 'bond_tile' | 'today_tile' | 'direct' };
+    }
+  | {
+      type: 'translation_completed';
+      props: {
+        vocalization_type: string;     // 10-class enum
+        intent: string;                 // 10-class enum
+        confidence: 'high' | 'moderate' | 'low';
+        had_audio: boolean;
+        translation_length: number;
+      };
+    }
+  | {
+      type: 'translation_failed';
+      props: { reason: string };
+    }
+  // No-cat-detected gate (separate from generic failed). Mirrors the
+  // body-language flow's behavior_rejected_no_cat event so we can
+  // measure relevance-gate noise across both surfaces.
+  | {
+      type: 'translation_rejected_no_cat';
+      props: { reason: string };
+    }
+  // No-meow gate — clip was silent OR mic was muted / declined. Tracked
+  // separately because it's NOT a failure, it's a product-contract
+  // boundary (we route to body-language reader instead). Useful for
+  // measuring how often users open the translator with silent clips —
+  // signal for either onboarding copy or a mic-permission nudge.
+  | {
+      type: 'translation_rejected_no_meow';
+      props?: Record<string, unknown>;
+    }
+  // Owner shared the translation. THE conversion-funnel proxy event.
+  // Share-rate is the closest pre-paywall signal we have for "this
+  // surface is good" — translations that get shared are translations
+  // owners trusted, found uncanny, or wanted to send to a friend.
+  | {
+      type: 'translation_shared';
+      props: {
+        intent: string;
+        confidence: 'high' | 'moderate' | 'low';
+      };
+    }
+  // Owner opened the "how it works" article from inside the translator.
+  // Trust-building signal — users curious enough about the methodology
+  // are higher-intent and more likely to share / retain. We track source
+  // (mode_picker = pre-record, result_view = post-result) to learn which
+  // moment of doubt is more common.
+  | {
+      type: 'translation_how_it_works_opened';
+      props: { source: 'mode_picker' | 'result_view' };
     }
   // ── Personality milestone ───────────────────────────────────────
   | {
@@ -396,6 +584,23 @@ export type AnalyticsEvent =
       type: 'subject_tag_blocked_self';
       props: { source: 'autocomplete' | 'free_text' | 'detected_chip' | 'auto_match' };
     }
+  // Clock-sanity guard fired — device clock differs from server time
+  // by > 1 hour, OR a local "today" key looked like it moved
+  // backwards relative to the latest cached entry. We block diary /
+  // chat / world generation when this fires, because the LLM would
+  // otherwise hallucinate against a wrong reference frame ("today"
+  // = some random past date). Real incident 2026-05-08 — see
+  // services/clockSanity.ts. Counts of this event in PostHog tell
+  // us how often Android clock drift affects real users.
+  | {
+      type: 'clock_anomaly_detected';
+      props: {
+        surface: 'diary' | 'chat' | 'boot' | 'world';
+        /** Server-minus-local delta in minutes. Positive = device behind. */
+        delta_minutes?: number;
+        reason: 'server_delta' | 'cached_entry_backwards';
+      };
+    }
   | {
       type: 'subject_directory_opened';
       props: { directory_size: number };
@@ -415,6 +620,17 @@ export type AnalyticsEvent =
   | {
       type: 'becoming_facet_cta_tapped';
       props: { facet: string; stage: string };
+    }
+  | {
+      /**
+       * Personality progress banner on chat / diary was tapped. Lets
+       * us see which surface (chat or diary) the banner actually drives
+       * /becoming opens from, and whether early-stage users tap more
+       * than late-stage users. If neither tap rate is meaningful, the
+       * banner isn't earning its sticky-strip visual real estate.
+       */
+      type: 'personality_progress_banner_tapped';
+      props: { source: 'chat' | 'diary'; depth: number; stage: string };
     }
   | {
       type: 'becoming_milestone_hit';
@@ -508,13 +724,112 @@ export type AnalyticsEvent =
   | { type: 'email_resent'; props?: Record<string, unknown> }
   | {
       type: 'paywall_viewed';
+      // 2026-05-12: expanded source enum to cover every AI feature
+      // the new `requireProAccess()` gate guards. Keeps PostHog
+      // cardinality bounded so dashboards can break down by gate
+      // source cleanly.
       props: {
-        source: 'scan_quota' | 'settings' | 'cats' | 'diary_archive' | 'birthday_album';
+        source:
+          | 'scan_quota'
+          | 'settings'
+          | 'cats'
+          | 'diary_archive'
+          | 'birthday_album'
+          | 'scan'
+          | 'behavior'
+          | 'translate'
+          | 'diary'
+          | 'postcard'
+          | 'cat_studio'
+          | 'chat'
+          | 'pain'
+          | 'pdf_export'
+          | 'multi_cat'
+          | 'day_14_soft';
       };
     }
   | {
       type: 'paywall_converted';
+      // LIFETIME kept in the type for historic compatibility — any
+      // legacy events already in PostHog will still validate. New
+      // events only emit MONTHLY / ANNUAL after 2026-05-12.
       props: { period: 'MONTHLY' | 'ANNUAL' | 'LIFETIME' };
+    }
+  | {
+      // Fired by useProGate.check() when a non-Pro / non-trial /
+      // non-whitelisted user hits an AI gate. Separate from
+      // paywall_viewed because the gate ROUTES to /paywall — this
+      // captures the upstream block-and-redirect signal so the
+      // funnel can be measured: gate hits → paywall views →
+      // conversions.
+      type: 'paywall_gate_blocked';
+      props: {
+        source:
+          | 'scan'
+          | 'behavior'
+          | 'translate'
+          | 'diary'
+          | 'postcard'
+          | 'cat_studio'
+          | 'chat'
+          | 'pain'
+          | 'pdf_export'
+          | 'multi_cat'
+          | 'scan_quota'
+          | 'settings'
+          | 'cats';
+      };
+    }
+  | {
+      // Day-14 soft paywall — auto-shown the morning of the trial's
+      // last day with personalised numbers. Distinct from organic
+      // paywall_viewed events because this one's auto-pushed.
+      type: 'paywall_day14_shown';
+      props: {
+        chat_turns_used: number;
+        diary_entries: number;
+        translations: number;
+        body_language_reads: number;
+        scans: number;
+      };
+    }
+  // ── Partner code program funnel (audit 2026-05-17) ──
+  // Three events covering the coupon-entry sub-funnel inside the
+  // paywall. Lets dashboards answer: of users who tap the "Have a
+  // partner code?" link, how many enter a valid code → how many
+  // ultimately convert (paywall_converted). Per-code conversion
+  // rates surface poor-fit creators fast.
+  | {
+      type: 'partner_code_modal_opened';
+      props?: Record<string, unknown>;
+    }
+  | {
+      // Fires on every Apply button tap, success OR failure. The
+      // `outcome` field tells dashboards which failure modes are
+      // most common (typo vs paused code vs RC offering misconfig).
+      type: 'partner_code_apply_attempted';
+      props: {
+        code_length: number;
+        outcome:
+          | 'valid'
+          | 'code_not_found'
+          | 'status_paused'
+          | 'status_archived'
+          | 'product_unavailable'
+          | 'network';
+      };
+    }
+  | {
+      // Fires only on FULL success — code validated AND the RC
+      // package resolved. The handoff event to the rest of the
+      // paywall flow. partner_name is bounded enum (one per
+      // partner_codes row), low PostHog cardinality.
+      type: 'partner_code_applied';
+      props: {
+        code: string;
+        partner_name: string;
+        product_id: string;
+      };
     }
   | { type: 'cat_added'; props: { cat_count_after: number } }
   | {
@@ -526,6 +841,51 @@ export type AnalyticsEvent =
       props: {
         direction: 'better' | 'same' | 'worse';
         helpful_rating: number | null;
+      };
+    }
+  // ── Vet-confirmed outcome (audit 2026-05-16) ──
+  // Fires when a user marks `vet_visited === 'yes'` in the outcome-
+  // check flow. This is the CORE TRIGGER for the "CatMD flagged it →
+  // vet confirmed it" funnel. Without this, you cannot reliably find
+  // the moments where the app's flag turned into a real vet visit.
+  // The accompanying testimonial nudge fires on the same condition;
+  // this event tracks the raw funnel regardless of whether the user
+  // ultimately submits a story.
+  | {
+      type: 'scan_outcome_vet_confirmed';
+      props: {
+        scan_id: string;
+        cat_id: string;
+        /** Snapshot of the scan's urgency at the time of confirmation. */
+        original_urgency_tier: 'routine' | 'monitor' | 'concern' | 'urgent';
+        /** 0-99 health score from the scan result. */
+        health_score: number;
+        /** Whole-day count between scan creation and outcome confirmation. */
+        days_since_scan: number;
+        outcome_source: 'scan_followup';
+      };
+    }
+  // ── Testimonial story (audit 2026-05-16) ──
+  // Fired by the post-vet-confirmed testimonial modal when the owner
+  // either (a) submits a story to the private `vet_confirmed_stories`
+  // table or (b) explicitly dismisses the prompt. Lets us measure
+  // story-funnel conversion and dismissal rate without exposing the
+  // story body itself in PostHog.
+  | {
+      type: 'testimonial_story_submitted';
+      props: {
+        scan_id: string;
+        /** 'private' | 'anonymous_quote' | 'first_name' | 'contact_me' */
+        permission_level: string;
+        had_contact_email: boolean;
+      };
+    }
+  | {
+      type: 'testimonial_story_dismissed';
+      props: {
+        scan_id: string;
+        /** 'skip' | 'never_again' | 'navigated_away' */
+        reason: string;
       };
     }
   | {
@@ -621,6 +981,36 @@ export type AnalyticsEvent =
         days_written: number;
         empty_days: number;
         populated_days: number;
+      };
+    }
+  | {
+      // Fires when the diary refuses to write an entry for a past
+      // date — currently only `past_empty_day` (the date had zero
+      // material activity in healthStore, so retroactive generation
+      // would just hallucinate content from persistent context like
+      // subjects + world memory). Counts of this event tell us how
+      // often gaps are correctly preserved in the archive, vs how
+      // often a user comes back after an absence with real material
+      // missing from healthStore.
+      type: 'diary_backfill_skipped';
+      props: {
+        reason: 'past_empty_day';
+        date: string;
+      };
+    }
+  | {
+      // Fires when a user opens the diary BEFORE 19:00 local time
+      // and sees the pre-7pm explainer card instead of an entry.
+      // Drives the "is the 7pm framing landing?" metric — high
+      // ratio of pre-7pm-visits to post-7pm-visits without diary
+      // engagement → users aren't coming back at 7pm, framing
+      // isn't sticking. `had_today_entry` should always be false
+      // when this fires (we only show the card when no entry yet);
+      // included for telemetry hygiene.
+      type: 'diary_pre_7pm_visit';
+      props: {
+        had_today_entry: boolean;
+        local_hour: number;
       };
     }
   | {
@@ -1176,4 +1566,33 @@ export async function flushAnalytics(): Promise<void> {
   } catch (e) {
     console.warn('[CatMD] analytics flush failed:', e);
   }
+}
+
+/**
+ * Register PostHog super-properties — auto-attach to every future
+ * event from this client until `resetAnalytics()` or app reinstall.
+ * Used by the install-attribution bootstrap to make utm_source /
+ * utm_campaign / etc. flow into every analytics row without per-
+ * call-site plumbing.
+ *
+ * The PostHog RN SDK persists super-properties to local storage, so
+ * they survive cold boots without re-registration. We still call this
+ * on every cold boot from the bootstrap path — idempotent, cheap,
+ * and protects against storage clears that the SDK can't catch.
+ *
+ * Safe to call before the SDK loads — queues internally.
+ */
+export function setSuperProperties(props: Record<string, unknown>): void {
+  void (async () => {
+    const ph = await getClient();
+    if (!ph) return;
+    try {
+      // posthog-react-native exposes `register` for super-property
+      // registration. Typings on older versions narrow to a JSON-like
+      // shape; we cast to any here rather than constrain every caller.
+      (ph as unknown as { register: (p: Record<string, unknown>) => void }).register(props);
+    } catch (e) {
+      console.warn('[CatMD] analytics setSuperProperties failed:', e);
+    }
+  })();
 }

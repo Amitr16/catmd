@@ -1,0 +1,7 @@
+{
+  "name": "install-referrer",
+  "version": "0.1.0",
+  "description": "Local Expo module wrapping Google's Play Install Referrer SDK. Used for marketing attribution on Android — captures utm_source/campaign/content + campaign/creative IDs from the install referrer URL.",
+  "main": "index.ts",
+  "private": true
+}

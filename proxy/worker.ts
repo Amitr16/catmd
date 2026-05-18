@@ -36,8 +36,16 @@ import {
   renderArticleBySlug,
   renderLibraryIndex,
 } from './library';
+import {
+  getBlogSlugs,
+  renderBlogIndex,
+  renderBlogPostBySlug,
+} from './blog';
 import { renderAudioTrendsJson, SEED_PAYLOAD } from './audioTrends';
 import { readCurrentTrends, refreshAudioTrends } from './audioTrendsRefresh';
+import { handleRcWebhook } from './rcWebhook';
+import { renderSymptomChecker } from './symptomChecker';
+import { renderPersonalityTest } from './personalityTest';
 
 export interface Env {
   OPENAI_API_KEY: string;          // Cloudflare secret (required)
@@ -63,6 +71,26 @@ export interface Env {
    * is a no-op.
    */
   AUDIO_TRENDS_KV?: KVNamespace;
+  /**
+   * RevenueCat webhook auth header (audit 2026-05-17). Configure the
+   * same value in RevenueCat → Integrations → Webhooks → Authorization
+   * header. Worker rejects POSTs to /api/rc-webhook that don't match.
+   * Set via `wrangler secret put RC_WEBHOOK_SECRET`.
+   */
+  RC_WEBHOOK_SECRET?: string;
+  /**
+   * Supabase service role key — required to write to partner_redemptions
+   * table from the webhook handler (bypasses RLS). Treat as highly
+   * sensitive. Set via `wrangler secret put SUPABASE_SERVICE_ROLE_KEY`.
+   */
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+  /**
+   * Supabase project URL — public, but kept in env so worker can
+   * construct API calls without hardcoding.
+   * e.g. https://xxx.supabase.co
+   * Set via `wrangler secret put SUPABASE_URL`.
+   */
+  SUPABASE_URL?: string;
 }
 
 /**
@@ -163,6 +191,32 @@ export default {
       }
     }
 
+    // ── SEO tool pages — interactive entry points ──────────────────────────
+    // These pages target high-intent commercial queries where the SERP wants
+    // a tool, not an article. Both ship full client-side interactivity.
+    if ((request.method === 'GET' || request.method === 'HEAD') && (url.pathname === '/cat-symptom-checker' || url.pathname === '/cat-symptom-checker/')) {
+      return htmlResponse(renderSymptomChecker());
+    }
+    if ((request.method === 'GET' || request.method === 'HEAD') && (url.pathname === '/cat-personality-test' || url.pathname === '/cat-personality-test/')) {
+      return htmlResponse(renderPersonalityTest());
+    }
+
+    // ── Blog (engineering / founder long-form posts) ───────────────────────
+    if ((request.method === 'GET' || request.method === 'HEAD') && (url.pathname === '/blog' || url.pathname === '/blog/')) {
+      return htmlResponse(renderBlogIndex());
+    }
+    if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname.startsWith('/blog/')) {
+      const slug = url.pathname.slice('/blog/'.length).replace(/\/+$/, '');
+      if (slug) {
+        const body = renderBlogPostBySlug(slug);
+        if (body) return htmlResponse(body);
+        return new Response('Not found', {
+          status: 404,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        });
+      }
+    }
+
     // ── Audio trends — cron-refreshed JSON for the postcard share UI ─────
     // The app fetches this on the postcard share screen, caches 24h
     // locally, and falls back to its own bundled list if this fails.
@@ -172,6 +226,15 @@ export default {
         ? await readCurrentTrends({ kv: env.AUDIO_TRENDS_KV, fallback: SEED_PAYLOAD })
         : SEED_PAYLOAD;
       return renderAudioTrendsJson(payload);
+    }
+
+    // ── RevenueCat webhook (audit 2026-05-17, partner-code program) ────────
+    // POST /api/rc-webhook — RC fires here on every subscription event.
+    // Authenticated via Authorization header against RC_WEBHOOK_SECRET.
+    // Writes partner_redemptions rows when a purchase carries a
+    // partner_code_id subscriber attribute. See proxy/rcWebhook.ts.
+    if (request.method === 'POST' && url.pathname === '/api/rc-webhook') {
+      return handleRcWebhook(request, env);
     }
 
     // ── SEO plumbing: sitemap + robots ─────────────────────────────────────
@@ -564,12 +627,18 @@ function buildSitemapXml(): string {
   const entries: { loc: string; lastmod: string; priority: string; changefreq: string }[] = [
     { loc: `${site}/`, lastmod: today, priority: '1.0', changefreq: 'weekly' },
     { loc: `${site}/library`, lastmod: today, priority: '0.9', changefreq: 'weekly' },
+    { loc: `${site}/blog`, lastmod: today, priority: '0.9', changefreq: 'weekly' },
+    { loc: `${site}/cat-symptom-checker`, lastmod: today, priority: '0.9', changefreq: 'monthly' },
+    { loc: `${site}/cat-personality-test`, lastmod: today, priority: '0.9', changefreq: 'monthly' },
     { loc: `${site}/privacy`, lastmod: today, priority: '0.3', changefreq: 'yearly' },
     { loc: `${site}/terms`, lastmod: today, priority: '0.3', changefreq: 'yearly' },
     { loc: `${site}/disclaimer`, lastmod: today, priority: '0.3', changefreq: 'yearly' },
   ];
   for (const { slug, lastmod } of getArticleSlugs()) {
     entries.push({ loc: `${site}/library/${slug}`, lastmod, priority: '0.8', changefreq: 'monthly' });
+  }
+  for (const { slug, lastmod } of getBlogSlugs()) {
+    entries.push({ loc: `${site}/blog/${slug}`, lastmod, priority: '0.8', changefreq: 'monthly' });
   }
   const urls = entries
     .map(

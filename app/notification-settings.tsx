@@ -31,6 +31,7 @@ import {
   PaperPlaneTilt,
   Pill,
   Sparkle,
+  Sun,
   VideoCamera,
 } from 'phosphor-react-native';
 import { Text } from '../src/components/Text';
@@ -39,7 +40,26 @@ import {
   type NotifCategory,
 } from '../src/state/notifPrefsStore';
 import { useCatStore } from '../src/state/catStore';
-import { cancelNotification } from '../src/services/notifications';
+import {
+  cancelNotification,
+  setMorningMewReminder,
+} from '../src/services/notifications';
+import {
+  resolveTodaysMood,
+  pickMorningGreeting,
+} from '../src/services/dailyMood';
+import {
+  buildArchetypeMod,
+  buildLiveMoodContext,
+  buildTodayBehaviorMod,
+  computeFeedbackMod,
+  hasMedicalConcernToday,
+} from '../src/services/moodWeights';
+import { useMoodFeedbackStore } from '../src/state/moodFeedbackStore';
+import { usePersonalityStore } from '../src/state/personalityStore';
+import { useHealthStore } from '../src/state/healthStore';
+import { resolveCatAgeMonths } from '../src/state/catStore';
+import { localDateKey } from '../src/services/dailyMood';
 import { useTheme } from '../src/theme/useTheme';
 import { radius, space } from '../src/theme/tokens';
 
@@ -61,6 +81,12 @@ export default function NotificationSettingsScreen() {
   const cats = useCatStore((s) => s.cats);
 
   const rows: CategoryRow[] = [
+    {
+      id: 'morning_mew',
+      icon: <Sun size={22} color={t.primary700} weight="duotone" />,
+      title: 'Morning mew',
+      description: "Daily at 8am — your cat's first line of the day, in their voice and today's mood.",
+    },
     {
       id: 'daily_checkin',
       icon: <Sparkle size={22} color={t.primary700} weight="duotone" />,
@@ -158,10 +184,53 @@ export default function NotificationSettingsScreen() {
           setScheduledId(cat.id, category, null);
         }
       }
+    } else if (category === 'morning_mew') {
+      // Morning Mew is unique: no natural entry-point screen arms it,
+      // so we schedule directly on toggle ON. Body = today's mood-
+      // shaped greeting. Cancel any prior id first to avoid duplicate
+      // 8 AM pushes.
+      for (const cat of cats) {
+        const key = `${cat.id}:${category}`;
+        const priorId = scheduledIds[key];
+        if (priorId) {
+          await cancelNotification(priorId);
+        }
+        try {
+          // Audit 2026-05-14 round 10 P2 #4: switched to the shared
+          // `buildLiveMoodContext` so this surface stays in lockstep
+          // with chat/diary/postcard/morning-mew-autoarm. Adds
+          // weather/meow/pain/appetite/litter pull automatically.
+          const arch = usePersonalityStore.getState().getProfile(cat.id)?.archetype ?? null;
+          const fbTable = useMoodFeedbackStore.getState().getFeedback(cat.id);
+          const liveCtx = await buildLiveMoodContext({
+            catId: cat.id,
+            ageMonths: resolveCatAgeMonths(cat) ?? null,
+          });
+          const mood = resolveTodaysMood({
+            catId: cat.id,
+            checkinMood: liveCtx.checkinMood ?? null,
+            hasRecentMedicalConcern: hasMedicalConcernToday(cat.id),
+            archetypeMod: buildArchetypeMod(arch),
+            todayMod: buildTodayBehaviorMod(liveCtx),
+            feedbackMod: computeFeedbackMod(fbTable),
+          });
+          const body =
+            pickMorningGreeting({ mood, catId: cat.id }) ??
+            `Tap to see what ${cat.name} has to say.`;
+          const id = await setMorningMewReminder({
+            catName: cat.name,
+            catId: cat.id,
+            body,
+          });
+          if (id) setScheduledId(cat.id, category, id);
+        } catch (e) {
+          console.warn('[notif] morning_mew schedule failed:', e);
+        }
+      }
     }
-    // Re-enabling does NOT auto-reschedule — the next save flow or the
-    // next trigger condition will pick up the fresh enabled flag and
-    // create a new schedule. Keeps logic simple.
+    // Re-enabling other categories does NOT auto-reschedule — the
+    // next save flow or the next trigger condition will pick up the
+    // fresh enabled flag. Keeps logic simple.
   };
 
   return (

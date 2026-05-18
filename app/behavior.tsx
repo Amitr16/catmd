@@ -28,6 +28,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Image,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -39,10 +40,11 @@ import * as VideoThumbnails from 'expo-video-thumbnails';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera as CameraIcon, ClockCounterClockwise, Eye, FilmStrip, Sparkle } from 'phosphor-react-native';
+import { ArrowLeft, ArrowSquareOut, Camera as CameraIcon, ClockCounterClockwise, Eye, FilmStrip, Sparkle } from 'phosphor-react-native';
 import { Button } from '../src/components/Button';
 import { Text } from '../src/components/Text';
 import { ObservationBody } from '../src/components/ObservationBody';
+import { useProGate } from '../src/services/paywallGate';
 import { useCatStore } from '../src/state/catStore';
 import { useHealthStore } from '../src/state/healthStore';
 import { useTheme } from '../src/theme/useTheme';
@@ -72,6 +74,35 @@ const SHORT_VIDEO_THRESHOLD_SEC = 7;     // < this → no trim picker, take firs
 const REEL_THUMB_COUNT = 8;              // thumbnails in the trim reel
 const FREE_DAILY_LIMIT = 3;
 
+// Long-form explainer article on catmd.pet — what AI body-language
+// readers actually do, the five channels, the per-cat memory layer,
+// what they don't claim. Linked from the mode picker + the done stage
+// so curious users can build trust in the read.
+const HOW_BODY_LANGUAGE_READER_WORKS_URL =
+  'https://catmd.pet/library/how-body-language-readers-work';
+
+/**
+ * Open the long-form explainer in the OS browser. Fire-and-forget;
+ * silent failure if the URL can't be opened (corporate device, no
+ * browser, etc.) — never breaks the user's flow.
+ */
+async function openBodyLanguageExplainer(
+  source: 'mode_picker' | 'done_stage',
+): Promise<void> {
+  void import('../src/services/analytics').then(({ track }) =>
+    track({
+      type: 'behavior_how_it_works_opened',
+      props: { source },
+    }),
+  );
+  try {
+    const ok = await Linking.canOpenURL(HOW_BODY_LANGUAGE_READER_WORKS_URL);
+    if (ok) await Linking.openURL(HOW_BODY_LANGUAGE_READER_WORKS_URL);
+  } catch {
+    // Silent — never block the user.
+  }
+}
+
 type Stage =
   | 'pick'              // initial — choose Capture vs Upload
   | 'capture'           // live camera, ready to burst
@@ -92,6 +123,7 @@ export default function BehaviorScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const cat = useCatStore((s) => s.cats.find((c) => c.id === s.activeCatId) ?? null);
+  const proGate = useProGate();
   const addEvent = useHealthStore((s) => s.addEvent);
   const events = useHealthStore((s) => s.events);
 
@@ -156,6 +188,11 @@ export default function BehaviorScreen() {
   // ── CAPTURE PATH ─────────────────────────────────────────────────────────
 
   const goToCapture = async () => {
+    // Pro gate — paid / trial / whitelisted only. Routes to /paywall
+    // if blocked. Fires `paywall_gate_blocked` analytics. Loading
+    // state always passes through (optimistic) so we don't flash the
+    // paywall on cold start.
+    if (!proGate.check('behavior')) return;
     // Lazy permission ask — user explicitly chose the camera path. We need
     // BOTH camera (always) and microphone (because we record audio for the
     // Whisper transcription that feeds the AI observation). If the user
@@ -230,6 +267,7 @@ export default function BehaviorScreen() {
   // ── UPLOAD PATH ──────────────────────────────────────────────────────────
 
   const pickVideo = async () => {
+    if (!proGate.check('behavior')) return;
     if (!cat) {
       setErrorMsg('Add a cat profile first.');
       setStage('error');
@@ -379,7 +417,7 @@ export default function BehaviorScreen() {
     // Telemetry: success path was previously invisible — only the
     // no-cat-detected failure was tracked. This event is the entire
     // Read [cat] success funnel.
-    void import('../src/services/analytics').then(({ track }) =>
+    void import('../src/services/analytics').then(({ track }) => {
       track({
         type: 'behavior_observation_completed',
         props: {
@@ -389,8 +427,11 @@ export default function BehaviorScreen() {
           top_tags: result.tags.slice(0, 3).join(','),
           observation_length: result.observation.length,
         },
-      }),
-    );
+      });
+      // Unified activation event for marketing-attribution funnels
+      // (audit 2026-05-16). Fires alongside behavior_observation_completed.
+      track({ type: 'core_feature_used', props: { feature: 'behavior' } });
+    });
 
     setObservation(result.observation);
     setTags(result.tags);
@@ -551,8 +592,16 @@ export default function BehaviorScreen() {
           <Text token="heading2" style={{ marginTop: space[4] }}>
             {THINKING_WORDS[thinkingIndex]}…
           </Text>
+          {/* Time estimate updated 2026-05-11 — split into TWO lines
+              so users don't confuse the analysis-time with the
+              recording duration. Recording = 6 sec fixed; analysis =
+              up to 25 sec (frames + Whisper + vision pass + world
+              extraction running in parallel). */}
           <Text token="body" style={{ color: t.textMuted, marginTop: space[2], textAlign: 'center' }}>
-            Reading the frames. ~5 seconds.
+            Reading the 6-second clip — frames + audio.
+          </Text>
+          <Text token="caption" style={{ color: t.textMuted, marginTop: space[1], textAlign: 'center' }}>
+            Analysis takes up to 25 sec.
           </Text>
         </View>
       )}
@@ -583,6 +632,32 @@ export default function BehaviorScreen() {
               <Text token="caption" style={{ color: t.textMuted, lineHeight: 18 }}>
                 Behaviour observation — not a diagnosis. For symptoms or anything that worries you, run a triage scan instead.
               </Text>
+              {/* Trust-deepener on the done stage — users who just saw a
+                  read often wonder "how reliable is this?" Pair with the
+                  pre-record link in the mode picker so the explainer is
+                  reachable at both moments of doubt. */}
+              <Pressable
+                onPress={() => openBodyLanguageExplainer('done_stage')}
+                accessibilityRole="link"
+                accessibilityLabel="Read how modern body-language readers work"
+                style={({ pressed }) => [
+                  styles.howItWorksLink,
+                  { marginTop: space[2], opacity: pressed ? 0.7 : 1 },
+                ]}
+              >
+                <Text
+                  token="caption"
+                  style={{
+                    color: t.secondary700,
+                    fontFamily: 'Figtree_600SemiBold',
+                    fontSize: 12,
+                    letterSpacing: 0.3,
+                  }}
+                >
+                  How modern body-language readers work
+                </Text>
+                <ArrowSquareOut size={12} color={t.secondary700} weight="bold" />
+              </Pressable>
             </View>
           </View>
 
@@ -615,7 +690,7 @@ export default function BehaviorScreen() {
           >
             <Eye size={16} color={t.textSecondary} weight="duotone" />
             <Text token="caption" style={{ marginLeft: space[2], color: t.textSecondary, fontWeight: '600' }}>
-              View all past readings — they all stay in {cat?.name ?? 'the cat'}'s memory
+              View all past readings — they all stay in {cat?.name ?? 'the cat'}&apos;s memory
             </Text>
           </Pressable>
         </ScrollView>
@@ -624,7 +699,7 @@ export default function BehaviorScreen() {
       {stage === 'error' && (
         <View style={styles.center}>
           <Text token="heading2" style={{ color: t.warning, marginBottom: space[2] }}>
-            Couldn't analyse
+            Couldn&apos;t analyse
           </Text>
           <Text token="body" style={{ color: t.textMuted, marginBottom: space[6], textAlign: 'center' }}>
             {errorMsg}
@@ -722,6 +797,31 @@ function ModePicker({
           <Text token="caption" style={{ color: t.textPrimary, fontWeight: '600' }}>How it reads:</Text>
           {' '}AI watches the video and listens to the audio — picking up posture, tail position, ears, eye state, broad movement, and any vocalisations (meows, purrs, trills).
         </Text>
+        {/* Trust hook — long-form research-backed explainer. Mirrors
+            the pattern on /translate so curious users can verify the
+            methodology before committing to a recording. */}
+        <Pressable
+          onPress={() => openBodyLanguageExplainer('mode_picker')}
+          accessibilityRole="link"
+          accessibilityLabel="Read how the body-language reader works"
+          style={({ pressed }) => [
+            styles.howItWorksLink,
+            { opacity: pressed ? 0.7 : 1 },
+          ]}
+        >
+          <Text
+            token="caption"
+            style={{
+              color: t.secondary700,
+              fontFamily: 'Figtree_600SemiBold',
+              fontSize: 12,
+              letterSpacing: 0.3,
+            }}
+          >
+            Read how it works
+          </Text>
+          <ArrowSquareOut size={12} color={t.secondary700} weight="bold" />
+        </Pressable>
       </View>
 
       {dailyLimitHit ? (
@@ -987,6 +1087,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: space[4],
     marginTop: space[2],
+  },
+  howItWorksLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: space[2],
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
   },
   optionCard: {
     flexDirection: 'row',

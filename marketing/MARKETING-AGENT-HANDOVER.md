@@ -5,13 +5,44 @@
 > re-derive the strategy, the brand voice, the content backlog, or the
 > founder constraints.
 >
-> **Read this whole doc once, then `marketing/MARKETING-STRATEGY-MOONSHOT.md`.
-> That's the full ramp.**
+> **Read this whole doc once, then `marketing/CONTENT-WRITING-BRIEF.md`
+> (the comprehensive content brief — added 2026-05-16) and
+> `marketing/MARKETING-STRATEGY-MOONSHOT.md`. That's the full ramp.**
 >
-> **Codebase status (2026-05-05):** Android live in closed testing,
-> public listing imminent. v0.1.8 / vc 62 ships chat without learned-facts
-> chip + Cat Studio weekly cap + share-clipboard caption + pinned-facts
-> retrieval. Product is best-in-class per founder; constraint is reach.
+> **Codebase status (2026-05-18):** ✅ **LIVE ON GOOGLE PLAY PRODUCTION**
+> in 177 countries. v0.1.21 / vc 94 LIVE. **vc 99 AAB built, awaiting Play
+> Console upload** — once uploaded, vc 99 is the production version.
+>
+> **Shipped since vc 94 (LIVE in vc 99 AAB):**
+> - **vc 96** — Partner code system. Annual-only discount codes for
+>   influencer partnerships. $14 royalty per subscriber (30% of net
+>   after Google's 15% Play fee), weekly settlement, free Pro for life
+>   for creator. See `docs/PARTNER-CODE-ACTIVATION.md`.
+> - **vc 99** — 3-tier depth-modulated cat voice. Voice now matures
+>   with the bond: warm-curious (0-25%) → emerging (25-65%) →
+>   intimate-comfort (65%+). Fixes the day-1 churn caused by the old
+>   always-aristocratic-distant register.
+> - **vc 99** — PersonalityProgressBanner on Chat + Diary (sticky
+>   one-line status: "✨ Forming · voice is still warming up · 12%
+>   → Improve").
+> - **vc 99** — removed Caution mood banner from Chat (visual cleanup).
+>
+> **Shipped on catmd.pet since vc 94:**
+> - 3 new library articles (cat-not-jumping, cat-grooming-less,
+>   why-does-my-cat-meow-at-me)
+> - 2 interactive tool pages: `/cat-symptom-checker`, `/cat-personality-test`
+> - SEO title-tag fixes on how-meow-translators-work + cat-body-language
+> - 8 orphan articles linked with inline contextual anchors
+>
+> **Prior architecture (vc 94 and earlier, still in production):**
+> 15-mood daily lottery + 15 voice modes + 4-tier voice quality gate
+> + live mood overlay (weather/weight/water/pain/appetite/litter/meow)
+> + YOUR WORLD grounding + date-anchored backfill + marketing attribution
+> (Play Install Referrer + UTM → PostHog super-properties +
+> `core_feature_used` activation event). 17 audit rounds + 80+ fixture
+> tests gate every ship. Three founder/engineering blog posts live at
+> catmd.pet/blog. Product is best-in-class per founder; constraint is
+> reach.
 >
 > **Founder:** Amit. Solo. Has Nano Banana (free) and fal.ai access (~$10
 > credit). $500/mo marketing budget, bootstrappable as MRR lands.
@@ -32,12 +63,12 @@ tell the founder to "create the Reddit account in the next hour" or
 similar urgent-tone instructions without first checking what already
 exists.
 
-**Confirmed status (as of 2026-05-05, end-of-day):**
+**Confirmed status (as of 2026-05-16):**
 
 | Item | Status |
 |---|---|
-| Android app live | ✅ In closed testing on Play Store (v0.1.8 / vc 62 just shipped) |
-| Public Play Store listing | ❌ Not yet flipped — gates paid ads and the official Week-1 start |
+| Android app live | ✅ **PRODUCTION on Google Play** — v0.1.21 / vc 94 — 177 countries — live since 2026-05-14. **vc 99 AAB built 2026-05-18, awaiting Play Console upload** — once uploaded, vc 99 is production. |
+| Public Play Store listing | ✅ **LIVE.** App is publicly searchable + installable. URL: play.google.com/store/apps/details?id=com.catmd.app |
 | 9-video series scaffolded | ✅ Folders + storyboards exist for all 9 |
 | **Video #1 (Chat)** | 🟡 **In production. 3/4 assets done:** 3 stills + 3 clips saved to `marketing/videos/01-chat/`. **Pending:** Clip 3 screen recording on vc 62, brand card with icon, CapCut, export. **Finishing kit ready:** `marketing/videos/01-chat/FINISHING-KIT.md`. |
 | Videos #2-9 | ❌ Storyboards exist; no production started |
@@ -68,11 +99,39 @@ the docs were written to push pace, not to override existing work.
 
 ## 0c. Product features ALREADY SHIPPED that drive marketing — DO NOT re-spec
 
-**Critical:** the marketing-leverage features below are LIVE in **v0.1.10 /
-vc 67** (was vc 62 — updated 2026-05-06 after vc 67 ship). Do not propose
-them as "ship in Pre-Week 0" decisions. Do not quote
-`marketing/chat-as-viral-lever.md` as if its spec is pending — that doc
-was written before the build; the build has happened.
+**Critical:** the marketing-leverage features below are LIVE in
+**v0.1.21 / vc 94** (production, on Google Play in 177 countries). Do
+not propose them as "ship in Pre-Week 0" decisions. Do not quote
+`marketing/chat-as-viral-lever.md` as if its spec is pending — that
+doc was written before the build; the build has happened.
+
+### 🆕 SHIPPED 2026-05-12 → 2026-05-16 (post-vc-67, pre-production-launch)
+
+These features ship in vc 94 and are the new marketing-leverage
+surface. They didn't exist in earlier handover snapshots — content
+written before May 12 will under-sell the product. **Read these
+before writing any new copy.**
+
+| Feature | Status | Where it lives | Marketing angle |
+|---|---|---|---|
+| **15-mood daily lottery** | ✅ Shipped vc 94 | `src/services/dailyMood.ts` | "Co-Star for cats." Same cat reads completely differently from day to day. 15 moods × 5 clusters (warm / joy / flavor / sass / dark). Deterministic per (cat, date). 4-layer weighted formula: `base × archMod × todayMod × feedbackMod^1.5`. The user-feedback exponent makes share-behaviour DOMINATE over weeks — the cat genuinely bends toward the moods you love. |
+| **15 pop-culture voice modes** | ✅ Shipped vc 94 | `src/services/voiceModes.ts` | "Bridgerton, Wes Anderson, drag confessional — applied to a cat." Legal-safe generic stylistic descriptors. Borrowed from Lai/Huang/Liang's *AI Cat Narrator* HCI paper (arXiv 2406.06192) — they validated defamiliarization with 1906 Japanese fiction; we translated to pop. First production application of their finding as far as we know. |
+| **4-tier voice quality gate** | ✅ Shipped vc 94 | `src/services/voiceQuality.ts` | "We don't ship AI slop." Deterministic post-generation evaluator. Bans "your furry friend", "purrfect", "I'm here for you", "as an AI", "I recommend". Caps length per surface (postcard 12 words, diary 18, chat 45). Hard-fails unsupported named entities. Most LLM products ship raw model output. We don't. Single most-defensible engineering claim in the brand. |
+| **Live mood overlay (weather/weight/water/pain/appetite/litter/meow)** | ✅ Shipped vc 94 | `src/services/moodWeights.ts` | "She woke up imperious, but after the thunderstorm and the off-baseline water, she's quieter now." Daily mood base is stable; live overlay shifts as today unfolds. Weather signals via Open-Meteo opt-in. Water + weight trends from 7-day / 30-day baselines (water only fires when ≥1 log exists for the day — no false "drank less" when user hasn't logged). |
+| **YOUR WORLD grounding** | ✅ Shipped vc 94 | World memory + prompt directives + voice quality gate | "The cat literally can't talk about things that aren't real." Every prompt includes a list of objects + places + people the cat has actually seen — extracted silently from photos. No invented radiators, no Mr Mittens. Climate-aware: a Singapore cat never mentions sunbeams by default. |
+| **Date-anchored backfill** | ✅ Shipped vc 94 | `src/services/diary.ts` | "Diary that doesn't time-leak." When backfilling past days, every signal anchors to that day's date — weather, water/weight baselines, subject appearances, recurring people, vibe. Most "AI journal" products compute today's context then write about yesterday using it. We caught it in audit and fixed it. |
+| **17 rounds of third-party AI audit** | ✅ Pre-launch | Codex audit cadence | "Built like an enterprise product." Each round returned structured P1/P2/P3 findings — every one fixed and verified by 80+ fixture tests before next ship. Findings that landed in production: weather mood leak, postcard self-tagging, water-not-logged misread, weight signal wiring gap, emergency-tier mood routing. No other indie pet app ships with this discipline. |
+| **80+ fixture tests** | ✅ Shipped vc 94 | `scripts/test-*.mjs` | 47 date-boundary + 15 voice quality + 18 voice mode + 10 install attribution. All pure-Node, no Jest, run in 1 second each. Every audit round runs the full suite before claiming a fix shipped. |
+| **Marketing attribution (Play Install Referrer + UTM)** | ✅ Shipped vc 95 | `modules/install-referrer/` + `src/services/installAttribution.ts` + bootstrap | "Built like an enterprise product, priced like an indie one." Custom Expo native module wraps Google's official `com.android.installreferrer` SDK. First-launch capture caches in AsyncStorage. utm_source / utm_campaign / utm_content / campaign_id / creative_id registered as PostHog super-properties — every future event inherits them. **`core_feature_used` activation event** fires alongside the granular event on every core-feature use (scan / chat / diary / postcard / behavior / translate) for single-event-filter funnel analysis. No third-party attribution vendor (Adjust / Appsflyer). |
+| **catmd.pet/blog (3 posts live)** | ✅ Shipped 2026-05-15 | `proxy/blog.ts` + Cloudflare Worker | Three founder/engineering posts deployed:<br>1. `cat-ai-is-going-to-be-slop` (marquee, HN-ready)<br>2. `from-natsume-to-bridgerton` (HCI / paper authors)<br>3. `shipped-catmd-in-14-days-with-claude` (indie hacker / Anthropic case study)<br>Mirrors library architecture with BlogPosting schema. Sitemap auto-includes blog slugs. |
+| **Library "Read next" footer** | ✅ Shipped 2026-05-15 | `proxy/library.ts` renderArticlePage | Prominent sage-bordered "Read next →" card inserted right after FAQ block in every library article. Intercepts readers before they dead-end at the conversion CTA. Uses `relatedSlugs[0]`. |
+| **Vet-share nudge** | ✅ Code shipped 2026-05-16 (activates vc 96) | `app/result.tsx` | One-tap structured observation summary sent via native share sheet (WhatsApp / SMS / email) on `/result` for `monitor` or `concern` urgency. Closes the "AI flagged → vet conversation" loop. |
+| **Vet-confirmed outcome story funnel** | ✅ Code shipped 2026-05-16 (activates vc 96 + SQL migration) | `app/outcome-check.tsx` + `TestimonialStoryModal.tsx` + Supabase `vet_confirmed_stories` table | **The press / case-study capture system.** Fires `scan_outcome_vet_confirmed` analytics when owner marks `vet_visited='yes'`, then prompts a 4-field testimonial with 4 permission options (private / anonymous / first name / contact me). Stories land in private Supabase table — read via SQL dashboard, tag press-worthy ones via `press_pitch_candidate=true`. 90-day cool-off prevents harassment. **NOT externally marketed** — input to press, not a user-facing claim.|
+
+### Legacy features still relevant (from prior handover) — already-shipped before vc 94
+
+| Feature | Status | Where it lives |
+|---|---|---|
 
 | Feature | Status | Where it lives |
 |---|---|---|
@@ -588,3 +647,7 @@ next video, comment on Reddit, post on X, and trust the math.**
 | 2026-05-05 (iteration 3 — zero pre-launch posts) | Founder twice rejected pre-launch posting (first w.r.t. Video #1 on D2, then w.r.t. mid-tier Video #4 on D2). Locked rule: no posts on TikTok / IG / YT / Threads / Bluesky / Mastodon until 5 AM PT May 15. All 9 videos held in queue. §0a now has 🔒 FOUNDER RULE box. Operating plan §3 rewritten as zero-posts pre-launch + integrates 10 high-leverage activities: Linktree multi-link bio (D2), Quora answer drafts (D6), Medium/Substack drafts (D6), Apple Search Ads Basic draft (D6), GitHub awesome-list PRs (D7), press kit PDF (D7), vet/shelter outreach (D8), custom cat-influencer archetype cards (D8), App Store "App Preview" video (D10), founder face-to-camera 30-sec pitch (D10), email waitlist + automation (D4), Connectively/Qwoted/SourceBottle (D2), RevenueCat alerts (D9), deep-link testing (D9). Output state §3 has 24-item ✅ checklist for D10 evening. LAUNCH-DAY-PLAYBOOK §1 updated: Video #1 drops at 5 AM PT (was Video #5 at 6 AM), Video #2 same day 5 PM, Video #3 Sun May 17 1 PM, post-launch cadence table for Videos #4-9 added. |
 | 2026-05-06 (vc 67 features ship) | New build vc 67 ships comprehensive medical recall (READ), proactive memory (UNPROMPTED), bidirectional gateway (WRITE), hedge guard, read-side voice discipline. Adds 3 new video concepts: #10 "She told ME her shot is overdue" (proactive memory + health), #11 "I told my cat her weight, she filed it" (write side), #12 "She knows when you skipped her dose" (eerie + judgmental). §0c table updated with all 5 new features marked vc 67. Drop cadence (per `videos/README.md` + agent recommendation): #10 Week 5+ default but pull forward to Week 2-3 if Video #1 cracks 100K views in Week 1; #11 reframed as B-side / X-thread asset rather than primary TikTok (data-entry hook is intrinsically weaker for the cat-owner audience); #12 Week 6+ as planned (eerie variant lands harder after audience trust). Pre-production seeding (Triage→Track with overdue vaccine + dose gap + weight history) recommended NOW (today, 10 min) so proactive-memory beats fire naturally during all subsequent chat use. |
 | 2026-05-07 (D3 — OpenClaw kit designed) | Designed full OpenClaw marketing-bot deployment kit at `marketing/openclaw/`. 16 workspace files: SOUL.md (marketing-strategist + brand-voice persona), IDENTITY.md (founder + product + sprint state), AGENTS.md (5 named sub-agents: ReddyTheBot, XPoster, MetricsHawk, CreatorScout, PressWatcher, Sunday Reviewer), TOOLS.md (capabilities — drafts only, no auto-publish), HEARTBEAT.md (24/7 schedule + threshold triggers + moonshot accelerant protocol), 7 skill files (reddit-comments, x-buildinpublic, daily-metrics, creator-outreach, journalist-queries, threshold-alerts, sprint-dashboard), knowledge/PRODUCT.md (comprehensive product reference), knowledge/INDEX.md (pointer map to all marketing docs), memory/sprint-state.md + voice-examples.md + learnings.md (templates). Hardware target: Mac Studio M4 Max 64GB. Model: Qwen 3.6-35B-A3B-Instruct Q5_K_M MLX via LM Studio. Deploy Week 2-3 post-launch (~Mon May 25), NOT before — pre-launch focus stays on launch readiness. Target outcome: 80% volume of Tier 2 drafting tasks automated with founder review; ~15 hours/week saved; moonshot probability lifted from 30-40% baseline to 50-65% via increased shots-fired without dropping voice quality. |
+| 2026-05-14 (production launch) | **CatMD launched on Google Play production.** v0.1.21 / vc 94. Live in 177 countries. Content review completed (initial review was effectively instant since the app passed during closed testing). 14-day reverse trial active. Pro Annual $69/year + Pro Monthly $12.99/month at launch (re-priced 2026-05-17 — see entry below). Lifetime tier DROPPED 2026-05-05 (recurring-only). 14 internal testers carried over from closed testing. |
+| 2026-05-17 (pricing re-balance) | **Pricing re-balanced** after research found the original $69/$12.99 split implied a 55.7% annual discount — well above the industry-healthy 30% ceiling per Subscription Index + Adapty + Recurly 2026 benchmarks. New prices: **Pro Annual $79.99/year (~$6.67/month) + Pro Monthly $9.99/month** = 33% effective annual discount, right in the sweet spot. Anchors against current AI companion category benchmarks (Replika $19.99/$69.99, Headspace Ebb $69.99/yr, Cal AI $29.99/yr, Pawp $99/yr). $9.99/mo crosses the single-digit psychological threshold for cold conversion. Existing paid subscribers are price-locked at the old rate per Google Play default behaviour. Updated everywhere: landing.ts, library.ts, blog.ts (no inline price refs needed), CONTENT-WRITING-BRIEF.md, FEATURE-INVENTORY-COMPLETE.md. App pulls prices live from RevenueCat — no code change required. |
+| 2026-05-15 (blog + library footer) | Three founder/engineering blog posts deployed at `catmd.pet/blog`: (1) `cat-ai-is-going-to-be-slop` (marquee HN piece on voice quality gate + mood lottery + applied research), (2) `from-natsume-to-bridgerton` (HCI angle re-applying Lai/Huang/Liang's AI Cat Narrator paper to pop-culture voice modes), (3) `shipped-catmd-in-14-days-with-claude` (indie hacker / Anthropic case study). Library articles got a prominent sage-bordered "Read next →" footer to prevent dead-ending. |
+| 2026-05-16 (mass docs refresh for content-writing) | **Created `marketing/CONTENT-WRITING-BRIEF.md`** — comprehensive 16-part doc for AI/human ghost-writers producing CatMD content. Sections: positioning, focus cohort, strengths & uniqueness, foundational research, cutting-edge research applied, full feature inventory, brand voice (cat + brand), approved vocabulary, forbidden claims, example good/bad copy, content-type playbook, approved assets. **Updated `FEATURE-INVENTORY-COMPLETE.md`** with all new vc 94 features: 15-mood lottery, 15 voice modes, 4-tier voice quality gate, live mood overlay, YOUR WORLD grounding, date-anchored backfill, marketing attribution. Pricing corrected to $12.99/mo + $69/yr (no Lifetime; 14-day reverse trial). **Updated this doc (§0a + §0c + changelog)** to reflect production launch. Also shipped earlier today: marketing attribution spec (`modules/install-referrer/`, install referrer + UTM parser + `core_feature_used` activation event + 6 core-feature backfills, 10 fixture tests). |

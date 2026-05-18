@@ -171,12 +171,19 @@ export async function extractAndStoreSelfFacts(opts: {
     isNew: boolean;
   }> = [];
 
+  // Use the semantic-similarity resolver (2026-05-14 audit fix #7) so
+  // contradictions get caught: "I love tuna" followed weeks later by
+  // "I hate tuna" used to both persist, making the cat inconsistent
+  // over time. The resolver:
+  //   - Bumps assertion_count on paraphrase duplicates (cosine ≥ 0.95)
+  //   - Supersedes older facts when new ones contradict them
+  //     (similarity 0.80-0.95 + opposing-verb pattern)
+  //   - Inserts independent facts normally
+  // Failures fall back gracefully to the store's exact-dedup path.
+  const { resolveAndUpsertFact } = await import('./selfFactsResolver');
   for (const ef of extracted.slice(0, 6)) {
     try {
-      // Snapshot the existing list to detect "is this a new fact" vs
-      // "we just bumped an existing one's assertion count."
-      const before = store.getFactsForCat(catId).length;
-      const result = store.upsertFact({
+      const outcome = await resolveAndUpsertFact({
         catId,
         fact: ef.fact,
         category: ef.category,
@@ -184,14 +191,15 @@ export async function extractAndStoreSelfFacts(opts: {
         confidence: ef.confidence,
         ...(sourceTurnId ? { sourceTurnId } : {}),
       });
-      const after = store.getFactsForCat(catId).length;
       written.push({
-        fact: result.fact,
-        category: result.category,
-        isNew: after > before,
+        fact: outcome.fact.fact,
+        category: outcome.fact.category,
+        // 'inserted' and 'replaced' both produce a new visible fact
+        // for the user; 'merged' just bumped an existing one.
+        isNew: outcome.kind !== 'merged',
       });
     } catch (e) {
-      console.warn('[selfFacts] upsert failed:', e);
+      console.warn('[selfFacts] resolve+upsert failed:', e);
     }
   }
 

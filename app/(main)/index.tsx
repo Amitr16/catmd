@@ -7,15 +7,16 @@
  *   - "Scan now" primary CTA (single button)
  *   - Recent scans list (last 3)
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Cat as CatIcon, Camera as CameraIcon, CaretDown, CaretRight, Flame, Gear, HeartStraight, Sparkle, Stethoscope, Toilet, TrendUp, TrendDown, WarningCircle } from 'phosphor-react-native';
+import { Cat as CatIcon, Camera as CameraIcon, CaretDown, CaretRight, Flame, Gear, HeartStraight, Microphone, Sparkle, Stethoscope, Toilet, TrendUp, TrendDown, WarningCircle } from 'phosphor-react-native';
 import { Button } from '../../src/components/Button';
 import { Card } from '../../src/components/Card';
 import { DailyCheckinCard } from '../../src/components/DailyCheckinCard';
 import { ScoreRing } from '../../src/components/ScoreRing';
+import { TrialBanner } from '../../src/components/TrialBanner';
 import { Text } from '../../src/components/Text';
 import { UrgencyBadge } from '../../src/components/UrgencyBadge';
 import { radius } from '../../src/theme/tokens';
@@ -35,6 +36,22 @@ import { useTheme } from '../../src/theme/useTheme';
 import { space } from '../../src/theme/tokens';
 import { tierFromScore } from '../../src/theme/tokens';
 import { computeAdjustedScore } from '../../src/services/healthScore';
+import {
+  resolveTodaysMood,
+  pickMorningGreeting,
+} from '../../src/services/dailyMood';
+import {
+  buildArchetypeMod,
+  buildLiveMoodContext,
+  buildTodayBehaviorMod,
+  computeFeedbackMod,
+  hasMedicalConcernToday,
+} from '../../src/services/moodWeights';
+import { useMoodFeedbackStore } from '../../src/state/moodFeedbackStore';
+import { usePersonalityStore } from '../../src/state/personalityStore';
+import { setMorningMewReminder } from '../../src/services/notifications';
+import { useNotifPrefsStore } from '../../src/state/notifPrefsStore';
+import { resolveCatAgeMonths } from '../../src/state/catStore';
 
 export default function HomeScreen() {
   const t = useTheme();
@@ -68,6 +85,62 @@ export default function HomeScreen() {
   const deleteScan = useScanStore((s) => s.deleteScan);
   const updateScan = useScanStore((s) => s.updateScan);
   const quota = useScanQuota();
+
+  // Auto-arm Morning Mew on first Today-tab mount per cat. No natural
+  // entry-point screen exists for this notification, so the Today tab
+  // plays that role. Arms ONCE per cat (idempotent via scheduledIds
+  // map) — if the user already has an id stored, we skip. The push is
+  // daily-recurring, so a single arm covers every future morning.
+  //
+  // Phase 2 (post-launch) will refresh this nightly so the lockscreen
+  // body reflects each day's freshly-rolled mood instead of the mood
+  // at first-arm time. For Phase 1, the morning line stays in the
+  // mood the cat was in when first armed — still feels personal, just
+  // doesn't drift. Acceptable tradeoff for ship speed.
+  const morningMewEnabled = useNotifPrefsStore(
+    (s) => s.enabled.morning_mew,
+  );
+  const scheduledIds = useNotifPrefsStore((s) => s.scheduledIds);
+  const setScheduledId = useNotifPrefsStore((s) => s.setScheduledId);
+  useEffect(() => {
+    if (!cat || !morningMewEnabled) return;
+    const key = `${cat.id}:morning_mew`;
+    if (scheduledIds[key]) return; // already armed
+    void (async () => {
+      try {
+        // Audit 2026-05-14 round 10 P2 #3 + #4: use the shared
+        // `buildLiveMoodContext` instead of hand-rolling. Pre-fix
+        // this picked the FIRST daily_checkin without filtering to
+        // today's date, so a morning push could schedule using
+        // yesterday's mood. `buildLiveMoodContext` filters by today
+        // properly + gathers all live signals (weather, meow, pain,
+        // appetite, litter) for richer mood selection.
+        const arch = usePersonalityStore.getState().getProfile(cat.id)?.archetype ?? null;
+        const fbTable = useMoodFeedbackStore.getState().getFeedback(cat.id);
+        const ageMonths = resolveCatAgeMonths(cat) ?? null;
+        const liveCtx = await buildLiveMoodContext({ catId: cat.id, ageMonths });
+        const mood = resolveTodaysMood({
+          catId: cat.id,
+          checkinMood: liveCtx.checkinMood ?? null,
+          hasRecentMedicalConcern: hasMedicalConcernToday(cat.id),
+          archetypeMod: buildArchetypeMod(arch),
+          todayMod: buildTodayBehaviorMod(liveCtx),
+          feedbackMod: computeFeedbackMod(fbTable),
+        });
+        const body =
+          pickMorningGreeting({ mood, catId: cat.id }) ??
+          `Tap to see what ${cat.name} has to say.`;
+        const id = await setMorningMewReminder({
+          catName: cat.name,
+          catId: cat.id,
+          body,
+        });
+        if (id) setScheduledId(cat.id, 'morning_mew', id);
+      } catch {
+        // best-effort — notifications must never block the dashboard
+      }
+    })();
+  }, [cat, morningMewEnabled, scheduledIds, setScheduledId]);
 
   const confirmDeleteScan = (id: string, headline: string) => {
     Alert.alert(
@@ -170,6 +243,14 @@ export default function HomeScreen() {
           <Gear size={24} color={t.textSecondary} />
         </Pressable>
       </View>
+
+      {/* Trial / Pro state banner. Renders only for users who:
+          - Are NOT on a paid plan
+          - Are NOT on the admin whitelist
+          - HAVE started the trial (anonymous-no-session = hidden)
+          Three modes: mid-trial (subtle), ending (nudge), expired (CTA).
+          See src/components/TrialBanner.tsx. */}
+      <TrialBanner />
 
       <View style={styles.ringRow}>
         {hasFreshScore ? (
@@ -394,17 +475,18 @@ export default function HomeScreen() {
 
       {/* ════════════════════════════════════════════════════════════════
           SECTION: KNOW YOUR CAT
-          Passive-observation tools. These don't have the urgency of the
-          Today section but are the second-most-tapped surface. Body
-          Language + Health Rhythm are LIVE.
-          (Renamed 2026-05-02: "Read [cat]" → "Body Language" because
-          users couldn't tell what "Read" meant. The route + analytics
-          event names stay `behavior` / `behavior_observation_*` for
-          continuity — UX rename only.)
+          Quick-action reads — Body Language (6 sec video) + Meow
+          Translator (4 sec video). Both are "do something with your
+          cat right now" actions, which is exactly the Today tab's
+          identity.
 
-          DEFERRED (tiles hidden 2026-05-02 ahead of test-phase build —
-          see SESSION-CHECKPOINT-2026-05-02.md §3 "Today-tab deferrals"):
-            - Meow decoder gated on a half-day audio-quality spike.
+          2026-05-11 reshuffle: Meow Translator moved here from Bond
+          (it's an action, not a passive bond surface). Health Rhythm
+          moved to Triage (it's a 30-day trend visualisation, sits
+          better with the medical tab). See src/services/meowTranslator.ts
+          and app/health-rhythm.tsx.
+
+          STILL DEFERRED:
             - Sleep Coach = 1-2 weeks of signal-processing + Android
               background-audio integration. Hidden until unblocked.
           ════════════════════════════════════════════════════════════ */}
@@ -421,10 +503,10 @@ export default function HomeScreen() {
         />
         <ModuleTile
           live
-          icon={<Sparkle size={24} color={t.primary700} weight="duotone" />}
-          title="Health Rhythm"
-          body="30-day patterns — flags drift."
-          onPress={() => router.push('/health-rhythm' as never)}
+          icon={<Microphone size={24} color={t.primary700} weight="duotone" />}
+          title="Meow Translator"
+          body={`Record 4 sec → one line in ${cat?.name ?? 'your cat'}'s actual voice.`}
+          onPress={() => router.push('/translate' as never)}
         />
       </View>
 

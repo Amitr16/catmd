@@ -5,6 +5,55 @@
 > study what Co-Star did right (25M+ users on identity-as-product),
 > then apply systematically.
 
+---
+
+## 🆕 IMPORTANT UPDATE — voice maturation (2026-05-18, vc 99)
+
+The original strategy below leans heavily on the **aristocratic / declarative
+/ Co-Star-style register** ("Tuna. Now." / "Adequate." / "Don't flatter
+yourself."). After live testing showed this register was **driving day-1
+churn** (new users with no diary, no YOUR WORLD entries, no archetype
+quiz answered were getting cold one-liners like "Adequate. I tolerate
+this existence."), the voice is now **depth-modulated** in production:
+
+| Bond depth | Voice | When |
+|---|---|---|
+| **0–25%** | **Warm + Curious** — asks questions back, sketch-honest, NO fabricating | First 1-2 weeks |
+| **25–65%** | **Emerging** — 70% warm, 30% dry, occasional questions | Weeks 2-6 |
+| **65–100%** | **Intimate-Comfort** — love as the substrate, sharp observation as the love-language | Month 2+ |
+
+**Implication for THIS doc**: the Co-Star aristocratic-declarative voice is
+still the **end-state** (intimate-comfort retains the sharp observation,
+opinions, mock-disdain — just with warmth as the substrate, not coldness).
+But it is **NOT what new users experience on day 1**, and our
+storyboards/video scripts must reflect this reality.
+
+**Marketing implications:**
+
+1. **Video scripts using cat-voice replies** — clarify what depth the user
+   should imagine. If a video shows *"Adequate. The chair was cold."* (deep
+   stage) as if it's a day-1 reply, viewers who download will see something
+   warmer and feel mismatched. Reframe with on-screen text like *"3 months
+   in"* or *"My cat after a year of CatMD"* to set expectations.
+2. **Quote-mining** — the quotable Co-Star-style one-liners ARE still in the
+   product, just at depth 65+. Either (a) film users who've been on the
+   app longer, or (b) seed the personality quiz + 7 days of activity in
+   the demo cat before screencasting.
+3. **Day-1 replies CAN be screenshot-worthy** too, just in a different
+   register — warm + curious-charming. Example: *"I might love you back.
+   Day one isn't enough to know."* lands warmly AND is quotable.
+4. **The voice journey is itself a story angle** — "watch my cat go from
+   curious-warm to intimate-confident over 3 months" is a TikTok arc
+   that's MORE engaging than a single Co-Star quote because it has
+   progression. Consider a multi-video series showing the same cat at
+   day 1 / week 2 / month 3.
+
+The rest of this doc (Co-Star lessons, declarative voice, daily card,
+push notifications) remains directionally correct for the **end-state**
+voice. Where it says "declarative cold-confident voice", read it as
+"intimate-confident voice with warmth underneath" — the end-state we ship
+to long-term users in production.
+
 ## Why Co-Star is the right reference
 
 Co-Star isn't an astrology app — it's an **identity product disguised as astrology**. Its mechanics map almost perfectly to what CatMD's cat-voice chat needs to be:

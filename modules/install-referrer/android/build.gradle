@@ -1,0 +1,61 @@
+// Local Expo module — wraps Google Play Install Referrer SDK for
+// marketing attribution. Autolinked by expo-modules-autolinking via
+// modules/install-referrer/expo-module.config.json.
+//
+// SDK version 2.2 is the stable line at the time of writing; it
+// supports Android API 21+ which exceeds CatMD's minSdk.
+//
+// Reference:
+//   https://developer.android.com/google/play/installreferrer/library
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'maven-publish'
+
+group = 'expo.modules.installreferrer'
+version = '0.1.0'
+
+buildscript {
+  // Pull in ExpoModulesCorePlugin so this module can use the Expo
+  // Modules API (Module / ModuleDefinition). Path is relative to the
+  // expo-modules-core dependency that the host app already brings in.
+  def expoModulesCorePlugin = new File(project(':expo-modules-core').projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
+  if (expoModulesCorePlugin.exists()) {
+    apply from: expoModulesCorePlugin
+    applyKotlinExpoModulesCorePlugin()
+  }
+}
+
+android {
+  namespace 'expo.modules.installreferrer'
+
+  compileSdkVersion safeExtGet("compileSdkVersion", 34)
+
+  defaultConfig {
+    minSdkVersion safeExtGet("minSdkVersion", 24)
+    targetSdkVersion safeExtGet("targetSdkVersion", 34)
+    versionCode 1
+    versionName "1.0.0"
+  }
+
+  // Mirror the host app's Kotlin / Java target versions so we don't
+  // emit a different bytecode level than the rest of the build.
+  kotlinOptions {
+    jvmTarget = JavaVersion.VERSION_17.toString()
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+}
+
+dependencies {
+  implementation project(':expo-modules-core')
+  implementation 'com.android.installreferrer:installreferrer:2.2'
+}
+
+/** Resolves a Gradle ext property with a default if not set by the host. */
+def safeExtGet(prop, fallback) {
+  rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}

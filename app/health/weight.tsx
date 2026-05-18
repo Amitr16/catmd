@@ -131,7 +131,6 @@ export default function Weight() {
           <Text token="heading3" style={{ marginBottom: space[3] }}>Trend</Text>
           <LineChart
             data={chartData}
-            width={340}
             height={180}
             yUnit="kg"
             emptyHint="Log your first weight to see the trend."

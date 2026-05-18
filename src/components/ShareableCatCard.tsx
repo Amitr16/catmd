@@ -226,7 +226,7 @@ function pickChatCaptionVariant(name: string, question: string, replyHeadline: s
   const variants: string[] = [
     `i asked: "${q}"\n\n${name} said this and i can't 😭`,
     `me: ${q}\n${name}:`,
-    `asked her "${q}".\n\nbig mistake.`,
+    `asked ${name} "${q}".\n\nbig mistake.`,
     `wanted to know "${q}".\n\n${name}'s answer:`,
     `me, casually: "${q}"\n${name}, devastatingly:`,
     `"${q}" — me, two seconds ago.\n${name}'s response:`,

@@ -3,7 +3,7 @@
     "name": "CatMD",
     "slug": "catmd",
     "scheme": "catmd",
-    "version": "0.1.15",
+    "version": "0.1.21",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "automatic",
@@ -105,7 +105,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
-      "versionCode": 76
+      "versionCode": 99
     },
     "web": {
       "output": "static",

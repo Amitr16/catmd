@@ -18,6 +18,7 @@
  * at $20M ARR) has a daily loop and it's the single biggest difference.
  * This card closes that gap for CatMD.
  */
+import * as React from 'react';
 import { useMemo, useState } from 'react';
 import {
   Alert,
@@ -30,7 +31,18 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { BowlFood, CheckCircle, Flame, X } from 'phosphor-react-native';
+import {
+  BowlFood,
+  CaretDown,
+  CaretRight,
+  CheckCircle,
+  Drop,
+  Flame,
+  Heartbeat,
+  Scales,
+  Toilet,
+  X,
+} from 'phosphor-react-native';
 import { Text } from './Text';
 import {
   dailyCheckinStreak,
@@ -44,6 +56,7 @@ import { useScanStore } from '../state/scanStore';
 import { useTheme } from '../theme/useTheme';
 import { radius, space } from '../theme/tokens';
 import { computeAdjustedScore } from '../services/healthScore';
+import { getPronouns } from '../services/pronouns';
 
 type Mood = DailyCheckinPayload['mood'];
 type Appetite = DailyCheckinPayload['appetite'];
@@ -59,6 +72,70 @@ const APPETITE_OPTIONS: { key: Appetite; label: string; emoji: string }[] = [
   { key: 'half', label: 'Half', emoji: '\uD83E\uDD63' },              // 🥣
   { key: 'none', label: 'Didn\u2019t eat', emoji: '\u274C' },          // ❌
 ];
+
+// ─── Track-more chip config ─────────────────────────────────────
+//
+// The "Track more about {Cat} this week" strip below the check-in
+// card surfaces under-tracked Health Rhythm inputs. Weight is the
+// flagship one — the 90-day weight-trend drift card can't fire
+// without >=2 measurements, and the only entry today is buried 3
+// taps deep inside Triage > Health > Weight.
+//
+// Each chip computes its OWN staleness rule and renders ONLY when
+// stale. A chip that's fresh (recently logged) disappears, so the
+// strip stays uncluttered.
+//
+// SRR is breed-conditional — only surfaced for HCM-risk breeds.
+// Source: AAFP / ACVIM consensus on hereditary feline cardiomyopathy.
+const HCM_RISK_BREEDS = new Set([
+  'maine coon',
+  'ragdoll',
+  'sphynx',
+  'persian',
+  'british shorthair',
+  'british longhair',
+  'bengal',
+  'norwegian forest',
+  'siberian',
+]);
+
+function isHcmRiskBreed(breed: string | null | undefined): boolean {
+  if (!breed) return false;
+  const key = breed.toLowerCase().trim();
+  if (HCM_RISK_BREEDS.has(key)) return true;
+  for (const name of HCM_RISK_BREEDS) {
+    if (key.includes(name)) return true;
+  }
+  return false;
+}
+
+/** Days since the most recent event of a given type for this cat. */
+function daysSinceLastEvent(
+  events: HealthEvent[],
+  catId: string,
+  type: HealthEvent['type'],
+): number | null {
+  let mostRecent = 0;
+  for (const e of events) {
+    if (e.cat_id !== catId || e.type !== type) continue;
+    const ms = new Date(e.ts).getTime();
+    if (ms > mostRecent) mostRecent = ms;
+  }
+  if (mostRecent === 0) return null;
+  return Math.floor((Date.now() - mostRecent) / (24 * 60 * 60 * 1000));
+}
+
+type TrackerChip = {
+  key: 'weight' | 'water' | 'litter' | 'srr';
+  icon: React.ReactNode;
+  label: string;
+  /** Sub-line shown below the label. "12 days ago" / "Never logged". */
+  subline: string;
+  /** When true, this chip is the most urgent — highlighted. */
+  urgent: boolean;
+  /** Route to deep-link to. */
+  route: string;
+};
 
 export function DailyCheckinCard() {
   const t = useTheme();
@@ -80,6 +157,89 @@ export function DailyCheckinCard() {
     if (!cat) return 0;
     return dailyCheckinStreak(events.filter((e) => e.cat_id === cat.id));
   }, [events, cat]);
+
+  // ─── Track-more chips ──────────────────────────────────────────
+  // Compute stale-only chip set. Each rule:
+  //   - weight: never logged OR > 14 days since last
+  //   - water: never logged OR > 14 days
+  //   - litter: never logged OR > 7 days (more frequent because
+  //     baseline shifts faster — daily-ish for healthy cats)
+  //   - srr: HCM-risk breed only; never logged OR > 30 days
+  // Urgent chips get a brighter outline; "never logged" is always
+  // urgent because the corresponding drift card can't even fire
+  // without one data point.
+  const trackerChips: TrackerChip[] = useMemo(() => {
+    if (!cat) return [];
+    const out: TrackerChip[] = [];
+    const dWeight = daysSinceLastEvent(events, cat.id, 'weight');
+    const dWater = daysSinceLastEvent(events, cat.id, 'water_intake');
+    const dLitter = daysSinceLastEvent(events, cat.id, 'litter_box_use');
+    const dSrr = daysSinceLastEvent(events, cat.id, 'srr_measurement');
+    const showWeight = dWeight == null || dWeight > 14;
+    const showWater = dWater == null || dWater > 14;
+    const showLitter = dLitter == null || dLitter > 7;
+    const isAtRisk = isHcmRiskBreed(cat.breed);
+    const showSrr = isAtRisk && (dSrr == null || dSrr > 30);
+    const subline = (d: number | null) =>
+      d == null ? 'Never logged' : `${d} day${d === 1 ? '' : 's'} ago`;
+    if (showWeight) {
+      out.push({
+        key: 'weight',
+        icon: <Scales size={18} color={t.primary700} weight="duotone" />,
+        label: 'Weight',
+        subline: subline(dWeight),
+        urgent: dWeight == null,
+        route: '/health/weight',
+      });
+    }
+    if (showWater) {
+      out.push({
+        key: 'water',
+        icon: <Drop size={18} color={t.primary700} weight="duotone" />,
+        label: 'Water',
+        subline: subline(dWater),
+        urgent: dWater == null,
+        // Water lives on the CKD screen — no dedicated /health/water yet.
+        route: '/health/ckd',
+      });
+    }
+    if (showLitter) {
+      out.push({
+        key: 'litter',
+        icon: <Toilet size={18} color={t.primary700} weight="duotone" />,
+        label: 'Litter',
+        subline: subline(dLitter),
+        urgent: dLitter == null,
+        route: '/health/litter',
+      });
+    }
+    if (showSrr) {
+      out.push({
+        key: 'srr',
+        icon: <Heartbeat size={18} color={t.primary700} weight="duotone" />,
+        label: 'Resp rate',
+        subline: subline(dSrr),
+        // SRR for at-risk breeds is genuinely high-leverage (early
+        // HCM detection) — always urgent when stale.
+        urgent: true,
+        route: '/health/srr',
+      });
+    }
+    return out;
+  }, [events, cat, t.primary700]);
+
+  // Strip default-expanded only when the first chip is "never logged"
+  // (so first-time discovery happens naturally). Once the user has
+  // logged any of them, the strip collapses by default to keep the
+  // Today tab clean. User can re-expand any time.
+  const anyNeverLogged = trackerChips.some((c) => c.subline === 'Never logged');
+  const [stripOpen, setStripOpen] = useState<boolean>(false);
+  // First render: open if any chip is never-logged. Use a ref-like
+  // initialiser pattern via useMemo + state to set it once.
+  React.useEffect(() => {
+    if (anyNeverLogged) setStripOpen(true);
+    // Only run on mount + when the never-logged status flips.
+  }, [anyNeverLogged]);
 
   const [open, setOpen] = useState(false);
   const [mood, setMood] = useState<Mood | null>(null);
@@ -176,9 +336,14 @@ export function DailyCheckinCard() {
             ],
           );
         } else if (tierChanged && isPositive) {
+          // Pronoun helper drives "she's / he's / they're" so the
+          // message matches the cat's set sex. Pre 2026-05-09 this
+          // hardcoded "she's" — wrong for male cats.
+          const subj = getPronouns(cat.sex).subject;
+          const verb = subj === 'they' ? 'they’ve' : `${subj}’s`;
           Alert.alert(
             `${cName} seems to be recovering 🎉`,
-            `${cName}’s score moved out of "${labelForTier(adjusted.baselineTier)}". Run a fresh scan to confirm she’s fully bounced back, or keep checking in.`,
+            `${cName}’s score moved out of "${labelForTier(adjusted.baselineTier)}". Run a fresh scan to confirm ${verb} fully bounced back, or keep checking in.`,
             [
               { text: 'Maybe later', style: 'cancel' },
               { text: 'Scan now', onPress: () => router.push('/scan') },
@@ -195,9 +360,11 @@ export function DailyCheckinCard() {
           );
         } else if (adjusted.suggestRescan && isPositive) {
           // Multiple positive check-ins stacked — gentle prompt for new scan.
+          const subj = getPronouns(cat.sex).subject;
+          const verb = subj === 'they' ? 'they’ve' : `${subj}’s`;
           Alert.alert(
             `${cName} seems much better 🐈‍⬛`,
-            'Want to run a fresh scan to confirm she’s fully bounced back?',
+            `Want to run a fresh scan to confirm ${verb} fully bounced back?`,
             [
               { text: 'Maybe later', style: 'cancel' },
               { text: 'Scan now', onPress: () => router.push('/scan') },
@@ -275,6 +442,95 @@ export function DailyCheckinCard() {
           ) : null}
         </View>
       </Pressable>
+
+      {/* ─── Track-more chip strip ─────────────────────────────────
+          Only renders when there's at least one stale tracker. The
+          strip is the bridge from the daily 10-second habit to the
+          weekly/monthly trackers (weight, water, litter, SRR) that
+          Health Rhythm depends on but the current UX buries 3 taps
+          deep in Triage. Each chip deep-links into its existing
+          dedicated screen — no new destinations, just discovery. */}
+      {trackerChips.length > 0 ? (
+        <View style={styles.stripWrap}>
+          <Pressable
+            onPress={() => setStripOpen((v) => !v)}
+            hitSlop={8}
+            style={styles.stripHeader}
+            accessibilityRole="button"
+            accessibilityLabel={
+              stripOpen
+                ? `Hide track-more options for ${cat.name}`
+                : `Track more about ${cat.name} this week, ${trackerChips.length} option${trackerChips.length === 1 ? '' : 's'} available`
+            }
+          >
+            <Text
+              token="caption"
+              style={{
+                flex: 1,
+                color: t.textSecondary,
+                fontFamily: 'Figtree_600SemiBold',
+                letterSpacing: 0.4,
+                textTransform: 'uppercase',
+                fontSize: 11,
+              }}
+            >
+              Track more about {cat.name} this week
+              {trackerChips.length > 0 ? ` (${trackerChips.length})` : ''}
+            </Text>
+            {stripOpen ? (
+              <CaretDown size={14} color={t.textMuted} weight="bold" />
+            ) : (
+              <CaretRight size={14} color={t.textMuted} weight="bold" />
+            )}
+          </Pressable>
+
+          {stripOpen ? (
+            <View style={styles.chipRow}>
+              {trackerChips.map((chip) => (
+                <Pressable
+                  key={chip.key}
+                  onPress={() => router.push(chip.route as never)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${chip.label} — ${chip.subline}. Tap to log.`}
+                  style={({ pressed }) => [
+                    styles.chip,
+                    {
+                      backgroundColor: chip.urgent ? t.primary50 : t.surface,
+                      borderColor: chip.urgent ? t.primary300 : t.borderSubtle,
+                      opacity: pressed ? 0.85 : 1,
+                    },
+                  ]}
+                >
+                  <View style={styles.chipIconRow}>
+                    {chip.icon}
+                    <Text
+                      token="caption"
+                      style={{
+                        marginLeft: 6,
+                        color: t.textPrimary,
+                        fontFamily: 'Figtree_600SemiBold',
+                        fontSize: 13,
+                      }}
+                    >
+                      {chip.label}
+                    </Text>
+                  </View>
+                  <Text
+                    token="caption"
+                    style={{
+                      marginTop: 2,
+                      color: chip.urgent ? t.primary700 : t.textMuted,
+                      fontSize: 11,
+                    }}
+                  >
+                    {chip.subline}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+        </View>
+      ) : null}
 
       <Modal
         visible={open}
@@ -491,5 +747,33 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // ─── Track-more strip ──────────────────────────────────────────
+  stripWrap: {
+    marginTop: space[2],
+  },
+  stripHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: space[2],
+    paddingHorizontal: space[1],
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: space[2],
+    marginTop: 2,
+  },
+  chip: {
+    flexGrow: 1,
+    flexBasis: '47%',
+    paddingVertical: space[2],
+    paddingHorizontal: space[3],
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  chipIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });

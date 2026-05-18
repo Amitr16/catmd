@@ -397,6 +397,54 @@ export async function fireStreakMilestoneNotification(opts: {
  * alarming.
  */
 /**
+ * Morning Mew — daily 8:00 AM push that fires a cat-voice morning
+ * greeting. Body is picked from today's mood (lottery resolved at
+ * scheduling time using archetype + today's signals + user feedback)
+ * so the lockscreen line MATCHES the day's mood the cat is in.
+ *
+ * IMPORTANT: this is a RECURRING daily trigger — same line repeats
+ * if the mood doesn't change. For per-day mood variation in the
+ * notification body, the app should cancel + re-schedule each evening
+ * when the next day's mood becomes computable. For Phase 1 (ships
+ * today, simple), the recurring schedule uses the mood at install/
+ * schedule time. Acceptable tradeoff — the cat's voice register is
+ * still mood-shaped; the line just won't re-roll until the schedule
+ * is refreshed.
+ *
+ * Phase 2 will cancel + re-arm nightly so each morning's notification
+ * body reflects tomorrow's freshly-rolled mood.
+ *
+ * Caller (notification-settings toggle, or onboarding completion)
+ * is responsible for cancelling the prior id before re-arming so the
+ * user doesn't get duplicate 8 AM pings.
+ */
+export async function setMorningMewReminder(opts: {
+  catName: string;
+  catId: string;
+  hour?: number;
+  minute?: number;
+  body?: string;
+}): Promise<string | null> {
+  const hour = opts.hour ?? 8;
+  const minute = opts.minute ?? 0;
+  // Body provided by caller (typically the result of
+  // pickMorningGreeting for today's mood). Fallback is generic but
+  // still on-brand.
+  const body = opts.body ?? `Tap to see what ${opts.catName} has to say.`;
+  return scheduleDailyAt({
+    hour,
+    minute,
+    title: `${opts.catName} is awake`,
+    body,
+    data: {
+      route: '/daily-card',
+      catId: opts.catId,
+      kind: 'morning_mew',
+    },
+  });
+}
+
+/**
  * Daily Postcard reminder — fires every evening at 19:00 local phone
  * time. Different from the diary reminder: postcards are about photos
  * (social-share moment), diary is about reflection. Both can fire on
@@ -469,52 +517,74 @@ export async function setDailyDiaryReminder(opts: {
   });
 }
 
+// `setCatVoiceEveningPush` was REMOVED 2026-05-09 with the 7pm-gate
+// diary-writing redesign. It used to schedule a per-day 19:00 push
+// with the entry's highlight as body, predicated on the entry being
+// generated EARLIER in the day. Under the 7pm gate, entries can
+// only be generated at or after 19:00 — meaning the push would land
+// at tomorrow 19:00 with TODAY's highlight, mistiming content vs day.
+// Replaced by `setDailyDiaryReminders` (below) which schedules a
+// 7-day rolling window of generic "diary is waiting" pushes; the
+// user taps one and the entry generates fresh on screen open.
+
 /**
- * Cat-voice evening push — fires TONIGHT at 19:00 (or tomorrow if it's
- * already past 19:00) with an actual cat-voice 1-liner as the body.
+ * Daily Diary reminder — schedules a 7-day rolling window of generic
+ * "Lily's diary is waiting" pushes at 19:00 local time.
  *
- * This is the Co-Star-style lock-screen-shareable push (per
- * marketing/chat-as-viral-lever.md §2). Unlike `setDailyDiaryReminder`
- * which uses a static "Lily has thoughts about today" body, this one
- * pulls a punchy one-liner from today's freshly-generated diary entry
- * and renders THAT as the body — so the lock-screen reads:
+ * ── Why a 7-day window vs perma-recurring ──────────────────────────
+ * If we used a perma-recurring trigger (`{ hour: 19, repeats: true }`),
+ * users who stop opening the app keep getting pushes forever, which
+ * Android demotes the channel for (3-4 ignored pushes → automatic
+ * importance downgrade → never recoverable). Worse: the user mutes
+ * the app entirely. The 7-day rolling window solves this: every
+ * time the user opens the app, we re-arm 7 days of pushes; if they
+ * stop opening, the tail expires and pushes go silent.
  *
- *   Lily
- *   "The bird at the window was unreasonable for thirty seconds."
+ * ── Why generic body, not entry highlight ──────────────────────────
+ * Pre 2026-05-09 the cat-voice push body carried the entry's
+ * highlight ("The bird at the window was unreasonable for thirty
+ * seconds"). Under the new 7pm-gate diary design, entries can ONLY
+ * be generated at or after 19:00 — meaning today's 19:00 has
+ * already passed by the time we'd schedule. The push would land at
+ * tomorrow 19:00 with TODAY's highlight, mistiming content vs the
+ * day. So the body is now generic; user taps it and the diary
+ * generates fresh on screen open. Daily ritual, not stale recap.
  *
- * The user can screenshot the lock screen and send it as-is. That's
- * the viral mechanic: every push notification doubles as shareable
- * content that recruits the next user.
- *
- * Caller is responsible for cancelling any prior `cat_voice_evening`
- * id before re-arming. Typically called from `generateForToday()` in
- * the diary store, right after a fresh entry lands.
+ * ── Caller contract ────────────────────────────────────────────────
+ * Caller cancels any prior reminder IDs (from notifPrefsStore's
+ * `getDiaryReminderIds`) before calling this, then stores the
+ * returned array via `setDiaryReminderIds`. Typically called once
+ * per app foreground / boot, debounced.
  */
-export async function setCatVoiceEveningPush(opts: {
-  catName: string;
+export async function setDailyDiaryReminders(opts: {
   catId: string;
-  oneLiner: string;
-}): Promise<string | null> {
-  // Compute next 19:00 — today if still upcoming, else tomorrow.
-  const fireAt = new Date();
-  fireAt.setHours(19, 0, 0, 0);
-  if (fireAt.getTime() <= Date.now() + 60 * 1000) {
-    fireAt.setDate(fireAt.getDate() + 1);
+  catName: string;
+}): Promise<string[]> {
+  const ids: string[] = [];
+  const now = new Date();
+  // Schedule for the next 7 days at 19:00 local. If today's 19:00
+  // hasn't passed, day 0 = today; otherwise day 0 = tomorrow.
+  const dayZero = new Date();
+  dayZero.setHours(19, 0, 0, 0);
+  if (dayZero.getTime() <= now.getTime() + 60 * 1000) {
+    dayZero.setDate(dayZero.getDate() + 1);
   }
-  return scheduleOneTimeAt({
-    fireAt,
-    title: opts.catName,
-    body: opts.oneLiner,
-    data: {
-      // Land on the designed daily-card screen (not the diary
-      // screen) — that's the polished surface where the same line
-      // the user saw on the lock screen is presented as a
-      // shareable card. See marketing/chat-as-viral-lever.md §3.
-      route: '/daily-card',
-      catId: opts.catId,
-      kind: 'cat_voice_evening',
-    },
-  });
+  for (let i = 0; i < 7; i++) {
+    const fireAt = new Date(dayZero);
+    fireAt.setDate(fireAt.getDate() + i);
+    const id = await scheduleOneTimeAt({
+      fireAt,
+      title: opts.catName,
+      body: `${opts.catName}'s diary is waiting — open to read today's entry.`,
+      data: {
+        route: '/diary',
+        catId: opts.catId,
+        kind: 'diary_reminder',
+      },
+    });
+    if (id) ids.push(id);
+  }
+  return ids;
 }
 
 /**

@@ -18,7 +18,21 @@
  */
 
 const CONTACT_EMAIL = 'support@catmd.pet';
-const PLAY_TEST_URL = 'https://play.google.com/apps/testing/com.catmd.app';
+// Production Play Store listing — went live 2026-05-14 with v0.1.21 (vc 94).
+// Pre-launch this was 'https://play.google.com/apps/testing/com.catmd.app'
+// (the closed-beta opt-in link). Now public.
+//
+// All CTAs that take a user to the Play Store should use the UTM-tagged
+// `buildPlayStoreUrl(...)` helper so the install referrer SDK can
+// attribute installs to the source page. The bare constant below is
+// kept ONLY for schema.org JSON-LD blocks (downloadUrl / installUrl /
+// sameAs) where Google's app-indexing guidelines want a clean URL.
+import {
+  buildPlayStoreUrl,
+  renderAnalyticsScripts,
+  renderSearchConsoleMeta,
+} from './seoAndAnalytics';
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.catmd.app';
 const WAITLIST_SUBJ = encodeURIComponent('CatMD waitlist');
 const WAITLIST_BODY = encodeURIComponent(
   "Hi — add me to the CatMD waitlist.\n\nCat's name:\nPlatform (iOS / Android):\nHow you heard about CatMD:",
@@ -32,12 +46,12 @@ export function renderLandingPage(): string {
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#FAF7F2" />
 <title>CatMD — Your cat, in their own voice. AI cat care app.</title>
-<meta name="description" content="The more you use it, the more it becomes your cat. Diary, postcards, daily card, and chat all in your cat's own voice — plus body-language reads and vet-grade triage when something feels off. Built for cats only. By cat people." />
+<meta name="description" content="The more you use it, the more it becomes your cat. Diary, postcards, chat, and the new multimodal Meow Translator all in your cat's own voice — plus body-language reads and vet-grade triage when something feels off. Built for cats only. By cat people." />
 
 <!-- Open Graph / Twitter card -->
 <meta property="og:site_name" content="CatMD" />
 <meta property="og:title" content="CatMD — Your cat, in their own voice." />
-<meta property="og:description" content="The more you use it, the more it becomes your cat. Diary, postcards, daily card and chat all in their own voice. Plus body-language reads and vet-grade triage. Built for cats only." />
+<meta property="og:description" content="The more you use it, the more it becomes your cat. Diary, postcards, chat, and the new multimodal Meow Translator all in their own voice. Plus body-language reads and vet-grade triage. Built for cats only." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://catmd.pet" />
 <meta name="twitter:card" content="summary_large_image" />
@@ -48,6 +62,9 @@ export function renderLandingPage(): string {
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='20' fill='%233F6456'/%3E%3Cpath d='M16 22 L20 10 L26 24 Z' fill='%233F6456'/%3E%3Cpath d='M48 22 L44 10 L38 24 Z' fill='%233F6456'/%3E%3Ccircle cx='26' cy='32' r='2.4' fill='%23FAF7F2'/%3E%3Ccircle cx='38' cy='32' r='2.4' fill='%23FAF7F2'/%3E%3Cpath d='M30 38 Q32 41 34 38' stroke='%23FAF7F2' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E" />
 
 <link rel="canonical" href="https://catmd.pet/" />
+
+${renderSearchConsoleMeta()}
+${renderAnalyticsScripts()}
 
 <!-- Preconnect for fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -108,7 +125,7 @@ export function renderLandingPage(): string {
   'url': 'https://catmd.pet',
   'downloadUrl': 'https://play.google.com/store/apps/details?id=com.catmd.app',
   'installUrl': 'https://play.google.com/store/apps/details?id=com.catmd.app',
-  'softwareVersion': '0.1.4',
+  'softwareVersion': '0.1.21',
   'fileSize': '38MB',
   'inLanguage': 'en',
   'publisher': { '@id': 'https://catmd.pet/#org' },
@@ -119,13 +136,16 @@ export function renderLandingPage(): string {
     'Differential diagnosis ranked by likelihood',
     'Vet-ready summary export',
     'Daily wellness check-ins with responsive scoring',
+    'Multimodal Meow Translator (audio + body language + cat memory)',
+    'Body-language video reader (6-second clip → labeled interpretation)',
+    'Cat Diary written in your cat\'s own voice every evening',
+    'Personality archetype mapping (Feline Five framework)',
     'Citation-backed advice from Merck Vet Manual, Cornell, AAFP, ISFM, ASPCA',
   ],
   'offers': [
-    { '@type': 'Offer', 'price': '0', 'priceCurrency': 'USD', 'name': 'Free tier — 3 scans / month' },
-    { '@type': 'Offer', 'price': '69', 'priceCurrency': 'USD', 'name': 'Pro Annual (7-day free trial)' },
-    { '@type': 'Offer', 'price': '12.99', 'priceCurrency': 'USD', 'name': 'Pro Monthly' },
-    { '@type': 'Offer', 'price': '199', 'priceCurrency': 'USD', 'name': 'Pro Lifetime (first 1,000 users)' },
+    { '@type': 'Offer', 'price': '0', 'priceCurrency': 'USD', 'name': '14-day free trial — full Pro access' },
+    { '@type': 'Offer', 'price': '79.99', 'priceCurrency': 'USD', 'name': 'Pro Annual' },
+    { '@type': 'Offer', 'price': '9.99', 'priceCurrency': 'USD', 'name': 'Pro Monthly' },
   ],
 })}</script>
 <script type="application/ld+json">${JSON.stringify({
@@ -153,7 +173,7 @@ export function renderLandingPage(): string {
       'name': 'What does CatMD cost?',
       'acceptedAnswer': {
         '@type': 'Answer',
-        'text': "Free tier: 3 scans per month, all flow types included. Pro Annual: $69/year (about $5.75/month) with a 7-day free trial. Pro Monthly: $12.99/month. Pro Lifetime: $199 one-time, limited to the first 1,000 users.",
+        'text': "14-day free trial with full Pro access — unlimited scans, every feature unlocked, no card on file. After trial: Pro Annual $79.99/year (about $6.67/month) or Pro Monthly $9.99/month. Cancel anytime.",
       },
     },
     {
@@ -169,7 +189,7 @@ export function renderLandingPage(): string {
       'name': 'When will CatMD be on iOS?',
       'acceptedAnswer': {
         '@type': 'Answer',
-        'text': "Android first (closed beta now, public launch in weeks). iOS follows roughly 2 months after Android public launch, pending Apple review. Join the waitlist to be notified the day the iOS TestFlight opens.",
+        'text': "Android is live on Google Play now. iOS follows roughly 2 months after Android public launch, pending Apple review. Join the waitlist to be notified the day the iOS TestFlight opens.",
       },
     },
   ],
@@ -1211,8 +1231,9 @@ export function renderLandingPage(): string {
       <a href="#how">How it works</a>
       <a href="#features">Features</a>
       <a href="#pricing">Pricing</a>
+      <a href="/blog">Blog</a>
       <a href="#faq">FAQ</a>
-      <a class="cta-mini" href="${PLAY_TEST_URL}">Android beta</a>
+      <a class="cta-mini" href="${buildPlayStoreUrl('landing', 'nav')}">Get on Google Play</a>
     </div>
   </div>
 </nav>
@@ -1221,7 +1242,7 @@ export function renderLandingPage(): string {
 <section class="hero">
   <div class="wrap">
     <div class="hero-copy">
-      <span class="tagline">Closed beta · Android first</span>
+      <span class="tagline">Live on Google Play · Android first</span>
       <h1>Your cat,<br/><em>in their own voice.</em></h1>
       <p class="lede">
         The more you use CatMD, the more it becomes <em>your</em> cat.
@@ -1232,7 +1253,7 @@ export function renderLandingPage(): string {
         feels off. Built for cats only. By cat people.
       </p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="${PLAY_TEST_URL}">Join Android beta</a>
+        <a class="btn btn-primary" href="${buildPlayStoreUrl('landing', 'hero')}">Get on Google Play</a>
         <a class="btn btn-ghost" href="mailto:${CONTACT_EMAIL}?subject=${WAITLIST_SUBJ}&amp;body=${WAITLIST_BODY}">iOS waitlist &rarr;</a>
       </div>
       <div class="meta">
@@ -1672,9 +1693,15 @@ export function renderLandingPage(): string {
 
       <!-- BOND pillar (3) -->
       <div class="feature reveal" data-pillar="bond">
+        <div class="icon-box">🎙️</div>
+        <span class="feature-pillar feature-pillar-bond">Bond</span>
+        <h3>Meow Translator <span class="tag">new</span></h3>
+        <p>4-second video. AI fuses the meow + body language + everything CatMD already knows about your cat into one screenshot-worthy line — in your cat&rsquo;s actual voice, calibrated to their archetype and recent week. <em>Lily says: &ldquo;fine. you may sit on the floor near me. don&rsquo;t talk.&rdquo;</em></p>
+      </div>
+      <div class="feature reveal" data-pillar="bond">
         <div class="icon-box">🎥</div>
         <span class="feature-pillar feature-pillar-bond">Bond</span>
-        <h3>Read your cat <span class="tag">new</span></h3>
+        <h3>Read your cat <span class="tag">live</span></h3>
         <p>6-second video. AI reads body language, vocalisations, and motion blur to tell you what your cat is most likely feeling — playful, hunting, soliciting, annoyed, fearful, content.</p>
       </div>
       <div class="feature reveal" data-pillar="bond">
@@ -1913,25 +1940,15 @@ export function renderLandingPage(): string {
   <div class="wrap">
     <div class="section-head reveal">
       <span class="eyebrow">Pricing</span>
-      <h2>Free during beta. <em>Honest pricing</em> at launch.</h2>
-      <p>Beta testers get full Pro access for free. No card on file. The plans below kick in at public launch.</p>
+      <h2>Simple, <em>honest pricing.</em></h2>
+      <p>Try every Pro feature free for 14 days. After that, choose a plan to keep your cat's voice.</p>
     </div>
     <div class="pricing-grid">
-      <div class="price-card reveal">
-        <span class="price-eyebrow">Free</span>
-        <div class="price-amount">$0</div>
-        <div class="price-cadence">3 scans / month · forever</div>
-        <ul class="price-list">
-          <li>All flow types included</li>
-          <li>Vet-ready PDF export</li>
-          <li>Anonymous, on-device storage</li>
-        </ul>
-      </div>
       <div class="price-card price-card-feature reveal">
         <span class="price-tag">Best value</span>
         <span class="price-eyebrow">Pro Annual</span>
-        <div class="price-amount">$69<span class="price-per">/year</span></div>
-        <div class="price-cadence">≈ $5.75/month · 7-day free trial</div>
+        <div class="price-amount">$79.99<span class="price-per">/year</span></div>
+        <div class="price-cadence">≈ $6.67/month · 14-day free trial</div>
         <ul class="price-list">
           <li>Unlimited scans</li>
           <li>Multi-cat dashboards</li>
@@ -1941,7 +1958,7 @@ export function renderLandingPage(): string {
       </div>
       <div class="price-card reveal">
         <span class="price-eyebrow">Pro Monthly</span>
-        <div class="price-amount">$12.99<span class="price-per">/month</span></div>
+        <div class="price-amount">$9.99<span class="price-per">/month</span></div>
         <div class="price-cadence">cancel anytime</div>
         <ul class="price-list">
           <li>Unlimited scans</li>
@@ -1950,20 +1967,8 @@ export function renderLandingPage(): string {
           <li>Priority emergency-tier model</li>
         </ul>
       </div>
-      <div class="price-card reveal">
-        <span class="price-tag">Founder · 1,000 max</span>
-        <span class="price-eyebrow">Pro Lifetime</span>
-        <div class="price-amount">$199</div>
-        <div class="price-cadence">one-time · forever</div>
-        <ul class="price-list">
-          <li>Everything in Pro Annual, forever</li>
-          <li>Locks in current feature set</li>
-          <li>Limited to first 1,000 supporters</li>
-          <li>For people who want CatMD to exist long-term</li>
-        </ul>
-      </div>
     </div>
-    <p class="pricing-footnote reveal">Prices in USD. Beta is fully free — no card on file, no auto-charge, no shenanigans.</p>
+    <p class="pricing-footnote reveal">Prices in USD. No card on file during the 14-day trial. No auto-charge surprises.</p>
   </div>
 </section>
 
@@ -1985,7 +1990,7 @@ export function renderLandingPage(): string {
       </details>
       <details class="faq-item reveal">
         <summary>What does it cost?</summary>
-        <p>Free tier: 3 scans per month, all flow types included. Pro Annual: $69/year (roughly $5.75/month) with a 7-day free trial. Pro Monthly: $12.99/month. Pro Lifetime: $199, limited to the first 1,000 users. Beta testers get free access during the beta.</p>
+        <p>14-day free trial with full Pro access — unlimited scans, every feature unlocked, no card on file. After trial: Pro Annual $79.99/year (roughly $6.67/month) or Pro Monthly $9.99/month. Cancel anytime.</p>
       </details>
       <details class="faq-item reveal">
         <summary>What happens to my cat's data?</summary>
@@ -1993,7 +1998,7 @@ export function renderLandingPage(): string {
       </details>
       <details class="faq-item reveal">
         <summary>When will CatMD be on iOS?</summary>
-        <p>Android first (closed beta now, public launch in weeks). iOS follows roughly 2 months after Android public launch, pending Apple review and reasonable retention proof on Android. Join the waitlist to be notified the day the iOS TestFlight opens.</p>
+        <p>Android is live on Google Play now. iOS follows roughly 2 months after Android public launch, pending Apple review and reasonable retention proof on Android. Join the waitlist to be notified the day the iOS TestFlight opens.</p>
       </details>
       <details class="faq-item reveal">
         <summary>Who built this?</summary>
@@ -2008,14 +2013,14 @@ export function renderLandingPage(): string {
   <div class="wrap">
     <div class="reveal">
       <h2>Your cat is one of one.<br/><em>Treat them that way.</em></h2>
-      <p>Join the Android closed beta, or the iOS waitlist. Free during beta.</p>
+      <p>Get CatMD on Google Play, or join the iOS waitlist.</p>
     </div>
     <div class="platform-row">
       <div class="platform reveal">
         <span class="p-status">● Live now · Android</span>
-        <h3>Android closed beta</h3>
-        <p>Opt in, install, use freely. Feedback DMed directly to the founder.</p>
-        <a class="btn btn-primary" href="${PLAY_TEST_URL}">Join Android beta</a>
+        <h3>Android — Google Play</h3>
+        <p>Install free, use freely. Feedback DMed directly to the founder.</p>
+        <a class="btn btn-primary" href="${buildPlayStoreUrl('landing', 'final_cta')}">Get on Google Play</a>
       </div>
       <div class="platform coming reveal">
         <span class="p-status">○ Coming soon · iOS</span>

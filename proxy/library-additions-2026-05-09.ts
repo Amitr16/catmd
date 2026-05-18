@@ -43,6 +43,10 @@ export const ADDITIONAL_IMAGE_ALTS: Record<string, string> = {
     'A cat reaching up gently toward a returning owner in a doorway, soft warm afternoon light — hero illustration for a guide on feline memory and recognition',
   'how-to-bond-with-cat':
     'Cat and owner sharing a slow blink across a cream-colored sofa in golden afternoon light — hero illustration for a guide on bonding with a cat through daily habits',
+  'how-meow-translators-work':
+    'A cat mid-meow with a phone screen beside it showing a short italic-serif quote in the cat\'s voice — hero illustration for a guide on how modern multimodal meow translators work',
+  'how-body-language-readers-work':
+    'A cat in motion across a soft-focus living room, tail mid-flick and ears mid-rotation — hero illustration for a guide on how AI cat body-language readers analyze multi-channel video',
 };
 
 export const ADDITIONAL_ARTICLES: Article[] = [
@@ -61,7 +65,7 @@ export const ADDITIONAL_ARTICLES: Article[] = [
     relatedSlugs: [
       'cat-tail-language',
       'cat-body-language-ears-whiskers-eyes',
-      'cat-vocalizations-decoded',
+      'how-meow-translators-work',
     ],
     faqs: [
       {
@@ -156,7 +160,7 @@ export const ADDITIONAL_ARTICLES: Article[] = [
 <ul>
 <li><strong>Body-language reader</strong> — upload a 6-second video, get a labeled interpretation: tail / ears / eyes / posture / motion / most-likely emotion / what-to-do-next. Specific to your clip, not a default.</li>
 <li><strong>Triage scan</strong> — describe a symptom or upload a photo, get a 0-99 severity score and an urgency tier (routine / monitor / concern / urgent). Always flags serious patterns to a vet.</li>
-<li><strong>Personality + memory layer</strong> — the app builds a profile of your cat (archetype, baseline behavior, household members, environment objects she lives with), and uses that profile to make every reading more specific over time. After a few weeks, it\'s not interpreting "a cat" — it\'s interpreting <em>your</em> cat.</li>
+<li><strong>Personality + memory layer</strong> — the app builds a profile of your cat (archetype, baseline behavior, household members, environment objects she lives with), and uses that profile to make every reading more specific over time. After a few weeks, it\'s not interpreting "a cat" — it\'s interpreting <em>your</em> cat. (For a broader look at <a href="/library/what-is-my-cat-thinking-ai-apps">AI apps that try to read what your cat is thinking</a>, see our explainer.)</li>
 </ul>
 
 <p>It\'s free to start, anonymous-first (no signup required), and the cat-voice diary it writes about your day every evening at 7pm is — depending on who you ask — either the most useful or the most uncomfortable thing on your phone.</p>
@@ -387,7 +391,7 @@ export const ADDITIONAL_ARTICLES: Article[] = [
 
 <h3>6. Vocalize in your normal voice</h3>
 
-<p>Cats recognize their owner\'s voice with statistical reliability — even when they don\'t outwardly respond. The "cat voice" some humans default to (high-pitched, baby-talk) is less effective than your normal speech in maintaining recognition. Talk to your cat in your everyday register about everyday things. Some cats learn to respond to specific phrases ("dinner," "outside," "bed time") as cue words, even without explicit training.</p>
+<p>Cats recognize their owner\'s voice with statistical reliability — even when they don\'t outwardly respond. The "cat voice" some humans default to (high-pitched, baby-talk) is less effective than your normal speech in maintaining recognition. Talk to your cat in your everyday register about everyday things. Some cats learn to respond to specific phrases ("dinner," "outside," "bed time") as cue words, even without explicit training. (For the full picture of <a href="/library/do-cats-remember-owners">whether cats remember their owners across long separations</a> — and the four kinds of feline memory at play — see our dedicated guide.)</p>
 
 <p>Volume matters less than consistency. Your cat is filing the rhythm and tone of you. Random changes (loud frustration outbursts, sudden silence after weeks of chatter) read as instability and undermine the bond. Steady, calm chatter, even talking to yourself, builds it.</p>
 
@@ -435,4 +439,259 @@ export const ADDITIONAL_ARTICLES: Article[] = [
 <p>If you want help with the daily-tracking habit specifically, apps like CatMD turn the daily check-in into a 10-second tap (mood + appetite + a photo, optional), and turn the patterns into a once-a-week reading you can look at. The cat keeps a diary in her own voice; you keep a record. Both compound into something neither of you could remember alone.</p>
 `,
   },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 4. How meow translators work — multimodal explainer
+  // Updated 2026-05-11: factual corrections — CatMeows is Ludovico et al
+  // 2020 (Pandeya 2018 is a separate dataset, sometimes called CatSound);
+  // CatMeows contains 440 vocalisations from 21 cats, not "thousands";
+  // Feline Five (Litchfield 2017 PLOS ONE) was developed using cats
+  // living in homes, not originally for shelter assessment.
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    slug: 'how-meow-translators-work',
+    title: 'AI Cat Translator: How Meow Translation Apps Actually Work (and Why Some Read Your Specific Cat)',
+    description:
+      'AI cat translator explained — how multimodal meow translation apps use audio, body language, and per-cat memory to interpret cat vocalizations in your cat\'s specific voice. Compares MeowTalk, CatGPT, and CatMD.',
+    datePublished: '2026-05-10',
+    dateModified: '2026-05-11',
+    readMinutes: 8,
+    primaryKeyword: 'meow translator apps',
+    relatedSlugs: [
+      'why-does-my-cat-meow-at-me',
+      'cat-vocalizations-decoded',
+      'how-body-language-readers-work',
+      'what-is-my-cat-thinking-ai-apps',
+    ],
+    faqs: [
+      {
+        question: 'Do meow translator apps actually work?',
+        answer:
+          'Audio-only translators classify meows into fixed labels like "Happy/Content" or "Hunting," which are generic across all cats. Modern multimodal translators add body language and per-cat memory, producing personalized interpretations of what your specific cat might be saying rather than categorical outputs.',
+      },
+      {
+        question: 'Is the AI actually translating, or guessing?',
+        answer:
+          'These systems interpret rather than translate. Cats lack structured language with one-to-one sound-meaning mappings. Apps analyze audio, body signals (ear position, tail movement, pupil dilation, posture), and cat-specific knowledge to generate plausible inner-monologue lines — similar to how a knowledgeable cat person would read a cat.',
+      },
+      {
+        question: 'Why does the same meow give different translations for different cats?',
+        answer:
+          'Audio represents only one of three inputs in multimodal systems. Body language and per-cat memory vary by cat. A Velcro-Cat and a Cool-Observer producing identical sounds and postures receive different interpreted lines based on their personality archetypes.',
+      },
+      {
+        question: 'What about distress sounds — can these apps flag emergencies?',
+        answer:
+          'Better translators classify distress intent when audio and body language indicate pain, fear, or acute stress, directing owners toward symptom triage rather than screenshot-worthy outputs. Distress flags represent behavioral observations, not clinical diagnoses — veterinary examination determines cause.',
+      },
+      {
+        question: 'How accurate is the vocalisation classification underneath?',
+        answer:
+          'Research datasets like CatMeows (Ludovico et al, 2020 — 440 vocalisations from 21 cats) and the CatSound dataset (Pandeya et al, MDPI Applied Sciences 2018) demonstrate machine classifiers can distinguish core vocalization types — meow, trill, chirp, purr, hiss, growl, yowl, chatter — with accuracy comparable to human listeners on isolated clips. Intent classification improves significantly when body-language and memory context are added — context audio-only systems cannot access.',
+      },
+    ],
+    bodyHtml: `
+<p>Cat translator apps have been on the App Store for over a decade. Most of them work the same way — record a meow, run it through an audio classifier, return one of about a dozen fixed labels. "Happy/Content." "Hunting." "Resting." Useful as a novelty for a week, then they stop being interesting. The label is the same for every cat in every household, and there is nothing to share with a friend.</p>
+
+<p>A new generation of <strong>multimodal meow interpreters</strong> works differently — they capture short video instead of audio alone, fuse the meow with body language and per-cat memory, and return one interpretive line in the cat\'s specific voice. This piece explains how that pipeline works under the hood, why the output is qualitatively different, and what the underlying research actually says.</p>
+
+<h2>The audio-only generation — what it does, where it stops</h2>
+
+<p>The classic cat-translator app does one thing well: it records a meow, transforms the waveform into a spectrogram, and runs a classifier that maps the spectrogram to one of roughly ten to thirteen vocalisation categories. The classifier is usually trained on a published dataset of labelled cat vocalisations.</p>
+
+<p>Two of the most-cited research datasets are the <strong>CatSound</strong> dataset (Pandeya et al, <em>MDPI Applied Sciences</em>, 2018) — a ten-class set of around 3,000 cat-sound samples covering states like resting, hunting, mating, defending, and paining — and <strong>CatMeows</strong> (Ludovico et al, 2020), which contains 440 vocalisations from 21 cats across three controlled contexts: brushing, isolation in an unfamiliar environment, and waiting for food. Audio-only classifiers built on these and related corpora can distinguish vocalisation context with accuracy in the 80-95% range on their own test splits.</p>
+
+<p>The datasets and the classifiers are real and useful. The limitation is structural: the output of an audio-only classifier is a CATEGORY, not a SENTENCE. The model can tell you the meow falls in the "isolated" cluster or the "waiting for food" cluster — it cannot tell you what your cat would plausibly be saying about that situation, because it has no information about your cat as an individual.</p>
+
+<p>This is why audio-only interpreters plateau. The category is the same on day one as on day three hundred. There is nothing to compound.</p>
+
+<h2>The multimodal generation — three inputs, one output</h2>
+
+<p>A modern multimodal meow interpreter captures four seconds of <em>video</em> instead of audio alone. That single change unlocks two additional input channels.</p>
+
+<h3>Channel 1 — Audio</h3>
+
+<p>Same as before: the meow is transcribed (often via Whisper or a similar speech-to-text model running over the vocalisation) and classified into one of the ten or so vocalisation types — meow, trill, chirp, purr, hiss, growl, yowl, chatter, silent (no audio, body-only read), other. The intent gets a similar classification: greeting, demand for food, demand for attention, annoyed, playful, comfort-seeking, warning, distress, curious, self-soothing.</p>
+
+<p>This is the same engineering audio-only interpreters have always done. It is necessary, not sufficient.</p>
+
+<h3>Channel 2 — Body language</h3>
+
+<p>The four-second video lets the model see what the cat is doing across time, not just what the cat sounds like at one moment. Posture, ear position, tail movement, pupil dilation, motion patterns. The body-language signal carries roughly half of cat communication on its own — see the existing guide on <a href="/library/cat-body-language-ears-whiskers-eyes">reading ears, whiskers, eyes, and posture</a> and the companion piece on <a href="/library/cat-tail-language">tail language</a> for the full inventory.</p>
+
+<p>Pairing audio with body language resolves ambiguities the audio cannot resolve alone. The same yowl can be a territorial warning, a mating call, or pain depending on what the cat\'s body is doing while it yowls. A meow with a tail-up greeting posture means something different from the same meow with a defensive crouch and dilated pupils. The body-language channel is what makes the interpretation contextual instead of categorical.</p>
+
+<h3>Channel 3 — Per-cat memory</h3>
+
+<p>This is the channel audio-only interpreters do not have at all. A modern multimodal app maintains a structured memory of the specific cat — name, breed, personality archetype, recent diary entries, recent triage flags, what the cat ate yesterday, who the named family members in the household are, whether there has been a recent vet visit.</p>
+
+<p>The personality archetype matters most. Different cats with the same physical signal would say different things, in different registers. A worked example — same posture, same meow, two cats:</p>
+
+<blockquote style="margin: 1.2em 0; padding: 0.6em 1em; border-left: 4px solid var(--sage, #3F6456); font-style: italic; font-family: Georgia, serif; font-size: 1.05em;">A Velcro-Cat would say: "i missed you. the chair held the shape of you. lap."</blockquote>
+
+<blockquote style="margin: 1.2em 0; padding: 0.6em 1em; border-left: 4px solid var(--sage, #3F6456); font-style: italic; font-family: Georgia, serif; font-size: 1.05em;">A Cool-Observer in the same physical state would say: "yes. i hear the thing. it is beneath my dignity to react."</blockquote>
+
+<p>The audio is identical. The body language is identical. The per-cat memory layer is what produces two completely different interpreted lines. This is why modern interpreters feel personal in a way audio-only ones never did — because they are. The five-archetype framework most multimodal apps draw on is the <strong>Feline Five</strong> (Litchfield et al, <em>PLOS ONE</em>, 2017), a peer-reviewed personality model developed from a survey of more than 2,800 cats living in homes.</p>
+
+<h2>What "fuse the three channels into one line" actually means</h2>
+
+<p>The fusion step is where multimodal AI does its work. The audio classification, the body-language read, and the per-cat memory all become inputs to a large language model — typically a multimodal model in the GPT-4o or Gemini family — with a prompt that asks: given this audio, this body language, and this cat\'s profile, what is one short line this specific cat would plausibly be saying right now, in their voice.</p>
+
+<p>The model returns a single sentence, typically 40 to 160 characters, in the first person, ending with a period. Honest apps add hard rules to the prompt to prevent generic outputs — if the line could plausibly be applied to any cat, it gets regenerated. The output is calibrated for one thing: the screenshot. A short, specific, in-voice line that the owner will send to a friend and that the friend will instantly recognise as belonging to that specific cat.</p>
+
+<h2>Why the output gets sharper over time</h2>
+
+<p>The per-cat memory layer compounds. Every interaction the cat has with the app — every diary entry, every photo tagged with named people, every triage scan, every previous translation — becomes context for the next translation. After a few weeks of use, a multimodal interpreter knows things about your cat that no audio-only system can ever access: the name of the human the cat sleeps near, the brand of food the cat refused last week, the eye that was inflamed three weeks ago.</p>
+
+<p>Those facts get woven into the interpreted lines when they are relevant. A meow in a posture that suggests discomfort, in a cat with a recent eye-triage flag, might come back as <em>"i am purring but i am not okay. eye still hurts. stay close."</em> instead of a generic discomfort label. The line is interpretation, not diagnosis — but it is interpretation that points the owner toward a specific thing to watch.</p>
+
+<h2>What modern interpreters do not claim</h2>
+
+<p>The honest framing matters. Multimodal interpreters do not <em>decode</em> cat language — cats do not have a structured language with a one-to-one mapping between sounds and meanings. They <em>interpret</em>, in the same sense a thoughtful cat-savvy friend interprets when reading your cat across the room. The output is plausible inner-monologue, anchored on real signals (audio, body language, history), but it is not a transcription.</p>
+
+<p>The other thing they do not claim is clinical diagnosis. When the body-language read or the audio classifier flags distress, a well-designed app routes the owner toward symptom triage rather than producing a screenshot-worthy line. The flag is a behavioural observation worth investigating. The diagnosis is the vet\'s call.</p>
+
+<h2>What this changes day-to-day</h2>
+
+<p>For owners who used audio-only interpreters years ago and abandoned them after the novelty wore off, the relevant update is: the underlying technology has changed enough that the experience is different. The label is gone, replaced by a line. The line is in your specific cat\'s voice instead of in a generic register. The output gets more specific the longer you use the app, because the per-cat memory compounds.</p>
+
+<p>None of this replaces the fundamental cat-reading skills. The vocalisation vocabulary covered in the existing piece on <a href="/library/cat-vocalizations-decoded">how to read your cat\'s sounds</a> is still the foundational literacy, and the <a href="/library/cat-body-language-ears-whiskers-eyes">body-language guide</a> is still the day-to-day reference. A multimodal interpreter is not a substitute for learning to read your own cat. It is a way to compress moments your cat is already showing you into something you can save and share.</p>
+
+<p>Two cats in the same household with two different archetypes will, over time, develop two distinct voices in a multimodal interpreter that audio-only systems would have given identical labels. That is the difference, and it is the reason the second generation of these apps is worth a fresh look.</p>
+`,
+  },
+  // ─────────────────────────────────────────────────────────────────────────
+  // 5. How body-language readers work — multi-channel explainer (2026-05-11)
+  //
+  // Companion piece to how-meow-translators-work. Both articles use the
+  // same "what audio-only / single-channel apps miss, what multimodal
+  // adds" structure so they read as a pair. Sourced from cat-ethology
+  // literature: Bradshaw, Ellis, Delgado are all real cat-behaviour
+  // researchers.
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    slug: 'how-body-language-readers-work',
+    title: 'How Modern Cat Body-Language Readers Actually Work — and Why Six Seconds Is the Right Window',
+    description:
+      'How AI cat body-language reader apps analyze tail, ears, eyes, posture, and motion across six-second videos to provide personalized reads of your cat\'s emotional state.',
+    datePublished: '2026-05-11',
+    dateModified: '2026-05-11',
+    readMinutes: 8,
+    primaryKeyword: 'cat body language reader app',
+    relatedSlugs: [
+      'cat-tail-language',
+      'cat-body-language-ears-whiskers-eyes',
+      'how-meow-translators-work',
+    ],
+    faqs: [
+      {
+        question: 'Why does the app need video — can\'t it just analyse a photo?',
+        answer:
+          'A single photo captures one frozen moment, and most cat body-language signals are temporal — they only reveal themselves across time. A tail flicking once every two seconds means something different from a tail held still; an ear that rotates outward at second four means something different from an ear that stays forward; pupils dilating across the clip is a signal a still photo cannot show. Six seconds (or four for the meow translator) is the minimum window where these temporal signals become readable. Photo-only apps fundamentally cannot read motion, and motion carries roughly half of body-language meaning.',
+      },
+      {
+        question: 'How accurate is the AI compared to a vet behaviourist?',
+        answer:
+          'For obvious states (clear distress, clear relaxation, clear play), modern multimodal readers are accurate enough that an experienced cat owner watching the same clip would generally agree with the read. For ambiguous states (mild discomfort vs annoyance, anxious-tense vs alert-curious, pain vs simple displeasure), AI accuracy drops because human experts disagree on those too — they\'re inherently context-dependent. The honest framing: a multimodal reader is a calibrated cat-savvy second opinion, not a clinical assessment. For anything that looks like pain or distress, the read should route you toward vet examination, not replace it.',
+      },
+      {
+        question: 'Does the app know my specific cat, or is it reading every cat the same way?',
+        answer:
+          'Modern readers do both. The body-language interpretation itself uses a base model trained on general feline behaviour — that part is the same for every cat. But the SECOND layer (what the read means in context for your cat) uses per-cat memory. A skittish-sensitive cat looking tense at second three is meaningful; a confident-communicator cat looking tense at second three is more meaningful, because tension is unusual for that archetype. The app knows the difference because the personality archetype, recent history, and baseline temperament are part of the interpretation prompt, not just the visual analysis.',
+      },
+      {
+        question: 'What body parts is the AI actually looking at?',
+        answer:
+          'The five canonical channels for cat body language are tail, ears, eyes (including pupil dilation), posture (shoulders, hips, weight distribution), and motion (any change across the clip — twitches, flicks, ear rotations, head turns, weight shifts). A sixth channel — vocalisation — folds in if the clip has audio. Modern multimodal models (typically GPT-4o-class or Gemini-class with vision) can see all six in parallel from a single video; older single-channel apps could only see one. The interpretation prompt asks the model to comment on each channel separately and then synthesize an overall emotional state with confidence.',
+      },
+      {
+        question: 'What\'s the difference between this and just having an experienced cat owner watch the clip?',
+        answer:
+          'Two practical differences. First, the AI is consistent — it never gets tired, distracted, or biased toward what it expects to see. Second, the AI has structured memory of your cat that an outside observer would not — recent triage flags, the day\'s mood log, what the cat ate yesterday, the personality archetype. An experienced cat-savvy friend gives you intuition; the multimodal reader gives you intuition cross-referenced with structured per-cat history. Neither replaces a vet for medical concerns. Both are most useful as a "what am I missing here?" second opinion when you\'re reading your own cat at the threshold of being unsure.',
+      },
+    ],
+    bodyHtml: `
+<p>Cats communicate continuously, but most of what they\'re saying is silent. The vocalisation channel — meows, trills, hisses — is what owners notice. The body-language channel — tail position, ear rotation, pupil dilation, posture, motion across time — carries roughly half of all cat communication and is where almost every emotional and physical signal first appears. Reading it well is the difference between catching a problem early and noticing it after it\'s become urgent.</p>
+
+<p>For decades the only way to learn this was practice — years of living with cats, trial and error, occasionally a vet behaviourist for the harder cases. The new generation of <strong>cat body-language reader apps</strong> takes a six-second video and returns a structured read across all five channels in roughly the time it takes to upload the clip. This piece explains how that pipeline works, why the multi-channel approach matters, and what the underlying science actually says about cat body language.</p>
+
+<h2>The single-channel generation — what it tried, where it stopped</h2>
+
+<p>The first wave of cat-behaviour apps were single-channel: photo-only mood detectors, tail-position classifiers, "is your cat happy" quizzes that asked you to upload one image. They were limited by something structural, not by model quality.</p>
+
+<p>The structural limit is that <strong>most cat body-language signals are temporal</strong>. They reveal themselves across seconds, not in single frames. Consider:</p>
+
+<ul>
+<li>A tail held still vs a tail flicking once every two seconds — the second is mild irritation; the first is neutral. A still photo can\'t tell the difference.</li>
+<li>Ears held forward vs ears rotating outward at second four — the rotation is the signal. The static position is ambiguous.</li>
+<li>Pupils that stay constant vs pupils dilating across the clip — dilation is alert/aroused/fearful state. The static reading misses it.</li>
+<li>A cat that looks relaxed at second one but tenses at second four — the SHIFT is what matters. A photo at second one says "fine"; a photo at second four says "tense"; both are wrong.</li>
+</ul>
+
+<p>Single-frame analysis fundamentally cannot see any of this. The classic body-language guides taught by veterinary behaviourists — the work of cat-behaviour researchers like John Bradshaw, Sarah Ellis, and Mikel Delgado — emphasize that body language is read in motion and in clusters of signals, never from one frozen moment.</p>
+
+<p>This is why six seconds (or thereabouts) is the minimum useful window. Long enough to capture two or three temporal signals; short enough that the cat hasn\'t moved into a completely different context.</p>
+
+<h2>The multi-channel generation — five (or six) inputs, one structured read</h2>
+
+<p>A modern body-language reader analyses the clip across five visual channels in parallel, plus audio if present. Each channel produces a sub-read; the sub-reads then get synthesized into an overall emotional state with confidence.</p>
+
+<h3>Channel 1 — Tail</h3>
+
+<p>The tail is the most expressive single channel. Position (high, neutral, low, tucked), shape (straight, curled, puffed), and motion (still, slow swish, fast flick, lashing) each carry meaning. The full vocabulary is covered in the existing guide on <a href="/library/cat-tail-language">cat tail language</a>. The AI reads all three dimensions across the clip — a tail that starts low and goes lower means something different from a tail that starts low and rises.</p>
+
+<h3>Channel 2 — Ears</h3>
+
+<p>Ears rotate independently and continuously. Forward = engaged or alert, sideways or "airplane" = irritated or conflicted, flat back = defensive or fearful. Critically, ears often shift faster than any other channel — a cat\'s ears can rotate from forward to sideways in under a second when something off-frame catches attention. The reader tracks the rotation, not just the snapshot.</p>
+
+<h3>Channel 3 — Eyes</h3>
+
+<p>Two sub-signals here. Pupil dilation (dilated = aroused, fearful, or just dim lighting; constricted = focused or content) and eyelid position (slow blinks = trust signal, half-lidded = relaxed, wide-open with dilation = alert/anxious, hard stare = challenge). The full eye-and-face guide is at <a href="/library/cat-body-language-ears-whiskers-eyes">how to read ears, whiskers, and eyes</a>.</p>
+
+<h3>Channel 4 — Posture</h3>
+
+<p>Whole-body shape carries weight (literally). Loaf position with paws tucked = content and safe. Side-lying with belly exposed = trusting. Crouched low with weight forward = ready to bolt or pounce. Arched back with sideways orientation = defensive display. Stretched out with one leg extended = utterly relaxed. The shape is contextual — a "loaf" in the middle of the room is different from a "loaf" wedged into the back of a closet.</p>
+
+<h3>Channel 5 — Motion</h3>
+
+<p>Any change across the clip. Weight shifts, twitches, head turns, repositioning, the moment the cat decides to look at the camera. Motion-channel signals are often the most diagnostic because they\'re unconscious — the cat doesn\'t know it\'s about to flick its tail in the next half-second; the move just happens.</p>
+
+<h3>Channel 6 — Audio (if present)</h3>
+
+<p>If the clip has sound, the audio channel folds in: meows, trills, purrs, hisses, growls, chatter. Audio resolves ambiguity in posture — the same crouched position with a hiss means defence; without the hiss it might mean stalking. Audio analysis is the same engineering covered in the parallel piece on <a href="/library/how-meow-translators-work">how meow interpreters work</a>.</p>
+
+<h2>What "fuse the channels" actually means in practice</h2>
+
+<p>Each channel produces a sub-read with its own confidence. The fusion step asks a multimodal large language model — typically GPT-4o or Gemini in the vision-capable family — to synthesize the channels into one overall state with one overall confidence number, and to flag any internal contradictions.</p>
+
+<p>Contradictions are diagnostic on their own. A cat with relaxed posture but dilated pupils and ear-rotation is showing conflicted signals — the body says "I\'m fine" while the face says "I\'m alert about something." That contradiction is exactly what an experienced cat-savvy human would notice and comment on; the multi-channel architecture surfaces it explicitly instead of averaging it away.</p>
+
+<p>A typical structured output looks like: tail (slight flick, mild irritation, medium confidence), ears (forward then rotating outward at second four, increasing irritation, high confidence), eyes (slightly dilated, alert state, medium confidence), posture (loaf with weight forward, ready to move, medium confidence), motion (weight shift at second three, decision-point, high confidence), audio (none). Overall: <em>"Mildly irritated, deciding whether to move. Probably fine if left alone for thirty seconds."</em></p>
+
+<h2>The per-cat memory layer — what makes the read about YOUR cat</h2>
+
+<p>The visual analysis is the same for every cat. The interpretation of what those visuals mean depends on the specific cat. This is where the reader pulls in the per-cat memory — the personality archetype from a quiz like the <strong>Feline Five</strong> (Litchfield et al, <em>PLOS ONE</em>, 2017 — developed from a survey of 2,800+ cats living in homes), recent diary entries, recent triage flags, the cat\'s baseline temperament.</p>
+
+<p>The same set of body-language sub-reads can mean different things in context. A skittish-sensitive cat showing mild irritation at the camera is normal baseline behaviour; a confident-communicator cat showing the same signals is unusual and worth noting. A senior cat with a recent vet visit showing slight stiffness in posture is worth flagging differently from a young cat doing the same thing for one frame. The per-cat memory layer is what turns a generic body-language read into "what this means for your specific cat right now."</p>
+
+<h2>Why the read gets sharper over time</h2>
+
+<p>Just like the meow interpreter, the body-language reader compounds. Every clip you submit becomes part of the cat\'s baseline. The reader learns your cat\'s normal — the typical tail position, the usual ear rotation rate, the resting posture they default to. Drift from baseline is more diagnostic than absolute readings, and the reader can only spot drift after it has enough baseline data.</p>
+
+<p>This is the practical case for using the reader regularly even when nothing is wrong — the routine clips become the baseline. When something IS off, the system spots it because it has weeks of "this is what fine looks like for this cat" to compare against.</p>
+
+<h2>What modern readers do not claim</h2>
+
+<p>Two important honest framings. First, the body-language read is a behavioural observation, not a clinical diagnosis. When the reader flags "appears to be in pain" or "showing distress signals," that\'s a useful "go check this out" nudge — it\'s not a verdict. The cat needs hands-on examination from a vet for any actual diagnosis. Honest readers always pair concerning reads with a route to symptom triage rather than ending the flow at the read.</p>
+
+<p>Second, the reader does not replace human attention. The five-channel framework is something cat-savvy owners learn to read intuitively over years; the AI condenses some of that learning into a single video upload, but it doesn\'t substitute for being present with your cat day-to-day. The reader is most useful at the threshold of being unsure — when you can tell something is slightly off but can\'t put your finger on what.</p>
+
+<h2>What this changes day-to-day</h2>
+
+<p>Three things shift once you have a reliable multi-channel reader available. First, ambiguous moments stop being ambiguous — when you\'re not sure if the cat is annoyed or just sleepy, you upload six seconds and find out. Second, you start spotting baseline drift earlier — the reader notices a posture change a week before you would have, because it\'s comparing against three months of clips. Third, you stop second-guessing the obvious reads — the times when your cat is clearly fine, the reader confirms it, and you stop spending mental energy worrying.</p>
+
+<p>The reader is not a replacement for the underlying literacy. The full <a href="/library/cat-body-language-ears-whiskers-eyes">how-to-read-ears-whiskers-eyes guide</a> and the <a href="/library/cat-tail-language">tail language guide</a> are the foundation; reading your own cat is still the most important skill. The multimodal reader is what you reach for when the read is non-obvious or when you want a second opinion that has structured per-cat history backing it. It is, fundamentally, a calibrated cat-savvy friend you can summon in six seconds.</p>
+`,
+  },
+
 ];

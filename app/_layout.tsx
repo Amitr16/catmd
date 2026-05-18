@@ -82,8 +82,46 @@ export default function RootLayout() {
         // Analytics: emit the session-open event and identify the user
         // by their stable auth uid so anonymous-then-email-upgrade flows
         // collapse to one person profile in PostHog.
-        const { identify, track } = await import('../src/services/analytics');
-        track({ type: 'app_opened' });
+        //
+        // Marketing attribution (audit 2026-05-16):
+        // BEFORE the first app_opened fires, fetch the Play Install
+        // Referrer (cached after first launch, max 2s) and register
+        // utm_source/campaign/content + campaign_id/creative_id as
+        // PostHog super-properties so every subsequent event inherits
+        // them. The first app_opened ALSO carries the attribution in
+        // its explicit props payload — belt-and-suspenders against any
+        // edge case where super-props haven't persisted yet.
+        const { identify, setSuperProperties, track } = await import('../src/services/analytics');
+        const { getOrCaptureInstallAttribution } = await import(
+          '../src/services/installAttribution'
+        );
+        const attribution = await getOrCaptureInstallAttribution();
+        // Register globally — auto-attaches to every future event.
+        setSuperProperties({
+          utm_source: attribution.utm_source,
+          ...(attribution.utm_campaign ? { utm_campaign: attribution.utm_campaign } : {}),
+          ...(attribution.utm_content ? { utm_content: attribution.utm_content } : {}),
+          ...(attribution.utm_medium ? { utm_medium: attribution.utm_medium } : {}),
+          ...(attribution.utm_term ? { utm_term: attribution.utm_term } : {}),
+          ...(attribution.campaign_id ? { campaign_id: attribution.campaign_id } : {}),
+          ...(attribution.creative_id ? { creative_id: attribution.creative_id } : {}),
+          is_organic_install: attribution.is_organic,
+        });
+        // Fire app_opened with the attribution explicitly in the
+        // payload — first event in a session must carry it directly
+        // (not relying on super-props to have persisted from a prior
+        // session that may never have completed).
+        track({
+          type: 'app_opened',
+          props: {
+            utm_source: attribution.utm_source,
+            ...(attribution.utm_campaign ? { utm_campaign: attribution.utm_campaign } : {}),
+            ...(attribution.utm_content ? { utm_content: attribution.utm_content } : {}),
+            ...(attribution.campaign_id ? { campaign_id: attribution.campaign_id } : {}),
+            ...(attribution.creative_id ? { creative_id: attribution.creative_id } : {}),
+            is_organic_install: attribution.is_organic,
+          },
+        });
         if (session?.user?.id) identify(session.user.id);
 
         // Conscious diary: backfill missing entries for the active cat on
@@ -106,6 +144,37 @@ export default function RootLayout() {
           }
         } catch (e) {
           console.warn('[CatMD] diary backfill init failed:', e);
+        }
+
+        // ── Re-arm 7-day rolling diary-reminder pushes ───────────
+        // Schedules / re-schedules 7 daily 19:00 generic "diary is
+        // waiting" pushes for the active cat. Cancels any stale
+        // reminder IDs from a prior session before scheduling fresh.
+        // The 7-day window auto-expires for users who stop opening
+        // the app (avoids Android channel demotion from ignored
+        // recurring pushes). See services/notifications.ts.
+        try {
+          const { useCatStore } = await import('../src/state/catStore');
+          const { useNotifPrefsStore } = await import('../src/state/notifPrefsStore');
+          const { setDailyDiaryReminders, cancelNotification } = await import(
+            '../src/services/notifications'
+          );
+          const activeCatId = useCatStore.getState().activeCatId;
+          const cat = activeCatId
+            ? useCatStore.getState().cats.find((c) => c.id === activeCatId)
+            : null;
+          if (cat && useNotifPrefsStore.getState().enabled.cat_voice_evening) {
+            const prefs = useNotifPrefsStore.getState();
+            const oldIds = prefs.getDiaryReminderIds(cat.id);
+            await Promise.all(oldIds.map((id) => cancelNotification(id)));
+            const newIds = await setDailyDiaryReminders({
+              catId: cat.id,
+              catName: cat.name,
+            });
+            prefs.setDiaryReminderIds(cat.id, newIds);
+          }
+        } catch (e) {
+          console.warn('[CatMD] diary reminder scheduling failed:', e);
         }
       } catch (e) {
         console.warn('[CatMD] bootstrap failed:', e);

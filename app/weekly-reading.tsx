@@ -41,12 +41,14 @@ import { Button } from '../src/components/Button';
 import { Text } from '../src/components/Text';
 import { useShareableCard } from '../src/components/ShareableCatCard';
 import { useActiveCat } from '../src/hooks/useActiveCat';
+import { useEntitlement } from '../src/hooks/useEntitlement';
 import {
   useThisWeeksReading,
   useWeeklyReadingGenerating,
   useWeeklyReadingStore,
 } from '../src/state/weeklyReadingStore';
 import { track } from '../src/services/analytics';
+import { getPronouns } from '../src/services/pronouns';
 import { useTheme } from '../src/theme/useTheme';
 import { radius, space } from '../src/theme/tokens';
 
@@ -58,6 +60,7 @@ export default function WeeklyReadingScreen() {
   const reading = useThisWeeksReading(cat?.id);
   const generating = useWeeklyReadingGenerating(cat?.id);
   const generateForThisWeek = useWeeklyReadingStore((s) => s.generateForThisWeek);
+  const { hasProAccess } = useEntitlement();
   const [error, setError] = useState<string | null>(null);
   const { share: shareCard, Host: ShareCardHost } = useShareableCard();
 
@@ -68,6 +71,9 @@ export default function WeeklyReadingScreen() {
     if (!cat?.id) return;
     if (reading) return;
     if (generating) return;
+    // Pro gate — weekly reading is an LLM call (~$0.0005). Same
+    // policy as diary: history viewable, generation gated.
+    if (!hasProAccess) return;
     setError(null);
     void generateForThisWeek(cat.id).catch((e) => {
       console.warn('[WeeklyReading] generation failed:', e);
@@ -77,8 +83,9 @@ export default function WeeklyReadingScreen() {
           : "Couldn't compose this week's reading — tap retry.",
       );
     });
+    // hasProAccess in deps for cold-start anonymous-session race fix.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cat?.id]);
+  }, [cat?.id, hasProAccess]);
 
   useEffect(() => {
     if (!cat?.id) return;
@@ -91,13 +98,18 @@ export default function WeeklyReadingScreen() {
 
   const handleShare = () => {
     if (!cat || !reading) return;
+    // Eyebrow uses gender-aware "Subject noticed" — "He noticed" /
+    // "She noticed" / "They noticed". Real bug 2026-05-09: hardcoded
+    // "She noticed" was wrong for male cats. Routed through the
+    // pronouns helper for consistency across surfaces.
+    const subj = getPronouns(cat.sex).Subject;
     void shareCard(
       {
         kind: 'becoming_milestone',
         catName: cat.name,
         catPhotoUri: cat.photo_uri ?? null,
         headline: reading.reading,
-        eyebrow: 'She noticed',
+        eyebrow: `${subj} noticed`,
         ...(reading.verdict ? { subtitle: reading.verdict } : {}),
       },
       { surface: 'weekly_reading' },
@@ -112,7 +124,7 @@ export default function WeeklyReadingScreen() {
           { backgroundColor: t.surface, paddingTop: insets.top },
         ]}
       >
-        <Header onBack={() => router.back()} />
+        <Header onBack={() => router.back()} catSex="unknown" />
         <View style={{ padding: space[6] }}>
           <Text token="body" color="textMuted">
             Add a cat first — Settings → Manage cats.
@@ -129,7 +141,7 @@ export default function WeeklyReadingScreen() {
         { backgroundColor: t.surface, paddingTop: insets.top },
       ]}
     >
-      <Header onBack={() => router.back()} />
+      <Header onBack={() => router.back()} catSex={cat?.sex ?? 'unknown'} />
 
       <ScrollView
         contentContainerStyle={{
@@ -153,7 +165,7 @@ export default function WeeklyReadingScreen() {
                 paddingHorizontal: space[5],
               }}
             >
-              {catName} is composing this week's reading…
+              {catName} is composing this week&apos;s reading…
             </Text>
           </View>
         ) : null}
@@ -169,9 +181,16 @@ export default function WeeklyReadingScreen() {
               {error}
             </Text>
             <Button
-              label="Try again"
+              label={hasProAccess ? 'Try again' : 'Unlock with Pro'}
               variant="secondary"
               onPress={() => {
+                if (!hasProAccess) {
+                  router.push({
+                    pathname: '/paywall',
+                    params: { source: 'diary' },
+                  } as never);
+                  return;
+                }
                 setError(null);
                 if (cat?.id) {
                   void generateForThisWeek(cat.id, { force: true });
@@ -242,7 +261,7 @@ export default function WeeklyReadingScreen() {
                   fontFamily: 'Figtree_400Regular',
                 }}
               >
-                She noticed · this week
+                {getPronouns(cat.sex).Subject} noticed · this week
               </Text>
             </View>
 
@@ -345,7 +364,13 @@ export default function WeeklyReadingScreen() {
   );
 }
 
-function Header({ onBack }: { onBack: () => void }) {
+function Header({
+  onBack,
+  catSex,
+}: {
+  onBack: () => void;
+  catSex: 'male' | 'female' | 'unknown';
+}) {
   const t = useTheme();
   return (
     <View style={styles.header}>
@@ -353,7 +378,7 @@ function Header({ onBack }: { onBack: () => void }) {
         <ArrowLeft size={24} color={t.textPrimary} weight="regular" />
       </Pressable>
       <Text token="heading2" style={{ flex: 1, textAlign: 'center' }}>
-        She noticed
+        {getPronouns(catSex).Subject} noticed
       </Text>
       <View style={styles.iconBtn} />
     </View>
