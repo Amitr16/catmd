@@ -153,6 +153,17 @@ export default function DiaryScreen() {
       type: 'diary_opened',
       props: { had_today_cached: !!todayEntry },
     });
+    // Review-prompt counters — diary view counts as a useful insight
+    // ONLY when there's an actual entry to read. Empty-day visits
+    // shouldn't earn the prompt rule.
+    if (todayEntry) {
+      void import('../src/services/reviewPrompt').then(
+        ({ markUsefulInsight, markMeaningfulSessionIfCoreFeatureUsed }) => {
+          markMeaningfulSessionIfCoreFeatureUsed();
+          markUsefulInsight('diary');
+        },
+      );
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cat?.id]);
 

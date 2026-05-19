@@ -633,6 +633,74 @@ export type AnalyticsEvent =
       props: { source: 'chat' | 'diary'; depth: number; stage: string };
     }
   | {
+      /**
+       * Top-of-Today nudge "Add an email so {Cat} remembers you on a
+       * new phone" was rendered. Fires once per render-window (the
+       * store's SAME_DAY_REPRESS gate prevents same-day double-counts).
+       * Combined with email_nudge_tapped_add_email gives the
+       * activation funnel for the persist-email nudge.
+       */
+      type: 'email_nudge_shown';
+      props: { days_since_install: number; dismiss_count_so_far: number };
+    }
+  | {
+      type: 'email_nudge_tapped_add_email';
+      props: { dismiss_count_so_far: number };
+    }
+  | {
+      /**
+       * User tapped "Not now" or the X. Escalating snooze ladder
+       * (7d → 14d → 30d → permanent) lives in emailNudgeStore. The
+       * will_be_permanent flag is true on the 4th dismiss.
+       */
+      type: 'email_nudge_dismissed';
+      props: { dismiss_count_so_far: number; will_be_permanent: boolean };
+    }
+  // ── Review-prompt funnel (2026-05-19 spec — earned prompt) ────────
+  // Funnel:
+  //   review_prompt_eligible  → user crossed the bar but modal not yet shown
+  //   review_prompt_shown     → modal is on screen
+  //   review_prompt_clicked   → user tapped Leave a review (native Google
+  //                             in-app review dialog then fires, throttled
+  //                             by Google to ~1/yr per user)
+  //   review_prompt_dismissed → user tapped Not now / closed modal
+  | {
+      type: 'review_prompt_eligible';
+      props: {
+        meaningful_sessions_count: number;
+        useful_insights_count: number;
+        days_since_install: number;
+        last_insight_type: string;
+      };
+    }
+  | {
+      type: 'review_prompt_shown';
+      props: {
+        meaningful_sessions_count: number;
+        useful_insights_count: number;
+        days_since_install: number;
+        trigger: string;
+        last_insight_type: string;
+      };
+    }
+  | {
+      type: 'review_prompt_clicked';
+      props: {
+        destination: 'google_play';
+        meaningful_sessions_count: number;
+        useful_insights_count: number;
+        last_insight_type: string;
+      };
+    }
+  | {
+      type: 'review_prompt_dismissed';
+      props: {
+        meaningful_sessions_count: number;
+        useful_insights_count: number;
+        last_insight_type: string;
+      };
+    }
+  | {
       type: 'becoming_milestone_hit';
       props: { facet: string; stage: string; value: number };
     }

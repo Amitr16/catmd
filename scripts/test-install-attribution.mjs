@@ -25,7 +25,7 @@ try {
 // Attribution` lives in installAttribution.ts and isn't testable here
 // (would pull expo-modules-core which doesn't load in Node).
 
-const { parseReferrerUrl } = await import(
+const { parseReferrerUrl, toCanonicalProps } = await import(
   '../src/services/installAttributionParser.ts'
 );
 
@@ -135,9 +135,74 @@ for (const fx of FIXTURES) {
   }
 }
 
-console.log(`\n${pass}/${FIXTURES.length} passed.`);
-if (fail > 0) {
-  console.log(`\n${fail} failure(s):`);
+console.log(`\n${pass}/${FIXTURES.length} parser fixtures passed.`);
+
+// ─── Canonical-aliases fixtures (toCanonicalProps) ───
+// Marketing-attribution dashboards depend on the alias names; locking
+// the field mapping with fixtures prevents a future "renamed one field"
+// refactor from silently breaking every paid funnel.
+
+const ALIAS_FIXTURES = [
+  {
+    name: 'organic default → ad_platform=organic, install_source=organic',
+    input: parseReferrerUrl(''),
+    expect: { ad_platform: 'organic', install_source: 'organic' },
+  },
+  {
+    name: 'meta paid campaign → full alias bag',
+    input: parseReferrerUrl(
+      'utm_source=meta&utm_medium=paid&utm_campaign=paid-test-w1&utm_content=video01_chat_hook&utm_term=us_cat_owners_android',
+    ),
+    expect: {
+      ad_platform: 'meta',
+      ad_medium: 'paid',
+      ad_cohort: 'us_cat_owners_android',
+      campaign_id: 'paid-test-w1',
+      creative_id: 'video01_chat_hook',
+      install_source: 'paid',
+    },
+  },
+  {
+    name: 'AdWords numeric campaign_id alongside utm_campaign → separate aliases',
+    input: parseReferrerUrl(
+      'utm_source=google&utm_campaign=Spring_2026&campaign_id=12345&creative_id=67890',
+    ),
+    expect: {
+      ad_platform: 'google',
+      campaign_id: 'Spring_2026',
+      gads_campaign_id: '12345',
+      gads_creative_id: '67890',
+      install_source: 'paid',
+    },
+  },
+];
+
+let aliasPass = 0;
+let aliasFail = 0;
+for (const fx of ALIAS_FIXTURES) {
+  const result = toCanonicalProps(fx.input);
+  const errors = [];
+  for (const [k, v] of Object.entries(fx.expect)) {
+    if (result[k] !== v) {
+      errors.push(`expected ${k}=${JSON.stringify(v)}, got ${JSON.stringify(result[k])}`);
+    }
+  }
+  if (errors.length === 0) {
+    aliasPass++;
+    console.log(`  ✓ ${fx.name}`);
+  } else {
+    aliasFail++;
+    failures.push({ name: fx.name, errors, result });
+    console.log(`  ✗ ${fx.name}`);
+    for (const e of errors) console.log(`      ${e}`);
+  }
+}
+
+console.log(`${aliasPass}/${ALIAS_FIXTURES.length} canonical-alias fixtures passed.`);
+
+const totalFail = fail + aliasFail;
+if (totalFail > 0) {
+  console.log(`\n${totalFail} failure(s):`);
   for (const f of failures) {
     console.log(`  - ${f.name}: ${JSON.stringify(f.result)}`);
   }

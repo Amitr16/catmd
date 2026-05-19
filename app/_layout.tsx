@@ -46,10 +46,11 @@ import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { AppState, Linking, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useTheme } from '../src/theme/useTheme';
+import { ReviewPromptModal } from '../src/components/ReviewPromptModal';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -95,7 +96,16 @@ export default function RootLayout() {
         const { getOrCaptureInstallAttribution } = await import(
           '../src/services/installAttribution'
         );
+        const { toCanonicalProps } = await import(
+          '../src/services/installAttributionParser'
+        );
         const attribution = await getOrCaptureInstallAttribution();
+        // Build canonical-alias props (campaign_id/creative_id/
+        // ad_platform/ad_medium/ad_cohort/install_source +
+        // gads_campaign_id/gads_creative_id) — these ship ON EVERY
+        // EVENT in addition to the raw utm_* fields. Marketing
+        // dashboards read either naming family transparently.
+        const canonicalProps = toCanonicalProps(attribution);
         // Register globally — auto-attaches to every future event.
         setSuperProperties({
           utm_source: attribution.utm_source,
@@ -103,9 +113,10 @@ export default function RootLayout() {
           ...(attribution.utm_content ? { utm_content: attribution.utm_content } : {}),
           ...(attribution.utm_medium ? { utm_medium: attribution.utm_medium } : {}),
           ...(attribution.utm_term ? { utm_term: attribution.utm_term } : {}),
-          ...(attribution.campaign_id ? { campaign_id: attribution.campaign_id } : {}),
-          ...(attribution.creative_id ? { creative_id: attribution.creative_id } : {}),
+          ...(attribution.campaign_id ? { campaign_id_raw: attribution.campaign_id } : {}),
+          ...(attribution.creative_id ? { creative_id_raw: attribution.creative_id } : {}),
           is_organic_install: attribution.is_organic,
+          ...canonicalProps,
         });
         // Fire app_opened with the attribution explicitly in the
         // payload — first event in a session must carry it directly
@@ -117,9 +128,10 @@ export default function RootLayout() {
             utm_source: attribution.utm_source,
             ...(attribution.utm_campaign ? { utm_campaign: attribution.utm_campaign } : {}),
             ...(attribution.utm_content ? { utm_content: attribution.utm_content } : {}),
-            ...(attribution.campaign_id ? { campaign_id: attribution.campaign_id } : {}),
-            ...(attribution.creative_id ? { creative_id: attribution.creative_id } : {}),
+            ...(attribution.utm_medium ? { utm_medium: attribution.utm_medium } : {}),
+            ...(attribution.utm_term ? { utm_term: attribution.utm_term } : {}),
             is_organic_install: attribution.is_organic,
+            ...canonicalProps,
           },
         });
         if (session?.user?.id) identify(session.user.id);
@@ -294,6 +306,122 @@ export default function RootLayout() {
       removeListener?.();
     };
   }, [router]);
+
+  // ── Review-prompt session boundary ──────────────────────────────
+  //
+  // The review-prompt rule counts "meaningful sessions" — sessions where
+  // the user did something with a core feature. The per-session debounce
+  // in reviewPromptStore prevents a single session from incrementing the
+  // counter multiple times. Reset that debounce on:
+  //   (a) cold start (this effect's initial run)
+  //   (b) app foregrounded from background (AppState 'active' transition)
+  // so the next "first core-feature use this session" can increment.
+  useEffect(() => {
+    void import('../src/state/reviewPromptStore').then(({ useReviewPromptStore }) => {
+      // Anchor install-age clock if first ever run.
+      useReviewPromptStore.getState().ensureFirstSeen();
+      // Treat this mount as the start of a fresh session.
+      useReviewPromptStore.getState().resetSessionDebounce();
+    });
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') return;
+      void import('../src/state/reviewPromptStore').then(({ useReviewPromptStore }) => {
+        useReviewPromptStore.getState().resetSessionDebounce();
+      });
+    });
+    return () => {
+      sub.remove();
+    };
+  }, []);
+
+  // ── Dev-only attribution-override deep link handler ─────────────
+  //
+  // Lets the marketing agent verify the PostHog attribution pipeline
+  // end-to-end WITHOUT running a paid install through Play Referrer.
+  //
+  // Test workflow (dev builds only):
+  //   1. Install the dev APK (organic — default attribution captured)
+  //   2. Tap a deep link like:
+  //        catmd://open?utm_source=meta&utm_campaign=paid-test-w1
+  //          &utm_content=video01_chat_hook&utm_medium=paid
+  //          &utm_term=us_cat_owners_android
+  //   3. The handler below parses the URL, overwrites the cached
+  //      attribution in AsyncStorage, re-registers PostHog super-
+  //      properties, and fires a fresh `app_opened` event with the
+  //      new attribution. PostHog should immediately show the test
+  //      campaign params on that event (and on every subsequent event
+  //      this session).
+  //
+  // Gated by __DEV__ inside overrideAttributionFromDeepLink — a no-op
+  // in production builds (the deep link still navigates, just doesn't
+  // tamper with attribution). See src/services/installAttribution.ts
+  // for the gate detail.
+  useEffect(() => {
+    if (!__DEV__) return;
+
+    const handleDeepLink = async (url: string | null) => {
+      if (!url) return;
+      try {
+        const { overrideAttributionFromDeepLink } = await import(
+          '../src/services/installAttribution'
+        );
+        const { toCanonicalProps } = await import(
+          '../src/services/installAttributionParser'
+        );
+        const { setSuperProperties, track } = await import(
+          '../src/services/analytics'
+        );
+        const overridden = await overrideAttributionFromDeepLink(url);
+        if (!overridden) return;
+        // Re-register super-props so all subsequent events carry the
+        // override, then fire a fresh app_opened so the marketing
+        // agent can verify in PostHog within seconds.
+        const canonicalProps = toCanonicalProps(overridden);
+        setSuperProperties({
+          utm_source: overridden.utm_source,
+          ...(overridden.utm_campaign ? { utm_campaign: overridden.utm_campaign } : {}),
+          ...(overridden.utm_content ? { utm_content: overridden.utm_content } : {}),
+          ...(overridden.utm_medium ? { utm_medium: overridden.utm_medium } : {}),
+          ...(overridden.utm_term ? { utm_term: overridden.utm_term } : {}),
+          is_organic_install: overridden.is_organic,
+          ...canonicalProps,
+          attribution_source: 'dev_deep_link_override',
+        });
+        track({
+          type: 'app_opened',
+          props: {
+            utm_source: overridden.utm_source,
+            ...(overridden.utm_campaign ? { utm_campaign: overridden.utm_campaign } : {}),
+            ...(overridden.utm_content ? { utm_content: overridden.utm_content } : {}),
+            ...(overridden.utm_medium ? { utm_medium: overridden.utm_medium } : {}),
+            ...(overridden.utm_term ? { utm_term: overridden.utm_term } : {}),
+            is_organic_install: overridden.is_organic,
+            ...canonicalProps,
+            attribution_source: 'dev_deep_link_override',
+          },
+        });
+        console.log(
+          '[CatMD] Dev attribution override applied:',
+          JSON.stringify(canonicalProps),
+        );
+      } catch (e) {
+        console.warn('[CatMD] Dev attribution override failed:', e);
+      }
+    };
+
+    // Cold-start case: app launched directly from the deep link.
+    Linking.getInitialURL()
+      .then((u) => handleDeepLink(u))
+      .catch(() => {});
+
+    // Warm-state case: app already running, deep link fired into it.
+    const sub = Linking.addEventListener('url', ({ url }) => {
+      void handleDeepLink(url);
+    });
+    return () => {
+      sub.remove();
+    };
+  }, []);
 
   const [fontsLoaded, fontError] = useFonts({
     SourceSerif4_400Regular,
@@ -477,6 +605,16 @@ export default function RootLayout() {
                 options={{ title: 'Body Language', presentation: 'card', headerShown: false }}
               />
             </Stack>
+            {/* Review-prompt modal — globally mounted. Visibility is
+                driven by services/reviewPrompt.ts. The modal only
+                renders when the earned-prompt rule is met:
+                  meaningful_session_count >= 3
+                  AND useful_insight_count >= 1
+                  AND days_since_install >= 2
+                  AND not in a health-concern flow
+                  AND no prior click / no recent dismiss
+                See spec in src/services/reviewPrompt.ts. */}
+            <ReviewPromptModal />
           </View>
         </QueryClientProvider>
       </SafeAreaProvider>

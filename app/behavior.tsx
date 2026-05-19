@@ -432,6 +432,16 @@ export default function BehaviorScreen() {
       // (audit 2026-05-16). Fires alongside behavior_observation_completed.
       track({ type: 'core_feature_used', props: { feature: 'behavior' } });
     });
+    // Review-prompt counters — body-language read is one of the
+    // qualifying insight types (see services/reviewPrompt.ts). Always
+    // safe to call; eligibility + health-concern guard is checked
+    // inside maybeTriggerReviewPrompt.
+    void import('../src/services/reviewPrompt').then(
+      ({ markUsefulInsight, markMeaningfulSessionIfCoreFeatureUsed }) => {
+        markMeaningfulSessionIfCoreFeatureUsed();
+        markUsefulInsight('body_language');
+      },
+    );
 
     setObservation(result.observation);
     setTags(result.tags);

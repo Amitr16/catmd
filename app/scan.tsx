@@ -251,6 +251,18 @@ export default function ScanScreen() {
       const rec = triageToScanRecord(cat?.id ?? 'unknown', text.trim(), imageUri, result, detectedMode);
       addScan(rec);
 
+      // Review-prompt counters — fire AFTER addScan so the scan record
+      // (with its urgency tier) is visible to the health-concern guard
+      // inside maybeTriggerReviewPrompt. If the scan was concern/urgent
+      // the guard suppresses the prompt automatically; if it was
+      // routine/monitor the prompt may appear ~1.2s later on /result.
+      void import('../src/services/reviewPrompt').then(
+        ({ markUsefulInsight, markMeaningfulSessionIfCoreFeatureUsed }) => {
+          markMeaningfulSessionIfCoreFeatureUsed();
+          markUsefulInsight('scan_result');
+        },
+      );
+
       // Bump the server-side scan counter. Optimistically update the
       // hook so the UI reflects the new count immediately; the next
       // refresh reconciles against authoritative state.

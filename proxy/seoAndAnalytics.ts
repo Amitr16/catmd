@@ -84,6 +84,40 @@ export function renderAnalyticsScripts(): string {
 <script>
   !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
   posthog.init('${POSTHOG_API_KEY}',{api_host:'${POSTHOG_HOST}',person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true});
+  // ── Play Store CTA click tracking (2026-05-19) ──
+  // Fires \`play_store_cta_clicked\` for any <a> pointing at the Play
+  // Store, regardless of which page (landing / library article / blog /
+  // legal). Extracts placement from the URL's utm_content param so the
+  // marketing agent can build a Landing → Play Store CTR funnel with
+  // breakdown by placement (hero / nav / final_cta / library_cta /
+  // blog_cta / etc.) without needing per-page event types.
+  //
+  // Why delegated, not per-anchor: \`<a>\` elements are scattered across
+  // the page tree and re-rendered as different routes mount. A single
+  // document-level listener catches them all without per-render wiring.
+  //
+  // Why \`capture: true\`: clicks on links may navigate away before
+  // bubbling completes. Capturing-phase + the SDK's request-batching
+  // is the recommended pattern from PostHog docs for outbound links.
+  document.addEventListener('click', function(e) {
+    try {
+      var a = e.target && e.target.closest ? e.target.closest('a[href*="play.google.com"]') : null;
+      if (!a) return;
+      var href = a.getAttribute('href') || '';
+      var q = href.indexOf('?');
+      var params = q >= 0 ? new URLSearchParams(href.slice(q + 1)) : new URLSearchParams();
+      window.posthog && window.posthog.capture && window.posthog.capture('play_store_cta_clicked', {
+        placement: params.get('utm_content') || 'unknown',
+        utm_source: params.get('utm_source') || '',
+        utm_medium: params.get('utm_medium') || '',
+        utm_campaign: params.get('utm_campaign') || '',
+        page_path: window.location.pathname,
+        page_referrer: document.referrer || '',
+        cta_text: (a.innerText || '').trim().slice(0, 80),
+        href_origin: 'landing',
+      });
+    } catch (_) { /* swallow — never block navigation on tracking */ }
+  }, true);
 </script>`);
   }
 

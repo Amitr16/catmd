@@ -83,3 +83,49 @@ export function parseReferrerUrl(referrerUrl: string | undefined | null): Instal
     raw_referrer_url: referrerUrl,
   };
 }
+
+/**
+ * Build the canonical-alias property bag the marketing agent expects on
+ * every PostHog event (in addition to the raw utm_* fields).
+ *
+ * Why aliases exist: the raw utm_* names are channel-native (Google
+ * Analytics convention); marketing dashboards prefer field names that
+ * read as "what is this campaign / creative / platform / cohort"
+ * regardless of where the install came from. Both naming families now
+ * ship on every event so SQL queries written against either convention
+ * work without translation.
+ *
+ *   campaign_id   = utm_campaign        (NOT the optional `campaign_id`
+ *                                         numeric field — that's an
+ *                                         AdWords-specific ID. Aliases
+ *                                         use the human campaign name.)
+ *   creative_id   = utm_content
+ *   ad_platform   = utm_source          (meta / google / tiktok / etc.)
+ *   ad_medium     = utm_medium          (paid / cpc / influencer / etc.)
+ *   ad_cohort     = utm_term            (audience targeting label)
+ *   install_source = "organic" or "paid" depending on whether real
+ *                    campaign params were present
+ *
+ * Pure function — keep here so the canonical-derivation logic is
+ * testable in pure Node alongside the parser.
+ */
+export function toCanonicalProps(
+  attr: InstallAttribution,
+): Record<string, string | boolean> {
+  const out: Record<string, string | boolean> = {
+    ad_platform: attr.utm_source,
+    install_source: attr.is_organic ? 'organic' : 'paid',
+  };
+  // campaign_id alias prefers the human campaign name (utm_campaign).
+  // The AdWords-numeric campaign_id (if a Google Ads campaign explicitly
+  // attaches `campaign_id=` to the referrer) ships under a separate
+  // namespace so dashboards can join against Google Ads reports without
+  // colliding with the human-readable alias.
+  if (attr.utm_campaign) out.campaign_id = attr.utm_campaign;
+  if (attr.utm_content) out.creative_id = attr.utm_content;
+  if (attr.utm_medium) out.ad_medium = attr.utm_medium;
+  if (attr.utm_term) out.ad_cohort = attr.utm_term;
+  if (attr.campaign_id) out.gads_campaign_id = attr.campaign_id;
+  if (attr.creative_id) out.gads_creative_id = attr.creative_id;
+  return out;
+}

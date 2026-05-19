@@ -4,10 +4,15 @@
 > from "Android only" to "live on the App Store" without re-deriving any
 > decisions.
 >
-> **Codebase status (as of 2026-05-04)**: React Native + Expo SDK 54, RN
-> 0.81, new architecture enabled. Currently shipping on Google Play —
-> v0.1.7 / versionCode 54 (Android AAB built today; replaced v0.1.6/51).
-> All native deps are cross-platform.
+> **Codebase status (as of 2026-05-19)**: React Native + Expo SDK 54, RN
+> 0.81, new architecture enabled. **LIVE ON GOOGLE PLAY PRODUCTION** —
+> v0.1.21 / versionCode 94 currently live in 177 countries since
+> 2026-05-14. vc 100 + vc 101 AABs built today, awaiting Play Console
+> upload. All native deps are cross-platform.
+>
+> **🆕 TL;DR for a fresh Claude session starting iOS work** —
+> jump to §13 "Briefing a fresh Claude session" at the very end of this
+> doc. It has the exact paste-ready block to hand a new agent.
 >
 > **Brand positioning**: "AI for cat owners. Your cat, decoded." Triage
 > is one feature among many. The product also surfaces a first-person
@@ -46,23 +51,151 @@
 >   screenshots, in priority order. iOS App Store wants its own sizes
 >   (see §5) but the SAME 8 screens are the right anchor set.
 >
-> **iOS prep already partially done in app.json** (this happened in
-> parallel with the Android session). Verify before continuing:
+> **iOS prep in app.json + eas.json — VERIFIED DONE (2026-05-19):**
 > - `ios.bundleIdentifier`: `com.catmd.app` ✓
-> - `ios.buildNumber`: `"1"` ✓
+> - `ios.buildNumber`: `"1"` ✓ (auto-increments via eas.json)
 > - `ios.config.usesNonExemptEncryption`: `false` ✓
 > - `ios.infoPlist`: NSCameraUsageDescription / NSPhotoLibraryUsageDescription /
->   NSMicrophoneUsageDescription / ITSAppUsesNonExemptEncryption ✓
+>   NSMicrophoneUsageDescription / **NSLocationWhenInUseUsageDescription** (NEW —
+>   weather grounding for chat/diary; rounded to ~10km) /
+>   ITSAppUsesNonExemptEncryption ✓
 > - `ios.privacyManifests`: full block with NSPrivacyCollectedDataTypes
 >   (ProductInteraction, PhotosOrVideos, AudioData, EmailAddress) +
 >   NSPrivacyAccessedAPITypes (FileTimestamp, UserDefaults, SystemBootTime,
 >   DiskSpace) ✓
+> - `eas.json` production profile: `ios.autoIncrement: "buildNumber"` ✓
 >
-> Still TODO before first iOS build: add `production.ios` block to
-> `eas.json` (see §4a), confirm Apple Dev Program enrollment status,
-> generate APNs key for push notifications.
+> **Still TODO before first iOS build:**
+> - Confirm Apple Dev Program enrollment status (separate doc)
+> - Generate APNs key (`.p8`) and hand to EAS via `eas credentials`
+> - Decide on Apple Search Ads Attribution module (see §4f NEW — the
+>   iOS equivalent of Play Install Referrer is a separate API)
+> - Refresh screenshots — Android curated set is from v0.1.6 / vc ~50;
+>   we're at v0.1.21 / vc 94 with many new screens (see §5 — substantially
+>   stale)
 >
 > The Android side is mature — iOS is a port, not build-from-scratch.
+
+---
+
+## 0.6 Changelog since 2026-05-04 (vc 54 → vc 101)
+
+A LOT of product has shipped between this guide's last refresh and
+today. Each item below either changes how to describe the app to Apple,
+what data it collects, what screenshots to capture, or what platform-
+specific iOS work is now needed.
+
+### Production-ready trial + paywall (2026-05-04 → vc ~85)
+- **14-day reverse free trial** — every new user gets full Pro for 14
+  days starting day-1, then prompts to subscribe. No card up front. After
+  day 14, hard-blocked from AI features until subscribed.
+- **Pricing locked in:** Pro Monthly $9.99, Pro Annual $79.99.
+  Partner Annual $55.99 (30% off — see vc 96 below).
+- **Email gate now mid-funnel:** anonymous users tap Subscribe → email
+  collected first (6-digit OTP, NO magic links) → then RC purchase sheet.
+  This locks cloud restore identity AT purchase time, not after.
+- **`EXPO_PUBLIC_ENABLE_PAYWALL=true` is now PRODUCTION DEFAULT**
+  (was false in the 2026-05-04 version of this doc — that's flipped).
+- **App Review impact:** §6f and §8d now apply; verify the 4 mandatory
+  paywall links (Terms / Privacy / Restore / pricing).
+
+### Marketing attribution (2026-05-09 → vc 95)
+- Play Install Referrer SDK integrated via local Expo module at
+  `modules/install-referrer` (Kotlin). On first launch (Android only),
+  parses utm_source/medium/campaign/content/term from the install
+  referrer and registers them as PostHog super-properties — every
+  analytics event downstream inherits attribution.
+- **iOS gap:** Play Install Referrer is Android-only. iOS equivalent is
+  Apple's AdServices framework + Search Ads Attribution API. **This is
+  not currently wired up — see §4f NEW for the work needed.**
+- Canonical-alias fields shipped on every event: `campaign_id`,
+  `creative_id`, `ad_platform`, `ad_medium`, `ad_cohort`,
+  `install_source` (+ `gads_campaign_id` / `gads_creative_id` carve-outs
+  for AdWords numeric IDs).
+- **Dev deep-link override** for testing attribution without live ads:
+  `catmd://open?utm_source=meta&utm_campaign=...` overwrites cached
+  attribution. Gated by `__DEV__` so prod builds ignore it. **Apple
+  reviewers may notice this if they inspect deep-link handlers —
+  documented in §6f.**
+
+### Partner code system (2026-05-17 → vc 96)
+- Annual-only discount codes for influencer / creator partnerships.
+- Partner product: `pro_annual_partner` at $55.99/yr (30% off $79.99).
+- Backend: paywall coupon entry → Supabase RPC `validate_partner_code`
+  → RC subscriber attribute (`partner_code_id`) → RC webhook → Cloudflare
+  Worker `/api/rc-webhook` → `partner_redemptions` table. Idempotent
+  via webhook_event_id UNIQUE constraint.
+- Partner royalty: $14/subscriber (30% of net after Google's 15% Play
+  fee on $55.99). Apple takes a different 15% — **partner royalty math
+  needs revisiting if iOS Pro purchases become a meaningful channel.**
+- Free Pro for the creator + their cat (via `pro_whitelist` table,
+  `is_current_user_whitelisted` RPC flips Pro instantly).
+- **App Review impact:** mention partner code entry as a discount code
+  redemption flow at paywall (NOT external subscription / not violating
+  Apple's IAP rules — the discounted product is still purchased through
+  Apple's IAP, partner royalty is paid by us out of the net).
+
+### 3-tier depth-modulated cat voice (2026-05-18 → vc 99)
+- Chat voice now matures with becoming-depth:
+  - 0-25% → WARM + CURIOUS (early days, asks questions back ~1 in 3,
+    never fabricates a past)
+  - 25-65% → EMERGING (warm with first dry edges, ~1 in 4 questions)
+  - 65%+ → INTIMATE-COMFORT (love as substrate, sharp observation as
+    love-language, ~1 in 5 questions)
+- Replaces the always-aristocratic register that was driving day-1
+  churn. Tuned via simulators at `scripts/simulator-{new-user,deep-stage}-voice.mjs`.
+- **App Review impact:** the cat-voice persona disclosure in §6f
+  remains accurate — voice is creative content, medical safety still
+  routes to triage.
+
+### PersonalityProgressBanner (2026-05-18 → vc 99)
+- Sticky one-line strip at the top of Chat + Diary: "✨ Forming · voice
+  is still warming up · 12% — Improve →". Tap routes to /becoming.
+- Per-stage status words: Forming / Sketching / Shaping / Settling /
+  Settled / Fully here. Pronoun-aware qualifier.
+- **No App Review concern** — purely engagement metadata.
+
+### Caution mood banner — REMOVED (2026-05-18, vc 99)
+- The "Caution: {Cat}'s mood is anyone's guess" strip is gone. Mood
+  signal still drives chat internally via `buildLiveMoodContext`. One
+  less banner stacking under the header.
+
+### Email-persistence nudge (2026-05-18 → vc 100)
+- Top-of-Today gentle banner: "Keep {Cat}'s memory safe across phones.
+  Add an email and {Cat} comes with you to a new device."
+- Escalating snooze ladder: 7d → 14d → 30d → permanent (after 4 "Not
+  now" taps).
+- Auto-hides once `hasConfirmedEmail` flips true.
+- **App Review impact:** clarify in §6f — this is NOT a forced email
+  capture, just a dismissible reminder. Free tier remains fully usable
+  without email.
+
+### Earned review prompt (2026-05-19 → vc 101)
+- Uses `expo-store-review` → native Google in-app review on Android,
+  `SKStoreReviewController` on iOS. Both Google + Apple throttle
+  natively (~1/yr per user).
+- Eligibility rule:
+  ```
+  meaningful_session_count >= 3
+  AND useful_insight_count >= 1
+  AND days_since_install >= 2
+  AND !inHealthConcernFlow      (7d suppression after urgent/concern scan)
+  AND !clickedReview            (never re-prompt after a click)
+  AND !dismissedWithin30Days
+  ```
+- **App Review impact:** Apple has explicit guidelines on review-prompt
+  frequency (their own throttle covers it, but our rule is stricter).
+  Add a 1-line disclosure in §6f. **Already iOS-compatible — no
+  platform-specific work needed; just verify on TestFlight.**
+
+### Site-side (catmd.pet) — for context only, not in app
+- 3 new library articles: cat-not-jumping, cat-grooming-less,
+  why-does-my-cat-meow-at-me, ai-cat-health-apps-compared
+- 2 new interactive tool pages: `/cat-symptom-checker`,
+  `/cat-personality-test`
+- Landing-page Play Store CTA click tracking via PostHog
+- Tools to direct App Store users to (if helpful, in
+  PRIVACY/listing copy) — none impact the iOS app bundle directly.
 
 ---
 
@@ -326,56 +459,22 @@ Sequenced so Apple's verification queue runs in parallel with code work.
 These are the `~3 hrs of code work` that's independent of Apple's queue.
 Do them on Day 1 while Apple verifies.
 
-### 4a. Add iOS production profile to `eas.json`
+### 4a. iOS production profile in `eas.json` — ✅ DONE (verified 2026-05-19)
 
-Current state:
-```json
-"production": {
-  "autoIncrement": true,
-  "channel": "production",
-  "android": { "buildType": "app-bundle" },
-  ...
-}
-```
+The `production.ios.autoIncrement: "buildNumber"` block is in place.
+First iOS build will start at `buildNumber=1` and auto-increment from
+there independently of Android `versionCode` (currently 101). No
+action needed.
 
-Add iOS block (sibling of `android`):
+### 4b. iOS-specific app.json fields — ✅ DONE (verified 2026-05-19)
 
-```json
-"production": {
-  "autoIncrement": true,
-  "channel": "production",
-  "android": { "buildType": "app-bundle" },
-  "ios": {
-    "autoIncrement": "buildNumber"
-  },
-  ...
-}
-```
-
-`autoIncrement: "buildNumber"` increments the iOS build number on each
-production build (independently of Android versionCode). `version` in
-`app.json` is shared.
-
-### 4b. Add iOS-specific app.json fields
-
-Add these inside `expo.ios`:
-
-```json
-"ios": {
-  "supportsTablet": false,
-  "bundleIdentifier": "com.catmd.app",
-  "buildNumber": "1",
-  "config": {
-    "usesNonExemptEncryption": false
-  },
-  "infoPlist": {
-    "NSCameraUsageDescription": "...",
-    "NSPhotoLibraryUsageDescription": "...",
-    "NSMicrophoneUsageDescription": "...",
-    "ITSAppUsesNonExemptEncryption": false
-  }
-}
-```
+All ios.* fields are in place, including:
+- `bundleIdentifier`, `buildNumber: "1"`, `supportsTablet: false`
+- `config.usesNonExemptEncryption: false`
+- `infoPlist`: NSCameraUsageDescription, NSPhotoLibraryUsageDescription,
+  NSMicrophoneUsageDescription, **NSLocationWhenInUseUsageDescription**
+  (added 2026-05-07 for weather-grounding — rounded to ~10km, never
+  shared), ITSAppUsesNonExemptEncryption: false
 
 Why each:
 - `buildNumber`: starting point; auto-incremented by EAS thereafter
@@ -383,8 +482,20 @@ Why each:
   on every TestFlight upload (we use HTTPS but no custom crypto)
 - `ITSAppUsesNonExemptEncryption: false`: same flag in Info.plist —
   belt-and-suspenders
+- `NSLocationWhenInUseUsageDescription`: explains the weather grounding
+  to Apple reviewers — without this Apple may reject for vague
+  permission strings
 
-### 4c. Privacy Manifest
+### 4c. Privacy Manifest — ✅ DONE via app.json `ios.privacyManifests`
+
+The full `privacyManifests` block is now inline in `app.json` (Expo
+generates `PrivacyInfo.xcprivacy` at prebuild time from it — no separate
+file needed). Verified 2026-05-19. Skip the file-based instructions
+below — they're the manual fallback if the JSON-in-app.json approach
+ever stops working.
+
+<details>
+<summary>Manual-fallback instructions (kept for reference)</summary>
 
 Create `PrivacyInfo.xcprivacy` at the project root via the
 `expo-build-properties` plugin OR a static asset. Cleanest path: add to
@@ -520,6 +631,8 @@ from `app.json`) with a plugin that copies the file at prebuild time.
 package OR add the file via a `withInfoPlist` config plugin. Document
 this when implementing.
 
+</details>
+
 ### 4d. Verify Whisper / multipart upload works on iOS
 
 iOS handles multipart/form-data slightly differently than Android. The
@@ -528,6 +641,83 @@ existing `transcribeBehaviorAudio` in
 `{ uri, name, type }` which works on iOS. **Sanity-test this on
 TestFlight** — the audio file path on iOS uses `file://` URIs from the
 camera which usually transmit fine.
+
+### 4f. 🆕 Apple Search Ads Attribution (iOS equivalent of Play Install Referrer)
+
+**The gap:** vc 95+ integrated Play Install Referrer on Android via a
+local Expo module (`modules/install-referrer`, Kotlin). On iOS, the
+equivalent is Apple's **AdServices framework** + **Search Ads
+Attribution API**. We have NOT wired this up yet.
+
+**What this means:**
+- Android: utm_source / campaign_id / creative_id flow into PostHog
+  super-properties on first launch automatically
+- iOS: every iOS install will currently bucket as `utm_source=organic`
+  in PostHog. Apple Search Ads spend can't be attributed back to users
+  until this is wired up.
+
+**Options (in order of effort + payoff):**
+
+1. **Skip for v1 iOS launch** — accept "organic" attribution on iOS
+   until the channel matters. If Apple Search Ads isn't part of the
+   first 60-day moonshot plan (and it isn't per `marketing/MARKETING-
+   OPERATING-PLAN.md`), this is fine. Document the limitation in the
+   marketing-attribution doc.
+
+2. **Add `react-native-iad`** OR Apple's own `AdServices.framework`
+   integration via a small native Expo module — ~half a day of work.
+   Token resolution requires calling Apple's attribution-token endpoint
+   on first launch, then the PostHog super-props pipeline reuses the
+   existing `parseReferrerUrl` machinery. The output shape MUST match
+   the Android `InstallAttribution` type so analytics dashboards see
+   one unified attribution model.
+
+3. **Wait for Apple's first-party SKAdNetwork data** in App Store
+   Connect — useful for ad-platform reconciliation but doesn't give
+   per-user attribution in PostHog. Complementary to option 2, not a
+   replacement.
+
+**Recommendation:** option 1 for iOS v1. Add option 2 in a follow-up
+when Apple Search Ads spend ramps up. The architecture is ready —
+`installAttributionParser.ts` is platform-agnostic, only the SOURCE of
+the referrer differs.
+
+### 4g. 🆕 Apple in-app review (`expo-store-review` already integrated)
+
+**Already shipped (vc 101):** `expo-store-review` is in the bundle. On
+iOS it calls `SKStoreReviewController` natively — same code path as
+Android, different OS dialog. Both Apple + Google throttle natively
+(~1 prompt per user per ~1yr). Our own earned-prompt rule
+(`meaningful_sessions >= 3 AND useful_insights >= 1 AND no health
+concern + 30-day cooldown`) layers on top.
+
+**No iOS-specific code needed.** Just verify on TestFlight that the
+native dialog renders correctly when eligible (use the dev-only
+shortcut: temporarily lower `MIN_INSTALL_AGE_MS` + `MIN_MEANINGFUL_SESSIONS`
+in `src/services/reviewPromptEligibility.ts` for the smoke test, then
+revert before submission).
+
+### 4h. 🆕 RevenueCat iOS configuration check
+
+**Already mostly done** — `EXPO_PUBLIC_RC_ANDROID_KEY` is set in EAS
+env. For iOS we need an equivalent `EXPO_PUBLIC_RC_IOS_KEY`. Steps:
+
+1. RevenueCat dashboard → CatMD project → Settings → Platforms → iOS
+2. If not present: connect to App Store Connect (needs API key from
+   App Store Connect → Users and Access → Keys → App Store Connect API)
+3. Copy the iOS API key (starts with `appl_`) and add as EAS env:
+   ```bash
+   npx eas secret:create --scope project --name EXPO_PUBLIC_RC_IOS_KEY --value appl_...
+   ```
+4. In code: `src/services/purchases.ts` already branches on Platform.OS;
+   it'll use the iOS key automatically.
+
+**Partner code system (vc 96) on iOS:** the same flow works
+identically — paywall coupon entry → Supabase RPC → RC subscriber
+attribute → webhook. RC's subscriber-attribute API is cross-platform.
+**Verify on TestFlight** that a partner code entered on iOS does
+actually fire the RC INITIAL_PURCHASE webhook with the
+`partner_code_id` attribute attached.
 
 ### 4e. Check `softwareKeyboardLayoutMode` — Android-only
 
@@ -858,6 +1048,73 @@ sandbox purchase. The account is pre-populated with ~14 days of
 diary entries, 3 named subjects in People & Pets, and a partial
 self-facts list — so the Becoming wheel reads at ~60% and the chat /
 diary have memory to draw from.
+
+ADDITIONAL FEATURES ADDED 2026-05-04 → 2026-05-19 (vc 55 → vc 101):
+
+(5) 14-DAY FREE TRIAL + SUBSCRIPTION FLOW:
+- Every new user gets full Pro for 14 days starting day 1 (reverse
+  trial — no card up front). After day 14, AI features are gated until
+  the user subscribes via Pro Monthly $9.99 or Pro Annual $79.99.
+- Subscription purchases happen through Apple's IAP, processed via
+  RevenueCat for receipt validation + entitlement management.
+- Trial banner on Today tab gives status: "Pro features unlocked · 9
+  days left" (mid-trial subtle) → "Trial ending in 2 days · Tap to
+  subscribe" (days 12-14) → "Trial ended" (day 0 hard CTA).
+
+(6) PARTNER CODE DISCOUNT FLOW (vc 96):
+- Paywall has an optional "Have a partner code?" link. Tapping opens a
+  coupon entry field. Valid codes (issued by us to creator partners)
+  unlock a discounted annual plan: $55.99 / year (30% off the standard
+  $79.99). Purchase still goes through Apple IAP — the discounted
+  product `pro_annual_partner` is a separate App Store product, not
+  an out-of-app discount. We pay partners a 30% royalty out of the
+  net (after Apple's 15% fee), settled weekly via Stripe / PayPal /
+  Wise. Reviewer is welcome to test code "TESTCODE30" if they want.
+
+(7) MARKETING ATTRIBUTION CAPTURE (vc 95):
+- On first launch, the app reads the install referrer (Android only —
+  iOS Apple Search Ads Attribution is not yet wired up) and registers
+  utm_source / utm_campaign / campaign_id / creative_id as PostHog
+  super-properties so analytics events carry campaign attribution.
+- A DEV-ONLY deep-link handler (`catmd://open?utm_source=...`) lets us
+  test attribution without running paid ads. This is gated by __DEV__
+  and silently no-ops in production builds. Reviewer will NOT see this
+  behavior in a TestFlight or App Store build.
+
+(8) PERSONALITY PROGRESS BANNER ON CHAT + DIARY (vc 99):
+- Sticky one-line strip showing how shaped the cat-in-the-app has
+  become from the user's input: "Forming · voice is still warming up
+  · 12% — Improve →". Tap routes to /becoming for the per-facet
+  breakdown. Pure transparency / engagement metadata — not health
+  scoring.
+
+(9) THREE-TIER CAT VOICE MATURATION (vc 99):
+- Chat voice now MATURES with the bond:
+  - 0-25% becoming-depth → warm + curious (early-days register, asks
+    questions back ~1 in 3, never fabricates a past)
+  - 25-65% → emerging (warm with first dry edges)
+  - 65%+ → intimate-comfort (love as substrate, sharp observation as
+    love-language)
+- Voice is creative content; medical safety still routes to triage.
+  See pillar (3) above for the unchanged medical-safety rules.
+
+(10) EMAIL-PERSISTENCE NUDGE (vc 100):
+- Gentle dismissible banner on Today tab (Day 3+ since install): "Keep
+  {cat}'s memory safe across phones. Add an email and {cat} comes with
+  you to a new device." Escalating snooze ladder (7d → 14d → 30d →
+  permanent). Auto-hides once the user adds + verifies an email.
+- Free tier remains fully usable without email — this is a reminder,
+  not a forced capture.
+
+(11) EARNED REVIEW PROMPT (vc 101):
+- Uses Apple's native SKStoreReviewController via expo-store-review.
+- Rule: prompt fires ONLY when the user has used the app meaningfully
+  at least 3 times AND received at least 1 useful insight (triage
+  result, body-language read, diary entry). Plus a 7-day suppression
+  after any urgent/concern triage scan, a 30-day cooldown after Not-
+  now, and never re-prompt once the user clicks Leave a review.
+- Apple's own native throttle (~1/yr per user) layers on top. Our
+  rules are STRICTER than Apple's defaults.
 ```
 
 ---
@@ -1197,5 +1454,95 @@ only use `--platform android` for genuinely Android-only fixes.
 - For Android build details: `docs/build-apk.md`
 - For codebase architecture (pillars, services): start with the
   CHECKPOINT files in chronological order
+
+---
+
+## 13. 🆕 Briefing a fresh Claude session (2026-05-19)
+
+Paste-ready block to give a new Claude session (CLI or Sonnet/Opus chat)
+when you want to kick off iOS work. This contains everything Claude
+needs to operate without re-deriving anything.
+
+### 13a. Opening message to send Claude
+
+```
+I'm about to start the iOS build of CatMD (currently Android-only,
+v0.1.21 / vc 94 live on Google Play; vc 100 + vc 101 AABs are built
+and queued for upload).
+
+Please read these docs FIRST, in this order, before doing anything:
+
+  1. docs/IOS-SETUP-GUIDE.md (this doc — the full plan)
+  2. marketing/WHAT-CATMD-DOES.md (current feature surface)
+  3. marketing/FEATURE-INVENTORY-COMPLETE.md (canonical feature ref)
+  4. store-listing/store-listing-copy.md (paste-ready listing copy
+     for App Store — already updated for "AI for cat owners")
+  5. docs/PARTNER-CODE-ACTIVATION.md (Supabase + RC + webhook setup
+     for the partner code discount system — already deployed on
+     Android, needs RC iOS-key configuration)
+
+After reading, REPORT BACK with:
+  - What's already done in the codebase (don't repeat work)
+  - What's blocked on me (Apple Dev enrollment, APNs key, etc.)
+  - The CRITICAL PATH from "no iOS build yet" to "live on App Store"
+  - Any decisions you need from me before proceeding
+
+Don't write any code or run any builds yet — wait for me to confirm
+the plan.
+```
+
+### 13b. Things Claude will ask you that you should pre-answer
+
+Save typing — answer these before Claude asks:
+
+| Question | Probable answer (confirm with current state) |
+|---|---|
+| **Apple Developer Program status?** | Enrolled? In progress? Not started? If not enrolled, this is the critical-path blocker — 1-3 day verification. |
+| **Apple Developer account name (Individual or Org)?** | Affects "Seller" on the App Store listing. |
+| **APNs key (`.p8`) already generated?** | If not, follow §2e. Hand to EAS via `eas credentials`. |
+| **Apple App-Specific Password for `eas submit`?** | Needed for App Store Connect upload. Generate at appleid.apple.com → Sign-In and Security → App-Specific Passwords. |
+| **Paywall enabled for first iOS release?** | YES — `EXPO_PUBLIC_ENABLE_PAYWALL=true` is the production default since vc ~85. |
+| **iOS RC API key (`appl_...`) configured?** | Check `eas secret:list` for `EXPO_PUBLIC_RC_IOS_KEY`. If absent → §4h. |
+| **App Store name "CatMD" — reserve?** | Check App Store Connect availability EARLY. Fall back to "CatMD: Your Cat's MD" if taken. |
+| **TestFlight tester list — internal-only or external too?** | Internal is instant + 100 testers free. External requires a separate beta review (~24h). Recommend internal-only for v1. |
+| **Apple Search Ads Attribution — wire up now or defer?** | See §4f. Recommend defer for iOS v1 (organic-bucket all iOS installs until Search Ads becomes a paid channel). |
+| **First iOS release version number?** | `app.json` version field is shared. Suggest bumping to v0.2.0 to mark the iOS launch as a milestone. |
+
+### 13c. The specific files Claude should NOT touch
+
+| File / area | Why off-limits |
+|---|---|
+| `proxy/*` (Cloudflare Worker) | Server-side. Shared between Android + iOS. Don't change for iOS. |
+| `marketing/INFLUENCER-PROSPECTS.md` | Marketing — handled in a separate session. |
+| `docs/PARTNER-CODE-ACTIVATION.md` | Already deployed on Android. Read-only reference. |
+| `src/services/chat.ts` VOICE_RULES | Voice was carefully tuned 2026-05-18 via simulators. Don't edit unless explicitly asked. |
+| `eas.json` `production.android` block | Production Android profile is stable. Touch only `production.ios` or `production.env`. |
+
+### 13d. Once iOS ships — the cross-platform sync checklist
+
+See §11 of this doc. Key rules:
+- Treat `eas update --platform all` as the default; only use
+  `--platform android` for genuinely Android-only fixes
+- Bump `version` in app.json to bump runtime for BOTH platforms; bump
+  `versionCode` and `buildNumber` INDEPENDENTLY (auto-incremented)
+- Store listing copy lives in `store-listing/store-listing-copy.md` —
+  edit once, paste in both consoles
+
+### 13e. The 30-second "is this on track" health check
+
+When you check back in on Claude during iOS work, ask:
+
+  1. "What's the next concrete deliverable?" — should always be a
+     specific code change, build run, App Store action, or info-from-me
+  2. "What's blocked on me right now?" — should usually be Apple's
+     verification queue (1-3 days) or a credential I haven't supplied
+  3. "Show me the current critical path" — Claude should be able to
+     enumerate the remaining steps to "live on App Store"
+
+If Claude can't answer all three, the agent has drifted. Reset by
+pointing at §3 (the step-by-step execution plan) and asking which
+step we're on.
+
+---
 
 End of iOS Setup Guide.

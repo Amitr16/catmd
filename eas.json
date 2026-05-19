@@ -16,7 +16,8 @@
       },
       "env": {
         "EXPO_PUBLIC_ENABLE_ANALYTICS": "false",
-        "EXPO_PUBLIC_ENABLE_PAYWALL": "false"
+        "EXPO_PUBLIC_ENABLE_PAYWALL": "false",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "preview": {

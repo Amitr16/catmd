@@ -75,7 +75,9 @@ import {
 import { suggestedPrompts } from '../../src/services/chat';
 import type { ChatTurn } from '../../src/services/chat';
 import { useProGate } from '../../src/services/paywallGate';
-import { pickMoodBanner } from '../../src/services/dailyMood';
+// pickMoodBanner removed 2026-05-18 along with the mood banner JSX. The
+// function is still exported from services/dailyMood.ts if we want it
+// back later as a tap-to-reveal chip inside the personality banner.
 import { getVoiceModeTag } from '../../src/services/voiceModes';
 import { track } from '../../src/services/analytics';
 import { useTheme } from '../../src/theme/useTheme';
@@ -103,13 +105,15 @@ export default function ChatTab() {
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const { share: shareCard, Host: ShareCardHost } = useShareableCard();
-  // Mood-warning banner copy — rotates per (cat, date). The actual
-  // mood is NOT revealed to the user; it's discovered through chat.
-  // The mood itself drives the LLM's voice via dailyMood.ts injected
-  // into the system prompt server-side (well, in chat.ts).
-  const moodBanner = cat?.id
-    ? pickMoodBanner({ catId: cat.id, catName: cat.name })
-    : null;
+  // Mood-warning banner copy was rendered above the chat ScrollView
+  // until 2026-05-18. The visual stack of two banners
+  // (PersonalityProgressBanner + mood) was too noisy for new users
+  // (see the screenshot in the design doc) so the mood banner was
+  // removed. The mood signal still drives chat replies internally via
+  // buildLiveMoodContext + the daily-mood pick injected into the
+  // system prompt — we just don't surface it as a separate banner.
+  // pickMoodBanner is still exported and available if we want to bring
+  // it back later as a tap-to-reveal chip inside the progress banner.
 
   const handleShareTurn = async (turn: ChatTurn) => {
     if (!cat) return;
@@ -546,14 +550,42 @@ function EmptyState({
   onPrompt: (p: string) => void;
 }) {
   const t = useTheme();
+  // ── First-open chat empty-state copy (2026-05-19) ──
+  //
+  // Tied to the "first-open-activation-rescue" campaign — KPI is
+  // chat_message_sent_users / app_opened_users (daily activation rate).
+  // The Variant A copy below is live; Variant B + C are kept inline for
+  // fast A/B swap if the activation rate doesn't cross 10% by Day 12.
+  //
+  // Variant A (LIVE) — "Direct + warm." Leans into the act the user
+  //   just did (naming the cat), gives one concrete starter prompt,
+  //   frames the cat as a friend, not a feature. Low gimmick.
+  // Variant B — "Specific + low-friction." Cuts decision friction with
+  //   explicit "tap a starter," primes that the voice gets better with
+  //   use (true at depth < 25 — see chat.ts voice modulation).
+  //   Heading: "{Lily} is here. Tap a starter or type your own."
+  //   Body:    "The more you talk, the more she sounds like herself."
+  // Variant C — "Sample-reply tease." Screenshot-friendly; previews
+  //   the warm day-1 voice as a real-cat-like example line.
+  //   Heading: "Ask {Lily} anything."
+  //   Body:    "She might say something like 'I might love you back.
+  //             Day one isn't enough to know.' See what she actually does."
+  //
+  // Kill rule: if 3-day rolling activation < 10% after Day 10, the
+  // nudge approach is abandoned for chat-first onboarding (per the
+  // campaign brief). Swap variants here — don't ship a new feature.
   return (
     <View style={{ paddingTop: space[6], gap: space[5] }}>
       <View style={{ alignItems: 'center', paddingHorizontal: space[5] }}>
         <Text token="heading2" style={{ textAlign: 'center', marginBottom: space[2] }}>
-          Talk to {catName}.
+          You named {catName}. Now ask {catName} something.
         </Text>
         <Text token="body" color="textMuted" style={{ textAlign: 'center', lineHeight: 22 }}>
-          {catName} replies in their own voice — drawing on their diary, their personality, the people in their life. Tell them anything about themselves and they{`'`}ll remember.
+          {catName} replies in their own voice. Start with{' '}
+          <Text token="body" style={{ fontStyle: 'italic', color: t.textPrimary }}>
+            &ldquo;how was your day?&rdquo;
+          </Text>
+          {' '}— or anything you&rsquo;d ask a friend.
         </Text>
       </View>
       <View style={{ gap: space[2] }}>

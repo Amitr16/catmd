@@ -53,6 +53,7 @@ export const ADDITIONAL_ARTICLES_2026_05_16: Article[] = [
     relatedSlugs: [
       'cat-not-jumping',
       'cat-grooming-less',
+      'ai-cat-health-apps-compared',
       'cat-not-eating',
       'cat-hiding-illness',
       'cat-body-language-ears-whiskers-eyes',

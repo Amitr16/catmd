@@ -11,6 +11,10 @@ import {
   ADDITIONAL_IMAGE_ALTS_2026_05_17,
 } from './library-additions-2026-05-17';
 import {
+  ADDITIONAL_ARTICLES_2026_05_18,
+  ADDITIONAL_IMAGE_ALTS_2026_05_18,
+} from './library-additions-2026-05-18';
+import {
   buildPlayStoreUrl,
   renderAnalyticsScripts,
   renderSearchConsoleMeta,
@@ -71,6 +75,7 @@ const IMAGE_ALT_BY_SLUG: Record<string, string> = {
   ...ADDITIONAL_IMAGE_ALTS,
   ...ADDITIONAL_IMAGE_ALTS_2026_05_16,
   ...ADDITIONAL_IMAGE_ALTS_2026_05_17,
+  ...ADDITIONAL_IMAGE_ALTS_2026_05_18,
   'cat-vomiting-when-to-see-vet':
     'Tabby cat sitting next to a clean ceramic water bowl, looking thoughtful — illustrative hero for a guide on cat vomiting urgency',
   'cat-not-eating':
@@ -510,7 +515,7 @@ const LIBRARY_SECTIONS: LibrarySection[] = [
         id: 'body-language',
         title: 'Body language fundamentals',
         blurb: 'The five channels every cat owner can learn to read: tail, ears, whiskers, eyes, and posture. With a printable cheat-sheet at the end of each.',
-        slugs: ['cat-tail-language', 'cat-body-language-ears-whiskers-eyes', 'cat-vocalizations-decoded', 'why-does-my-cat-meow-at-me', 'how-meow-translators-work', 'how-body-language-readers-work'],
+        slugs: ['cat-tail-language', 'cat-body-language-ears-whiskers-eyes', 'cat-vocalizations-decoded', 'why-does-my-cat-meow-at-me', 'how-meow-translators-work', 'how-body-language-readers-work', 'ai-cat-health-apps-compared'],
       },
     ],
   },
@@ -2805,4 +2810,5 @@ const ARTICLES: Article[] = [
   ...ADDITIONAL_ARTICLES,
   ...ADDITIONAL_ARTICLES_2026_05_16,
   ...ADDITIONAL_ARTICLES_2026_05_17,
+  ...ADDITIONAL_ARTICLES_2026_05_18,
 ];

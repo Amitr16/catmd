@@ -172,3 +172,56 @@ export async function resetInstallAttribution(): Promise<void> {
     // best-effort
   }
 }
+
+/**
+ * Dev-only override: parse a `catmd://...?utm_source=...&utm_campaign=...`
+ * deep link, OVERWRITE the cached attribution, and return the new shape.
+ * Used by the marketing-attribution test workflow so engineers can verify
+ * the PostHog pipeline end-to-end WITHOUT running a real paid install
+ * through the Play Store referrer (slow + costs money).
+ *
+ * Gated by __DEV__ — silently no-ops in production builds so a malicious
+ * deep link can't tamper with real users' attribution. If the marketing
+ * agent wants to test the actual prod AAB, they can layer a token-gated
+ * version later (`EXPO_PUBLIC_ATTRIBUTION_OVERRIDE_TOKEN` env var
+ * requiring a matching `_dev_token=` param). For now: dev-only is the
+ * safest default.
+ *
+ * Returns the new attribution shape on success, null when:
+ *   - Not a dev build (production behaviour: deep link still navigates,
+ *     just doesn't tamper with attribution)
+ *   - The URL has no parseable utm/campaign/creative params
+ *   - AsyncStorage write fails (best-effort)
+ */
+export async function overrideAttributionFromDeepLink(
+  url: string | null | undefined,
+): Promise<InstallAttribution | null> {
+  if (!__DEV__) return null;
+  if (!url || typeof url !== 'string') return null;
+
+  // Extract the query string from the URL. Accept any of:
+  //   catmd://open?utm_source=meta
+  //   catmd:///open?utm_source=meta
+  //   catmd:open?utm_source=meta
+  //   https://catmd.pet/?utm_source=meta  (web preview case)
+  const queryIdx = url.indexOf('?');
+  if (queryIdx < 0) return null;
+  const query = url.slice(queryIdx + 1);
+
+  const parsed = parseReferrerUrl(query);
+  // Only override if we got REAL attribution data — otherwise the deep
+  // link was a navigation, not an attribution test, and we leave the
+  // cached install attribution alone.
+  if (parsed.is_organic && !parsed.utm_source.length) return null;
+  if (parsed.is_organic && parsed.utm_source === 'organic') return null;
+
+  try {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+  } catch {
+    // Best-effort — the override may not survive an app kill, but the
+    // current session's super-props are still being updated by the
+    // caller (see app/_layout.tsx Linking handler) so the test event
+    // still fires with the right attribution.
+  }
+  return parsed;
+}

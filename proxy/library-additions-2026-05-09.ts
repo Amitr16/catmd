@@ -63,6 +63,7 @@ export const ADDITIONAL_ARTICLES: Article[] = [
     readMinutes: 7,
     primaryKeyword: 'what is my cat thinking',
     relatedSlugs: [
+      'ai-cat-health-apps-compared',
       'cat-tail-language',
       'cat-body-language-ears-whiskers-eyes',
       'how-meow-translators-work',
@@ -458,6 +459,7 @@ export const ADDITIONAL_ARTICLES: Article[] = [
     readMinutes: 8,
     primaryKeyword: 'meow translator apps',
     relatedSlugs: [
+      'ai-cat-health-apps-compared',
       'why-does-my-cat-meow-at-me',
       'cat-vocalizations-decoded',
       'how-body-language-readers-work',
@@ -579,6 +581,7 @@ export const ADDITIONAL_ARTICLES: Article[] = [
     readMinutes: 8,
     primaryKeyword: 'cat body language reader app',
     relatedSlugs: [
+      'ai-cat-health-apps-compared',
       'cat-tail-language',
       'cat-body-language-ears-whiskers-eyes',
       'how-meow-translators-work',

@@ -17,6 +17,7 @@ import { Card } from '../../src/components/Card';
 import { DailyCheckinCard } from '../../src/components/DailyCheckinCard';
 import { ScoreRing } from '../../src/components/ScoreRing';
 import { TrialBanner } from '../../src/components/TrialBanner';
+import { PersistEmailNudgeBanner } from '../../src/components/PersistEmailNudgeBanner';
 import { Text } from '../../src/components/Text';
 import { UrgencyBadge } from '../../src/components/UrgencyBadge';
 import { radius } from '../../src/theme/tokens';
@@ -251,6 +252,14 @@ export default function HomeScreen() {
           Three modes: mid-trial (subtle), ending (nudge), expired (CTA).
           See src/components/TrialBanner.tsx. */}
       <TrialBanner />
+
+      {/* Persist-cat-memory nudge — anonymous-first reminder to add
+          an email so {Cat}'s diary/personality/people survive a phone
+          change. Self-rate-limits with an escalating snooze ladder
+          (7d → 14d → 30d → permanent). Hidden once the user has a
+          confirmed email. See src/components/PersistEmailNudgeBanner
+          and src/state/emailNudgeStore for the cadence rules. */}
+      <PersistEmailNudgeBanner />
 
       <View style={styles.ringRow}>
         {hasFreshScore ? (
