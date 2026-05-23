@@ -48,7 +48,7 @@ export const ADDITIONAL_ARTICLES_2026_05_18: Article[] = [
     slug: 'ai-cat-health-apps-compared',
     title: 'AI Cat Health Apps Compared: What Each One Does (And Doesn\'t Do)',
     description:
-      'Honest comparison of the leading AI cat health and translator apps — Tably, MeowTalk, CatsMe, CatMD. What each one reads, where it shines, where it doesn\'t, and how to choose.',
+      "Honest comparison of the leading AI cat health and translator apps — Tably, MeowTalk, CatsMe, CatMD. What each one reads, where each one shines.",
     datePublished: '2026-05-18',
     dateModified: '2026-05-18',
     readMinutes: 10,
@@ -102,6 +102,8 @@ export const ADDITIONAL_ARTICLES_2026_05_18: Article[] = [
 <p>There are now apps that read your cat's face for pain, apps that classify your cat's meows into mood categories, apps that build personality profiles, and apps that try to do all of the above with daily health tracking. The marketing copy across them is suspiciously similar — some variant of "decode your cat." The underlying technology is wildly different. And the day-to-day usefulness depends entirely on which problem you're actually trying to solve.</p>
 
 <p>This is an honest comparison. None of these apps replace a vet. None of them diagnose. Some are clinical-grade for narrow tasks, some are entertainment with a health flavour, and some try to build a longer-term picture of how your cat is doing. The right one depends on what you're after.</p>
+
+<p>(Looking for a focused comparison with 11pets — the multi-pet organiser — specifically? See our blog: <a href="/blog/11pets-vs-catmd-comparison">11pets vs CatMD: Tracker or Health Intelligence?</a>)</p>
 
 <h2>The four apps, at a glance</h2>
 

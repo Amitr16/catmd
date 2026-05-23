@@ -57,7 +57,7 @@ export const ADDITIONAL_ARTICLES: Article[] = [
     slug: 'what-is-my-cat-thinking-ai-apps',
     title: 'What Is My Cat Thinking? AI Cat Apps in 2026, Decoded',
     description:
-      'A grounded look at what AI cat apps actually do in 2026 — what they can read, what they can\'t, and how the better ones turn body language and behavior into something you can act on.',
+      "A grounded look at what AI cat apps actually do in 2026 — what they read, what they can't, and how the best turn behavior into something to act on.",
     datePublished: '2026-05-09',
     dateModified: '2026-05-09',
     readMinutes: 7,
@@ -177,7 +177,7 @@ export const ADDITIONAL_ARTICLES: Article[] = [
     slug: 'do-cats-remember-owners',
     title: 'Do Cats Remember Their Owners? The Science of Feline Memory',
     description:
-      'A grounded look at what cats actually remember — short-term, long-term, social, and spatial — and what changes after weeks or years apart from a familiar person.',
+      'What cats actually remember — short-term, long-term, social, spatial — and what changes after weeks or years apart from a familiar person.',
     datePublished: '2026-05-09',
     dateModified: '2026-05-09',
     readMinutes: 6,
@@ -299,9 +299,9 @@ export const ADDITIONAL_ARTICLES: Article[] = [
   // ─────────────────────────────────────────────────────────────────────────
   {
     slug: 'how-to-bond-with-cat',
-    title: 'How to Bond With a Cat: 7 Daily Habits Backed by Behavior Science',
+    title: 'How to Bond With a Cat: 7 Daily Habits That Work',
     description:
-      'Cats bond differently than dogs — through small, consistent rituals more than dramatic affection. Seven evidence-based habits that compound into deep trust over weeks.',
+      'Cats bond through small, consistent rituals — not dramatic affection. Seven evidence-based daily habits that compound into deep trust over weeks.',
     datePublished: '2026-05-09',
     dateModified: '2026-05-09',
     readMinutes: 7,
@@ -451,9 +451,9 @@ export const ADDITIONAL_ARTICLES: Article[] = [
   // ─────────────────────────────────────────────────────────────────────────
   {
     slug: 'how-meow-translators-work',
-    title: 'AI Cat Translator: How Meow Translation Apps Actually Work (and Why Some Read Your Specific Cat)',
+    title: 'AI Cat Translator: How Meow Translation Apps Work',
     description:
-      'AI cat translator explained — how multimodal meow translation apps use audio, body language, and per-cat memory to interpret cat vocalizations in your cat\'s specific voice. Compares MeowTalk, CatGPT, and CatMD.',
+      "AI cat translator explained: how multimodal apps use audio, body language, and per-cat memory to interpret meows. Compares MeowTalk, CatGPT, CatMD.",
     datePublished: '2026-05-10',
     dateModified: '2026-05-11',
     readMinutes: 8,
@@ -494,6 +494,8 @@ export const ADDITIONAL_ARTICLES: Article[] = [
     ],
     bodyHtml: `
 <p>Cat translator apps have been on the App Store for over a decade. Most of them work the same way — record a meow, run it through an audio classifier, return one of about a dozen fixed labels. "Happy/Content." "Hunting." "Resting." Useful as a novelty for a week, then they stop being interesting. The label is the same for every cat in every household, and there is nothing to share with a friend.</p>
+
+<p>(For the skeptical-honest take on whether AI can actually translate a cat at all, see our blog: <a href="/blog/can-ai-translate-what-cat-is-saying">Can AI Actually Translate What Your Cat Is Saying?</a>)</p>
 
 <p>A new generation of <strong>multimodal meow interpreters</strong> works differently — they capture short video instead of audio alone, fuse the meow with body language and per-cat memory, and return one interpretive line in the cat\'s specific voice. This piece explains how that pipeline works under the hood, why the output is qualitatively different, and what the underlying research actually says.</p>
 
@@ -573,9 +575,9 @@ export const ADDITIONAL_ARTICLES: Article[] = [
   // ─────────────────────────────────────────────────────────────────────────
   {
     slug: 'how-body-language-readers-work',
-    title: 'How Modern Cat Body-Language Readers Actually Work — and Why Six Seconds Is the Right Window',
+    title: 'How Cat Body Language Reader Apps Work (6 Seconds)',
     description:
-      'How AI cat body-language reader apps analyze tail, ears, eyes, posture, and motion across six-second videos to provide personalized reads of your cat\'s emotional state.',
+      "How AI cat body-language reader apps analyze tail, ears, eyes, posture, and motion in a 6-second video to read your cat's emotional state.",
     datePublished: '2026-05-11',
     dateModified: '2026-05-11',
     readMinutes: 8,

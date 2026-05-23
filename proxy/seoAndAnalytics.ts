@@ -169,20 +169,33 @@ export type PlayStoreCtaMedium =
  * registers them as PostHog super-properties — every analytics event
  * downstream inherits them.
  *
- *   utm_source = 'catmd_pet'   (always — the marketing site)
- *   utm_medium = surface name (landing / library / blog / etc.)
- *   utm_content = the specific page or slug — lets you slice by article
+ *   utm_source   = 'catmd_pet'   (always — the marketing site)
+ *   utm_medium   = surface name (landing / library / blog / etc.)
+ *   utm_content  = the specific page or slug — lets you slice by article
+ *   utm_campaign = CRO variant ID (e.g. cro_headline_v1) — OPTIONAL,
+ *                  used by the landing-to-install CRO experiment lane
+ *                  to distinguish A/B variants in PostHog. Naming
+ *                  convention:
+ *                    cro_headline_v{N}  — headline copy A/B
+ *                    cro_hero_v{N}      — hero image A/B
+ *                    cro_cta_v{N}       — CTA button copy A/B
+ *                    cro_atf_v{N}       — above-the-fold layout A/B
  *
- * Example:
+ * Examples:
  *   buildPlayStoreUrl('library', 'do-cats-hide-pain')
- *   → https://play.google.com/store/apps/details?id=com.catmd.app
- *     &utm_source=catmd_pet&utm_medium=library&utm_content=do-cats-hide-pain
+ *   → ...?id=com.catmd.app&utm_source=catmd_pet&utm_medium=library
+ *      &utm_content=do-cats-hide-pain
+ *
+ *   buildPlayStoreUrl('landing', 'hero', 'cro_headline_v1')
+ *   → ...?id=com.catmd.app&utm_source=catmd_pet&utm_medium=landing
+ *      &utm_content=hero&utm_campaign=cro_headline_v1
  *
  * Pure function — no env, no I/O. Safe to call from every renderer.
  */
 export function buildPlayStoreUrl(
   medium: PlayStoreCtaMedium,
   content?: string,
+  campaign?: string,
 ): string {
   const params: string[] = [
     'utm_source=catmd_pet',
@@ -190,6 +203,9 @@ export function buildPlayStoreUrl(
   ];
   if (content) {
     params.push(`utm_content=${encodeURIComponent(content)}`);
+  }
+  if (campaign) {
+    params.push(`utm_campaign=${encodeURIComponent(campaign)}`);
   }
   return `${PLAY_STORE_BASE}&${params.join('&')}`;
 }

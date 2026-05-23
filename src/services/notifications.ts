@@ -428,9 +428,14 @@ export async function setMorningMewReminder(opts: {
   const hour = opts.hour ?? 8;
   const minute = opts.minute ?? 0;
   // Body provided by caller (typically the result of
-  // pickMorningGreeting for today's mood). Fallback is generic but
-  // still on-brand.
-  const body = opts.body ?? `Tap to see what ${opts.catName} has to say.`;
+  // pickMorningGreeting for today's mood). Fallback is the
+  // activation-rescue copy (2026-05-21 — first-open-activation-rescue
+  // campaign): chat-coded language to drive Today→Chat funnels,
+  // since the KPI is chat_message_sent_users / app_opened_users.
+  // The cat-voice register is preserved — "has thoughts" is warmer
+  // than the original generic "has to say" while still implying the
+  // user can hear them.
+  const body = opts.body ?? `${opts.catName} has thoughts. Tap to hear them.`;
   return scheduleDailyAt({
     hour,
     minute,

@@ -247,6 +247,26 @@ export default {
         },
       });
     }
+    // ── IndexNow key verification (2026-05-21) ──
+    // IndexNow is the indexing-protocol-of-choice for Bing, Yandex,
+    // Naver, Seznam, and (since 2024) several smaller engines that
+    // power AI search results. The protocol requires we host a key
+    // file at /<key>.txt that returns the key as plain text — that
+    // proves we control the domain. Submissions to api.indexnow.org
+    // are then validated against this URL.
+    //
+    // Google does NOT use IndexNow — it still requires Search Console
+    // submissions for fast re-crawl. Sitemap auto-discovery handles
+    // the slower path for Google.
+    if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/2a66e2b908bc8b2e947e000a2defc3a4.txt') {
+      return new Response('2a66e2b908bc8b2e947e000a2defc3a4', {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cache-Control': 'public, max-age=31536000',
+        },
+      });
+    }
     if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/robots.txt') {
       return new Response(buildRobotsTxt(), {
         status: 200,

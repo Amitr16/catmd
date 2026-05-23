@@ -105,7 +105,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
-      "versionCode": 101
+      "versionCode": 102
     },
     "web": {
       "output": "static",

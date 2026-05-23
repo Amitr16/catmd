@@ -40,9 +40,9 @@ export const ADDITIONAL_IMAGE_ALTS_2026_05_17: Record<string, string> = {
 export const ADDITIONAL_ARTICLES_2026_05_17: Article[] = [
   {
     slug: 'cat-not-jumping',
-    title: 'Cat Not Jumping Anymore? Pain, Arthritis, Aging, and When to Call a Vet',
+    title: 'Cat Not Jumping? Pain, Arthritis, Aging, When to Worry',
     description:
-      'If your cat stopped jumping onto furniture, stairs, or counters, it may be more than age. Learn what reduced jumping can mean, what to track, and when to contact a vet.',
+      'Cat stopped jumping onto furniture, stairs, or counters? It may be more than age. What reduced jumping means and when to call a vet.',
     datePublished: '2026-05-17',
     dateModified: '2026-05-17',
     readMinutes: 7,
@@ -559,9 +559,9 @@ export const ADDITIONAL_ARTICLES_2026_05_17: Article[] = [
   },
   {
     slug: 'why-does-my-cat-meow-at-me',
-    title: 'Why Does My Cat Meow at Me? 9 Reasons (and What Each One Means)',
+    title: 'Why Does My Cat Meow at Me? 9 Reasons Explained',
     description:
-      'Why does my cat meow at me? Adult cats meow almost only at humans, never at each other. The 9 reasons behind it — hunger, attention, illness, stress, and more — and how to tell which one your cat means.',
+      'Adult cats meow almost only at humans, never at each other. The 9 reasons your cat meows at you — hunger, attention, illness — and how to tell which.',
     datePublished: '2026-05-17',
     dateModified: '2026-05-17',
     readMinutes: 7,

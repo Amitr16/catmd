@@ -1047,10 +1047,10 @@ const ARTICLES: Article[] = [
   },
   {
     slug: 'cat-straining-to-urinate',
-    title: 'Cat Straining in the Litter Box: The 48-Hour Emergency Most Owners Miss',
+    title: 'Cat Straining to Urinate: 48-Hour Vet Emergency',
     description: 'A male cat straining in the litter box with no output is a life-threatening emergency. Here\'s why, what to do, and how to tell it apart from constipation.',
     datePublished: '2026-04-24',
-    dateModified: '2026-04-24',
+    dateModified: '2026-05-21',
     readMinutes: 6,
     primaryKeyword: 'cat urethral obstruction',
     relatedSlugs: ['cat-litter-box-changes', 'cat-vomiting-when-to-see-vet', 'cat-hiding-illness'],
@@ -1143,10 +1143,42 @@ const ARTICLES: Article[] = [
     title: 'Cat Hiding: Normal Behavior or Early Warning of Illness?',
     description: "Cats hide when they're stressed — but also when they're sick. How to tell the difference, and when hiding becomes a vet visit.",
     datePublished: '2026-04-24',
-    dateModified: '2026-04-24',
+    dateModified: '2026-05-20',
     readMinutes: 4,
     primaryKeyword: 'cat hiding',
     relatedSlugs: ['do-cats-hide-pain', 'cat-grooming-less', 'cat-not-eating', 'cat-lethargy', 'cat-body-language-ears-whiskers-eyes'],
+    faqs: [
+      {
+        question: 'When should I worry about my cat hiding?',
+        answer:
+          "Hiding under 12 hours with no other symptoms is usually fine. Hiding 12-24 hours warrants a vet call if appetite drops or behaviour changes. Hiding more than 24 hours, or hiding paired with any physical symptom (appetite loss, limping, vocalising when touched, litter-box changes), means a same-day vet visit.",
+      },
+      {
+        question: 'Why is my cat suddenly hiding so much?',
+        answer:
+          "Cats hide when stressed (new pet, baby, move, loud event, vet visit) AND when in pain or sick. Two-question filter: has anything changed in the environment, AND are there physical symptoms paired with the hiding? Stress alone — give 24-48 hours of quiet. Symptoms paired — call the vet.",
+      },
+      {
+        question: 'How long is it normal for a cat to hide?',
+        answer:
+          "A few hours after a disruption (visitor, vacuum, fireworks) is normal. A full day is worth investigating. Two consecutive days is a problem — even with no other visible symptoms. Cats are evolutionary prey animals and mask illness as long as they can.",
+      },
+      {
+        question: 'Should I pull my cat out of hiding?',
+        answer:
+          "No. Forcing a cat out escalates stress and erodes trust. Instead, place fresh food, water, and a clean litter box near the hiding spot, then leave the cat alone. Observe from a distance. If the cat won't eat or drink for 24 hours or shows physical symptoms, that's when you call the vet.",
+      },
+      {
+        question: 'Does my cat hiding mean she is dying?',
+        answer:
+          "Not necessarily — but hiding plus appetite loss, lethargy, or visible symptoms (limping, discharge, hunched posture) can indicate serious illness. Cats hide acute pain better than dogs because they're evolutionary prey. Hiding alone for under 12 hours is monitor; hiding paired with any other symptom is a same-day vet visit.",
+      },
+      {
+        question: "What's the difference between a cat hiding and just being shy?",
+        answer:
+          "A shy cat has predictable hiding spots and emerges on a regular schedule (mealtimes, evenings, when the house quiets). A worrying hide is OUT OF CHARACTER — a normally sociable cat suddenly withdraws, or a normally accessible cat refuses to come out for food. The change from baseline is the signal, not the hiding itself.",
+      },
+    ],
     bodyHtml: `
 <p>A cat hiding under the bed for a few hours is normal. A cat hiding for a day is a question. A cat hiding for two days is a problem.</p>
 <p>The difficulty is that cats use the same behavior — withdrawing from visibility — to signal "I want to be alone right now" <em>and</em> "I'm in pain but I don't want you to know." Generic "wait and see" advice doesn't work because by the time a cat's hiding is obvious enough to alarm you, they may have been sick for days.</p>
@@ -1236,10 +1268,10 @@ const ARTICLES: Article[] = [
   },
   {
     slug: 'cat-losing-weight',
-    title: 'Cat Losing Weight: CKD, Hyperthyroidism, and the Three Differentials You Need to Know',
+    title: 'Cat Losing Weight: CKD, Hyperthyroidism, Diabetes',
     description: 'A cat losing weight — even with a normal appetite — is almost never healthy. How to tell CKD from hyperthyroidism from diabetes, and which labs to ask for.',
     datePublished: '2026-04-24',
-    dateModified: '2026-04-24',
+    dateModified: '2026-05-21',
     readMinutes: 7,
     primaryKeyword: 'cat weight loss',
     relatedSlugs: ['cat-not-eating', 'senior-cat-care-after-age-10', 'cat-litter-box-changes'],
@@ -1485,7 +1517,7 @@ const ARTICLES: Article[] = [
     title: 'Cat Gum Color: Pink, Pale, Yellow, or Blue — What Each Means',
     description: 'Gum color is one of the fastest checks of feline health. Pink is good. Pale, yellow, or blue is an emergency. Here\'s what each color tells you.',
     datePublished: '2026-04-24',
-    dateModified: '2026-04-24',
+    dateModified: '2026-05-21',
     readMinutes: 4,
     primaryKeyword: 'cat gum color',
     relatedSlugs: ['cat-lethargy', 'cat-breathing-fast-sleeping', 'cat-vomiting-when-to-see-vet'],
@@ -1562,9 +1594,9 @@ const ARTICLES: Article[] = [
   {
     slug: 'cat-breathing-fast-sleeping',
     title: 'Cat Breathing Fast While Sleeping: HCM and the 30 bpm Rule',
-    description: "A sleeping cat's breathing rate should be under 30 breaths per minute. Above that — especially in Maine Coons, Ragdolls, and Persians — can be an early sign of HCM.",
+    description: "A sleeping cat's breathing rate should stay under 30/min. Above that — especially in Maine Coons, Ragdolls, and Persians — can signal early HCM.",
     datePublished: '2026-04-24',
-    dateModified: '2026-04-24',
+    dateModified: '2026-05-21',
     readMinutes: 5,
     primaryKeyword: 'cat breathing fast',
     relatedSlugs: ['cat-gum-color', 'cat-sneezing', 'cat-lethargy'],
@@ -1645,10 +1677,10 @@ const ARTICLES: Article[] = [
   },
   {
     slug: 'cat-litter-box-changes',
-    title: 'Litter Box Changes: Frequency, Consistency, Blood, and What They Mean',
+    title: 'Cat Litter Box Changes: Frequency, Blood, What It Means',
     description: "Your cat's litter box is the best home diagnostic tool you have. How to read changes in frequency, clump size, stool, and color.",
     datePublished: '2026-04-24',
-    dateModified: '2026-04-24',
+    dateModified: '2026-05-21',
     readMinutes: 5,
     primaryKeyword: 'cat litter box changes',
     relatedSlugs: ['cat-straining-to-urinate', 'cat-losing-weight', 'senior-cat-care-after-age-10'],
@@ -1758,10 +1790,10 @@ const ARTICLES: Article[] = [
   },
   {
     slug: 'cat-ate-lily-emergency',
-    title: 'Cat Ate a Lily: Why Every Minute Matters and What to Do Right Now',
+    title: 'Cat Ate a Lily? What to Do Right Now (Vet Emergency)',
     description: "Lilies cause acute kidney failure in cats within hours. The 6-hour window, which 'lilies' are actually toxic, and step-by-step actions before the vet.",
     datePublished: '2026-04-28',
-    dateModified: '2026-04-28',
+    dateModified: '2026-05-21',
     readMinutes: 6,
     primaryKeyword: 'cat lily poisoning',
     relatedSlugs: ['cat-vomiting-when-to-see-vet', 'cat-not-eating', 'cat-lethargy'],
@@ -1997,10 +2029,10 @@ const ARTICLES: Article[] = [
   // ── Section: Read your cat ──────────────────────────────────────
   {
     slug: 'cat-tail-language',
-    title: 'What your cat’s tail is telling you — the 7 positions, decoded',
+    title: "Cat Tail Language: What Your Cat's Tail Is Telling You",
     description: 'The tail is the most readable channel a cat has. Seven positions, what each one means, and the body-language combinations that change everything.',
     datePublished: '2026-05-01',
-    dateModified: '2026-05-01',
+    dateModified: '2026-05-21',
     readMinutes: 9,
     relatedSlugs: ['cat-body-language-ears-whiskers-eyes', 'how-body-language-readers-work', 'feline-five-personality-framework'],
     primaryKeyword: 'cat tail meaning',
@@ -2091,8 +2123,8 @@ const ARTICLES: Article[] = [
 
   {
     slug: 'cat-body-language-ears-whiskers-eyes',
-    title: 'Cat Body Language Meaning: What Ears, Eyes, Whiskers, and Tails Tell You',
-    description: 'Cat body language meaning, decoded. What ears, eyes, whiskers, tail, and posture each tell you about how your cat feels — with a quick-reference table and side-by-side photos.',
+    title: 'Cat Body Language Meaning: Ears, Eyes, Whiskers, Tails',
+    description: 'Cat body language meaning, decoded. What ears, eyes, whiskers, tail, and posture each tell you about how your cat feels — with a quick chart.',
     datePublished: '2026-05-01',
     dateModified: '2026-05-01',
     readMinutes: 10,
@@ -2118,6 +2150,8 @@ const ARTICLES: Article[] = [
     ],
     bodyHtml: `
 <p>The tail tells you maybe half of what your cat is feeling. The other half is in four channels you might be reading without realising it — <strong>ears, whiskers, eyes, and posture</strong>. Each is a real signal with a real vocabulary, and once you can read all five, you can read your cat with the kind of fluency most owners never reach.</p>
+
+<p>(If you've ever wondered "does my cat hate me," the five-channel read is the answer. See our blog: <a href="/blog/does-your-cat-hate-you">Does Your Cat Hate You? What Body Language Actually Means</a>.)</p>
 
 <h2>Ears — the directional indicator</h2>
 <p>Cats have 32 muscles per ear and can rotate each one 180° independently. That’s far more articulation than they need just to hear, and it’s why ears are such a rich emotional signal.</p>
@@ -2206,7 +2240,7 @@ const ARTICLES: Article[] = [
   {
     slug: 'feline-five-personality-framework',
     title: 'The Feline Five — the science of cat personality',
-    description: 'Cats have personalities the way humans do — measurable, stable, life-shaping. The five-trait research framework, the recognisable archetypes, and what each one means for how you should live with your cat.',
+    description: 'Cats have personalities like humans — measurable, stable, life-shaping. The Feline Five framework, the 9 archetypes, and what each means for you.',
     datePublished: '2026-05-01',
     dateModified: '2026-05-01',
     readMinutes: 11,
@@ -2235,7 +2269,7 @@ const ARTICLES: Article[] = [
       },
     ],
     bodyHtml: `
-<p>For decades, cat personality was treated as folk science — a thing every cat owner believed in but no researcher quantified. That’s changed. The 2017 Litchfield et al. study (<em>The "Feline Five": An Examination of Personality in the Domestic Cat</em>, PLoS One) surveyed over 2,800 cat owners and identified five replicable personality traits. Together they form the strongest scientific framework we have for understanding why cats are so individually different.</p>
+<p>For decades, cat personality was treated as folk science — a thing every cat owner believed in but no researcher quantified. That’s changed. The 2017 Litchfield et al. study (<em>The "Feline Five": An Examination of Personality in the Domestic Cat</em>, PLoS One) surveyed over 2,800 cat owners and identified five replicable personality traits. Together they form the strongest scientific framework we have for understanding why cats are so individually different. (For the practical-walkthrough version of this framework with all 9 archetypes side-by-side, see our blog: <a href="/blog/feline-five-personality-types">Every Cat Personality Type Explained</a>.)</p>
 
 <p>This guide walks through the five traits, the archetypes that emerge from common combinations, and what each one means for how to live with your cat.</p>
 
@@ -2306,8 +2340,8 @@ const ARTICLES: Article[] = [
   // ── Section: The good cat life ──────────────────────────────────
   {
     slug: 'five-pillars-happy-indoor-cat',
-    title: 'The 5 pillars of a happy indoor cat (according to feline vets)',
-    description: 'The AAFP/ISFM 5 Pillars framework is the welfare standard feline vets follow. Five environmental needs, what each one means in practice, and a 15-minute home audit you can do this weekend.',
+    title: 'The 5 Pillars of a Happy Indoor Cat (Per Feline Vets)',
+    description: "The AAFP/ISFM 5 Pillars — feline vets' welfare standard. Five environmental needs, what each means in practice, and a 15-minute home audit.",
     datePublished: '2026-05-01',
     dateModified: '2026-05-01',
     readMinutes: 12,
@@ -2392,7 +2426,7 @@ const ARTICLES: Article[] = [
   {
     slug: 'senior-cat-care-after-age-10',
     title: 'Senior cat care — the 12 changes worth tracking after age 10',
-    description: 'Cats over 10 enter a life-stage where small drift in weight, water, litter, and behaviour is often the first sign of treatable disease. The 12 markers worth tracking, the schedule that catches problems early, and the environment changes that keep senior cats comfortable.',
+    description: 'After age 10, small drifts in weight, water, and litter habits are often the first sign of treatable disease. The 12 markers worth tracking.',
     datePublished: '2026-05-01',
     dateModified: '2026-05-01',
     readMinutes: 9,
@@ -2491,10 +2525,10 @@ const ARTICLES: Article[] = [
   // ── Section: Read your cat — Article 3 ──────────────────────────
   {
     slug: 'cat-vocalizations-decoded',
-    title: 'How to read your cat’s vocalizations — meow, chirp, purr, growl',
-    description: 'Cats produce 21+ distinct sounds, but the everyday repertoire reduces to about eight. What each one means, the surprising fact that adult cats meow almost exclusively at humans, and how vocal patterns shift with age and health.',
+    title: 'How to Read Cat Vocalizations: Meow, Chirp, Purr, Growl',
+    description: 'Cats make 21+ sounds, but use about 8 daily. What each means, why adult cats meow almost only at humans, and how vocalisations shift with age.',
     datePublished: '2026-05-01',
-    dateModified: '2026-05-01',
+    dateModified: '2026-05-21',
     readMinutes: 9,
     relatedSlugs: ['why-does-my-cat-meow-at-me', 'cat-tail-language', 'cat-body-language-ears-whiskers-eyes', 'how-meow-translators-work'],
     primaryKeyword: 'cat sounds meaning',
@@ -2589,7 +2623,7 @@ const ARTICLES: Article[] = [
   {
     slug: 'multi-cat-household-harmony',
     title: 'Multi-cat households — the science of getting along',
-    description: 'Twenty percent of cat homes have more than one cat, and most of them have lower-grade conflict the owners don’t recognise. The AAFP-backed framework for resource design, the introduction protocol that prevents long-term tension, and the body-language signs that tell you whether your cats actually like each other.',
+    description: 'Most multi-cat homes have low-grade conflict owners miss. AAFP-backed resource design, the introduction protocol, and body-language signs to read.',
     datePublished: '2026-05-01',
     dateModified: '2026-05-01',
     readMinutes: 11,
@@ -2702,7 +2736,7 @@ const ARTICLES: Article[] = [
   {
     slug: 'kitten-development-windows',
     title: 'Kitten development — the windows that matter most',
-    description: 'The first 16 weeks of a cat’s life shape who they will be for the next 18 years. The 2-7 week socialisation window, the milestones month-by-month, and the things owners can do at each stage to set their cat up for a confident adult life.',
+    description: 'The first 16 weeks shape your kitten for the next 18 years. The 2-7 week socialisation window, monthly milestones, and what to do at each stage.',
     datePublished: '2026-05-01',
     dateModified: '2026-05-01',
     readMinutes: 9,

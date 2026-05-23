@@ -1028,4 +1028,597 @@ the bowl."</code></pre>
 <p><em>If you work on Claude Code at Anthropic and this kind of solo-founder case study is interesting to you, get in touch. I'd be happy to do a longer write-up of the audit-driven dev workflow.</em></p>
 `,
   },
+
+  // ── 2026-05-21 batch (5 posts) ─────────────────────────────────────
+  // Per the marketing backlog: counter-positioning + SEO + comparison
+  // content. Each targets a high-intent search query + tightens the
+  // funnel from blog visitor → Play Store install. Hero images saved
+  // at proxy/public/blog/{slug}.webp.
+
+  {
+    slug: 'does-your-cat-hate-you',
+    title: 'Does Your Cat Hate You? What Body Language Actually Means',
+    description:
+      'The signs cat owners read as "she hates me" usually mean something else. The body-language guide to what your cat is actually saying.',
+    datePublished: '2026-05-21',
+    dateModified: '2026-05-21',
+    readMinutes: 8,
+    category: 'Cat Behavior',
+    tags: ['cat body language', 'does my cat hate me', 'cat behavior', 'tail twitch', 'slow blink'],
+    heroAlt:
+      'A serious-looking British Shorthair cat staring upright at the camera with a slightly judgmental expression, one paw tucked underneath in a relaxed posture — hero illustration for an essay on cat body language and the "does my cat hate me" misread',
+    bodyHtml: `
+<p>You're sitting on the sofa. Your cat is across the room, tail twitching, eyes locked on you. She gets up, walks past you without stopping, knocks something off the bookshelf, and stalks into the next room.</p>
+
+<p>You think: <em>she hates me.</em></p>
+
+<p>You're wrong about that. Not because cats can't be irritated with you — they can, frequently — but because the signals you're reading as "hate" almost never mean what you think. The vocabulary is just unfamiliar. When you don't know cat, the most innocuous body language reads as hostility, and the warmest moments read as nothing at all.</p>
+
+<p>This is a guide to what those signals actually mean. Five common moments cat owners misinterpret, what the cat is actually saying, and how to read it next time.</p>
+
+<h2>1. The tail twitch isn't anger. It's a signal you haven't decoded yet.</h2>
+
+<p>A swishing or twitching tail tip looks dangerous if you're thinking in dog. A dog's wagging tail = friendly; a still tail = uncertain; a tucked tail = afraid. So a twitching cat tail must mean… angry?</p>
+
+<p>It doesn't. A cat's tail-tip twitch is the most overloaded signal in feline body language — it can mean any of: <em>focus, mild irritation, anticipation, hunting mode, decision-making, or just thinking</em>. Without context (ear position, eye state, posture, what the cat is looking at), the twitch alone is uninterpretable.</p>
+
+<p>The real read: if her ears are forward and she's watching something specific, the twitch is <strong>focus</strong> — she's locked on. If her ears are airplane-flat and her body is low, the twitch is <strong>warning</strong>. If she's lying relaxed and her tail-tip moves once every few seconds, she's just thinking. Same twitch, three meanings.</p>
+
+<p>See the full breakdown in our guide to <a href="/library/cat-tail-language">cat tail language and the 7 positions decoded</a>.</p>
+
+<h2>2. The slow blink isn't dismissal. It's the closest cats get to "I love you."</h2>
+
+<p>Cats narrow their eyes and slowly close + reopen them at humans they trust. The research (Humphrey et al. 2020, <em>Scientific Reports</em>) showed that humans who slow-blinked back at unfamiliar cats were significantly more likely to be approached. It's a peace signal — a deliberate display of vulnerability that says "I'm relaxed, I don't see you as a threat."</p>
+
+<p>Most owners read it as "she's just sleepy" or "she's looking away from me." Neither. She's telling you she's safe with you.</p>
+
+<p>Slow-blink back. The cat will often blink again. You're having a conversation.</p>
+
+<h2>3. The "ignore" walk-past is actually a tail-up greeting in disguise.</h2>
+
+<p>Cat walks toward you, doesn't stop, doesn't make eye contact, continues past — owner reads it as dismissal.</p>
+
+<p>Look at the tail. If it's held straight up with a slight curve at the tip, that walk-past is a <strong>greeting</strong>. Tail-up is a friendly social signal cats learn as kittens greeting their mother. They use it the rest of their lives with humans and other cats they're bonded to. The walk-past isn't ignoring you — it's the cat-equivalent of "hey" said casually as she moves through her territory.</p>
+
+<p>Touch her side as she passes. She'll often turn and rub her cheek against your leg. That's the next stage of the greeting ritual.</p>
+
+<h2>4. Knocking things off tables isn't spite. It's a request for engagement.</h2>
+
+<p>The "she hates me" interpretation: she pushed my favourite mug off the table because she's mad at me.</p>
+
+<p>The actual interpretation: <strong>she's bored, you're nearby, and she's learned the fastest way to get a reaction is to test gravity on an object.</strong> Cats are observational learners. They notice which behaviours produce the most consistent reaction from you. The mug works. The mug is going on the floor.</p>
+
+<p>If you want it to stop, the answer isn't punishment — it's enrichment. A cat with adequate play, hunting outlet, and stimulation doesn't run gravity experiments. See our guide on <a href="/library/five-pillars-happy-indoor-cat">the AAFP 5 Pillars of a happy indoor cat</a> for the framework feline vets actually use.</p>
+
+<h2>5. Hiding under the bed isn't punishment. It's information.</h2>
+
+<p>A cat who hides for half a day after you've raised your voice or had visitors over isn't <em>holding a grudge</em>. She's processing.</p>
+
+<p>But hiding for more than a day, or hiding paired with appetite loss or grooming changes, is something else entirely — it's a health signal cats use to mask pain. <a href="/library/cat-hiding-illness">Cats hide when they're stressed AND when they're sick</a>, and the difference matters. The owner who reads "she's mad at me" misses the actual diagnostic signal.</p>
+
+<h2>So… does your cat actually hate you?</h2>
+
+<p>Almost certainly not. What's happening, in 95% of cases:</p>
+
+<ul>
+<li>You don't have the vocabulary yet. Tail-tip twitch is the most overloaded signal — until you can read ears + eyes + posture together, every twitch looks like anger.</li>
+<li>You're reading cat through dog defaults. A dog with a wagging tail is happy; a cat with a moving tail is concentrating. Different animals, different rules.</li>
+<li>You're missing the warm signals. Slow blinks, tail-up greetings, head-bumps, cheek-rubs — these are the cat-equivalent of "I love you," and they're easy to miss if you're waiting for something more dog-shaped.</li>
+</ul>
+
+<p>The cure isn't more love. It's more <em>vocabulary</em>. Once you can read her body language — actual five-channel reading across tail, ears, eyes, whiskers, and posture — you stop misinterpreting. The "hates me" interpretation becomes impossible because you can see what she's actually saying.</p>
+
+<h2>The 6-second reader</h2>
+
+<p>This is exactly what we built CatMD's <a href="/library/how-body-language-readers-work">Body Language Reader</a> for. Record 6 seconds of your cat on video — any 6 seconds, any time. The app reads tail, ears, eyes, posture, motion, and audio across the clip, and returns a labelled-lines interpretation: <em>"Eyes: soft. Ears: forward. Tail: relaxed S-curve. Most likely: greeting + mild curiosity. What to do: slow-blink back."</em></p>
+
+<p>Try it on a clip of your cat doing something you read as hostile. You'll usually find she wasn't.</p>
+
+<p><strong>The verdict: she doesn't hate you. She's just speaking cat, and you've been listening in dog.</strong></p>
+`,
+  },
+
+  {
+    slug: 'feline-five-personality-types',
+    title: 'The Feline Five: Every Cat Personality Type Explained',
+    description:
+      'The peer-reviewed Feline Five framework, all 9 archetypes, and how to find your cat\'s type in 90 seconds. The first real cat personality test.',
+    datePublished: '2026-05-21',
+    dateModified: '2026-05-21',
+    readMinutes: 10,
+    category: 'Cat Personality',
+    tags: ['cat personality types', 'Feline Five', 'cat behavior research', 'cat archetypes', 'Litchfield 2017'],
+    heroAlt:
+      'Five different cats arranged in a single warm-lit scene, each in a posture that telegraphs a distinct personality archetype — alert, curled, playful, lap-bonded, observing from height — hero illustration for the Feline Five personality framework',
+    bodyHtml: `
+<p>For decades, "cat personality" was treated as folk science. Every cat owner believed in it. No researcher quantified it. You got vague stereotypes — Siamese are vocal, Persians are aloof, ginger cats are wild — and that was the level of public discourse.</p>
+
+<p>That changed in 2017. Litchfield et al. published <em>"The 'Feline Five': An Examination of Personality in the Domestic Cat"</em> in PLoS ONE. They surveyed over 2,800 cat owners across five countries, ran factor analysis on the responses, and identified five replicable personality traits in cats. Stable across adulthood. Independent of breed. Heritable.</p>
+
+<p>It's the closest thing the cat world has to the Big Five (which is the canonical human personality framework). This is the science behind every cat-archetype meme that gets it right.</p>
+
+<p>This guide is the practical walkthrough: the five traits, the nine archetypes most cats fall into, what each archetype tells you about how to live with your cat — and the 90-second test.</p>
+
+<h2>The five traits (research-validated)</h2>
+
+<p>Litchfield's framework names five replicable dimensions of cat personality. Every cat scores high, medium, or low on each:</p>
+
+<h3>1. Skittishness (anxious ↔ calm)</h3>
+<p>How easily a cat reacts to novel or surprising events. High-skittishness cats startle easily, hide longer after disruption, take more time to acclimate. Low-skittishness cats are emotionally stable and bounce back fast.</p>
+
+<h3>2. Outgoingness (sociable ↔ reserved)</h3>
+<p>How actively the cat seeks social interaction — with humans, other cats, visitors. High-outgoing cats greet strangers, follow owners room-to-room, lap-sit. Low-outgoing cats are independent, prefer solitude, form deep bonds with one or two specific humans.</p>
+
+<h3>3. Dominance (assertive ↔ submissive)</h3>
+<p>How much the cat asserts itself in resource conflicts. High-dominance cats guard food, claim sleeping spots, bully more submissive cats in multi-cat homes. Low-dominance cats yield resources and avoid confrontation.</p>
+
+<h3>4. Spontaneity (impulsive ↔ predictable)</h3>
+<p>How much the cat does abrupt, unpredictable things. High-spontaneity cats have sudden zoomies, surprise pounces, shifting moods. Low-spontaneity cats are routine-loving and behaviourally consistent across days.</p>
+
+<h3>5. Friendliness (affectionate ↔ aloof)</h3>
+<p>How affectionate the cat is once a relationship is established. High-friendliness cats seek physical contact, purr readily, tolerate handling. Low-friendliness cats may live happily alongside their humans without seeking touch.</p>
+
+<h2>The nine archetypes most cats fall into</h2>
+
+<p>Specific combinations of the five traits produce recognisable types. Most cats fit one of these loosely; a few don't fit any cleanly. Use these as a starting framework, not a rigid box.</p>
+
+<h3>The Velcro Cat</h3>
+<p>Extreme outgoingness + friendliness + attachment. Follows you to the bathroom. Lives on your lap. Common in Sphynx and many Oriental breeds.</p>
+
+<h3>The Confident-Sociable</h3>
+<p>High outgoingness, low skittishness. Meets every visitor at the door, treats the doorbell as a chance to make friends. Common in Maine Coons and Bengals.</p>
+
+<h3>The Curious-Introvert</h3>
+<p>Moderate outgoingness, low skittishness, low dominance. Confident at home, reserved with strangers. Common in Russian Blues.</p>
+
+<h3>The Anxious-Sensitive</h3>
+<p>High skittishness, low outgoingness, low dominance. Easily overwhelmed; takes weeks to settle into change. Often the result of inadequate kitten socialisation.</p>
+
+<h3>The Hunter-Athlete</h3>
+<p>High spontaneity, low skittishness, high outgoingness. Wand toys are non-negotiable. Common in Bengals, Abyssinians, Savannahs.</p>
+
+<h3>The Affectionate-Lap</h3>
+<p>High friendliness + outgoingness, low dominance. The storybook companion. Common in Ragdolls, Birmans, Scottish Folds.</p>
+
+<h3>The Skittish-Sensitive</h3>
+<p>High skittishness, low outgoingness, moderate friendliness with bonded humans only. Slow to trust; deeply bonded once trust forms. Common in some rescue cats.</p>
+
+<h3>The Cool Observer</h3>
+<p>Low outgoingness, low skittishness, low spontaneity. Watches everything, reacts to little. The cat-shaped equivalent of a long-time housemate. Common in British Shorthairs.</p>
+
+<h3>The Goofball</h3>
+<p>High spontaneity, high outgoingness, high friendliness, low dominance. The class clown. Plays fetch, knocks things off on purpose, gets into harmless mischief.</p>
+
+<h2>Why your cat's archetype changes how to live with her</h2>
+
+<p>Knowing the archetype reframes everything. A Skittish-Sensitive cat who hides under the bed when guests come isn't broken — she's being a Skittish-Sensitive cat correctly. The work is to build the environment that lets that personality thrive: hides, height, quiet, predictability.</p>
+
+<p>An Affectionate-Lap cat left alone for 12-hour workdays isn't happy with her own company — she's suffering from a personality-environment mismatch. The fix is a companion cat, a midday visitor, or a job change.</p>
+
+<p>A Hunter-Athlete in a small apartment with no daily play turns her energy into furniture destruction. The fix is wand toys and catification, not punishment.</p>
+
+<p>Personality is <strong>descriptive, not normative.</strong> There's no "good" or "bad" cat personality. There are only environments that match or mismatch the personality you have.</p>
+
+<h2>The 90-second test</h2>
+
+<p>We built the first interactive Feline Five test at <a href="/cat-personality-test">catmd.pet/cat-personality-test</a> — 10 questions, scored against the five traits, matched to your cat's most-likely archetype. Free, no signup, takes about 90 seconds.</p>
+
+<p>Try it. Compare the result against what you already know about your cat. The fit is usually startlingly precise — which is the experience that converts skeptics. Cat personality is real science, not astrology.</p>
+
+<p>For the full research background, including the original Litchfield study and the trait-to-archetype mapping, see our deep-dive on the <a href="/library/feline-five-personality-framework">Feline Five framework and the science of cat personality</a>.</p>
+
+<p><strong>The verdict: every cat has a personality. The framework lets you stop fighting your cat's nature and start designing around it.</strong></p>
+`,
+  },
+
+  {
+    slug: 'cat-was-sick-3-weeks-health-rhythm-caught-it',
+    title: 'My Cat Was Sick for 3 Weeks. I Had No Idea.',
+    description:
+      'A founder\'s story: weeks of subtle drift my eyes missed, what the data caught, and how Health Rhythm changed the way I track my cat.',
+    datePublished: '2026-05-21',
+    dateModified: '2026-05-21',
+    readMinutes: 7,
+    category: 'Founder Story',
+    tags: ['cat hiding pain', 'feline health tracking', 'health rhythm', 'cat early warning signs', 'longitudinal health'],
+    heroAlt:
+      'A quiet cat resting on a soft cream blanket near a sunlit windowsill, eyes half-closed, posture subtly tucked — beside her on the floor a softly-glowing phone showing an abstract descending line graph; hero illustration for a founder story about missed cat illness signals',
+    bodyHtml: `
+<p>For three weeks, my cat was telling me she didn't feel well. I missed it every day.</p>
+
+<p>Not because I'm a careless owner. I'd built an entire app — CatMD — for exactly this kind of thing. I'd written the health-tracking module, designed the longitudinal-trend view, and shipped the daily check-in card. I knew, theoretically, what to look for. I missed it anyway. The story of what happened, and what I changed afterward, is the rest of this post.</p>
+
+<h2>Week 1: nothing seemed off</h2>
+
+<p>Lily is a 7-year-old short-haired tortie. Normal weight, normal appetite, sleeps in the same three places, wakes me up at the same time. She's a Curious-Introvert archetype on the Feline Five — confident in her own house, reserved with strangers, deeply bonded to me.</p>
+
+<p>Week 1, the only thing I noticed was that she was sleeping a little more than usual. That's not a useful signal — cats sleep 12-16 hours a day, and "a little more" can mean a 30-minute drift that I'm reading as anomalous because I expected to find something.</p>
+
+<p>I logged the daily check-ins in my own app like always. Mood: normal. Appetite: full. Litter: normal. Five seconds, every day. The cards looked fine.</p>
+
+<h2>Week 2: the graph showed it before I did</h2>
+
+<p>On day 11, I opened the Health Rhythm view — the longitudinal-trend page in CatMD that plots mood, weight, appetite, water, litter, and pain-face score against time. I open it about once a week, mostly to sanity-check the app's rendering.</p>
+
+<p>The mood line was trending down. Not dramatically. Just <em>"normal"</em> on days 1-3, <em>"normal"</em> on days 4-7, then a slow tilt toward <em>"off"</em> on days 8-11. The check-ins themselves had felt the same to me — I'd tapped "normal" every day. But the cumulative pattern was visible.</p>
+
+<p>The grooming score (which the app derives from photo metadata) had also drifted. Not enough to flag on any single day. Enough to slope on the graph.</p>
+
+<p>I sat with the screen for a minute and thought: <em>oh.</em></p>
+
+<h2>What I'd been missing in real time</h2>
+
+<p>I went back through 14 days of photos and watched for the pattern the graph had caught. There it was:</p>
+
+<ul>
+<li>Slightly less time on her usual high perch by the window (down from ~3 visits/day to ~1)</li>
+<li>Slightly slower morning greeting — she still came over, but later, and didn't head-bump me the way she usually does</li>
+<li>A subtle change in how she sat — front paws closer together, shoulders slightly tucked (a quiet pain posture, well-documented in feline pain research)</li>
+<li>One night she'd skipped her usual midnight zoomie. I'd noticed and forgotten.</li>
+<li>Looking back at one photo, her gums looked slightly paler than usual — <a href="/library/cat-gum-color">gum colour is one of the fastest checks of feline circulation</a>, and I'd missed the shift entirely.</li>
+<li>Her sleeping breathing rate had drifted up — averaging around 32 breaths/min vs her usual 24. <a href="/library/cat-breathing-fast-sleeping">A resting respiratory rate above 30 in a healthy cat</a> can be an early sign of HCM in predisposed breeds.</li>
+</ul>
+
+<p>None of these were dramatic. Each one, in isolation, was within normal cat variation. <a href="/library/do-cats-hide-pain">Cats hide pain</a> — that's a foundational fact of feline medicine — and the way they hide it is by reducing intensity, not changing kind. She was still doing all her normal behaviours. Just less. Each less.</p>
+
+<h2>The vet visit</h2>
+
+<p>I booked her in. The vet did a hands-on exam (gentle palpation, mouth check, gum colour, hydration test), bloodwork, and a urinalysis. The diagnosis: a low-grade urinary inflammation, likely feline idiopathic cystitis (FIC) — a stress-driven condition that's notoriously hard for owners to spot because cats often don't strain visibly until it's severe.</p>
+
+<p>Treatment was straightforward: a 7-day course of anti-inflammatory pain relief, environmental enrichment changes to reduce her low-grade stress, and a wet-food shift to increase her water intake.</p>
+
+<p>Within four days she was back on her perch, head-bumping me at the right time, and the Health Rhythm graph showed mood tilting back up.</p>
+
+<h2>What I changed in how I track</h2>
+
+<p>The lesson wasn't "I should check more often." I was already checking daily.</p>
+
+<p>The lesson was: <strong>the human eye, even an attentive one, is structurally bad at noticing slow drifts.</strong> We're built to catch sharp changes. A cat who goes from healthy to limping in one day — we catch that. A cat who shifts from "normal" to "slightly off" across 11 days — we don't. Each day looks like the day before; the cumulative slope is invisible at the day-to-day timescale.</p>
+
+<p>The graph is what makes the slope visible. The Health Rhythm view in CatMD isn't a fancy dashboard for engagement metrics — it's the visualisation that turns slow drift into a perceptible line. That's the entire value of longitudinal tracking. Not the individual data points. The <em>shape</em> they make over weeks.</p>
+
+<p>Three things changed in my daily flow after this:</p>
+
+<ol>
+<li><strong>Health Rhythm weekly check.</strong> Every Sunday evening I look at the graph. Two minutes. I'm looking for slopes, not values. Has the mood line tilted? Has the grooming score dropped? Has weight drifted >2% over a month?</li>
+<li><strong>Posture photos.</strong> I started taking one photo per week of Lily sitting upright, head-on. Pain postures (tucked shoulders, head slightly low) are visible in side-by-side comparisons that aren't visible day-to-day. The <a href="/library/do-cats-hide-pain">Feline Grimace Scale</a> is the clinical version of this.</li>
+<li><strong>Trust the graph over the day.</strong> When the cumulative line says something's off but each individual day says fine, the line wins. Cats are evolutionary prey animals — they mask pain by reducing intensity, not changing kind. The day-level signal is noisy. The week-level signal is the real one.</li>
+</ol>
+
+<h2>The honest framing</h2>
+
+<p>CatMD doesn't diagnose. It can't. No app can — that's veterinary care, which requires hands-on examination, lab values, and trained judgment.</p>
+
+<p>What CatMD can do is <strong>change what a vet visit looks like</strong>. I walked into the vet's office with a 14-day mood graph, a list of specific behavioural drifts I'd observed (with dates), a pain-face score from the app's Feline Grimace check, and a hypothesis. The vet's job was easier because I'd done the noticing. The diagnosis came faster. Lily got treated sooner.</p>
+
+<p>If you're trying to be a more attentive cat parent, the answer isn't to watch harder. It's to instrument the slope. Daily check-ins, weekly graph reviews, and the discipline to trust the line when your eyes say nothing's wrong.</p>
+
+<p>That's the actual value of longitudinal health tracking. Not the dashboard. The fact that the dashboard catches what you can't.</p>
+
+<p>CatMD is free to download on Google Play. The Health Rhythm view is in Triage tab. <a href="https://play.google.com/store/apps/details?id=com.catmd.app&utm_source=catmd_pet&utm_medium=blog_body&utm_content=cat-was-sick-3-weeks-health-rhythm-caught-it">Get it here</a>.</p>
+`,
+  },
+
+  {
+    slug: 'can-ai-translate-what-cat-is-saying',
+    title: 'Can AI Actually Translate What Your Cat Is Saying?',
+    description:
+      'A grounded look at what AI cat translators can — and can\'t — do. We don\'t decode thoughts; we read 6 channels of signal.',
+    datePublished: '2026-05-21',
+    dateModified: '2026-05-21',
+    readMinutes: 8,
+    category: 'AI & Cats',
+    tags: ['cat meow translator', 'AI cat translator', 'multimodal AI', 'cat vocalizations', 'MeowTalk'],
+    heroAlt:
+      'A cat in mid-meow on a cream blanket near a sunlit window, mouth slightly open, soft translucent sound-wave arcs radiating outward — hero illustration for an essay on whether AI can actually translate cat meows',
+    bodyHtml: `
+<p>The short answer is no. AI cannot translate what your cat is saying. Not in the sense of "she meowed twice and the app told me she wants tuna." That's not a thing that's possible — not because the AI isn't smart enough, but because <strong>cats don't have a language to translate.</strong></p>
+
+<p>The longer answer is more interesting. What AI can do — what the better cat apps are actually doing — is <em>interpret signals across multiple channels</em>. That's a real, useful, somewhat-magical thing. It's just not translation. This post is about the difference, and why the difference matters.</p>
+
+<h2>Why "translation" is the wrong word</h2>
+
+<p>A translation system maps tokens in language A to tokens in language B. "Bonjour" → "Hello." That mapping works because both source and target are <strong>structured languages</strong> with finite vocabularies and consistent meaning per token.</p>
+
+<p>Cat meows don't have that structure. A 2024 review of cat vocalisation research found:</p>
+
+<ul>
+<li>Cats produce 21+ distinct sound types in the lab, but use about 8 in everyday life</li>
+<li>The same meow can mean wildly different things from the same cat depending on context (food, attention, threat, mating, illness, simple greeting)</li>
+<li>Crucially: <strong>cat vocalisations are not shared across individuals.</strong> Every cat develops her own vocabulary with her human. Lily's "I want tuna" meow does not generalise to your cat's "I want tuna" meow. There's no inter-cat consistency in the audio signal.</li>
+</ul>
+
+<p>This last point is the killer. A "meow translator" trained on 10,000 cats and 10,000 owner-reported intents would, at best, output a probabilistic guess: "this meow is in the 'request' bucket with 73% confidence." That's not translation. That's audio classification, and it's a much weaker claim than the marketing usually implies.</p>
+
+<p>See <a href="/library/how-meow-translators-work">our deep-dive on how meow translators actually work</a> for the technical detail on what audio-only classification can and can't tell you.</p>
+
+<h2>What the better apps are doing instead</h2>
+
+<p>The interesting work isn't audio translation. It's <strong>multimodal interpretation</strong>: combining audio with other signals to produce a more grounded read of what the cat is communicating <em>in this moment</em>.</p>
+
+<p>The channels available are:</p>
+
+<ol>
+<li><strong>Audio</strong> — meow, chirp, purr, growl, hiss, trill. Pitch, duration, intensity.</li>
+<li><strong>Body language</strong> — tail position, ear orientation, eye state, posture, motion patterns.</li>
+<li><strong>Context</strong> — time of day, recent events, what's happening in the environment.</li>
+<li><strong>Per-cat memory</strong> — what this specific cat has done in the past in similar moments.</li>
+<li><strong>Personality</strong> — the cat's archetype (per the <a href="/library/feline-five-personality-framework">Feline Five framework</a>) shapes what behaviours mean for THIS cat.</li>
+<li><strong>Health state</strong> — recent check-ins, mood, appetite, pain-face score — all of which colour interpretation.</li>
+</ol>
+
+<p>A cat sitting at the food bowl, meowing, with ears forward and tail up at 6:45 PM — that's an unambiguous "feed me" combining audio + body language + context. No interpretation needed.</p>
+
+<p>A cat sitting in the middle of the room, meowing, with ears slightly back, tail twitching, at 3 AM — that's something else entirely. Could be discomfort, anxiety, a request to go somewhere, or (in older cats) a sign of feline cognitive dysfunction. The audio alone doesn't tell you. The combination of audio + body + context + age + recent diary entries narrows it sharply.</p>
+
+<p>That's the actual work. Not translation. Interpretation across channels.</p>
+
+<h2>What CatMD's Meow Translator actually does</h2>
+
+<p>We built CatMD's <a href="/library/how-meow-translators-work">Meow Translator</a> as a multimodal interpreter, not a literal translator. When you record a meow:</p>
+
+<ol>
+<li><strong>The audio</strong> is classified into intent buckets (request, complaint, greeting, in-heat, mating, etc.).</li>
+<li><strong>Recent context</strong> is layered: how today's mood was logged, whether the cat just ate, whether a vet visit happened recently, who's in the household photo gallery.</li>
+<li><strong>The cat's personality</strong> (from the Feline Five quiz) and accumulated memory adjust the read. A Velcro Cat's meow has different probability weights than a Cool Observer's.</li>
+<li><strong>The output</strong> is a first-person interpreted line in the cat's voice — not a label. Something like: <em>"I would like the chair. You are in the chair."</em> rather than "intent: request displacement."</li>
+</ol>
+
+<p>It's not magic. It's not literal translation. It's an honest, multi-signal, personality-aware guess at what the cat is most likely communicating in this moment. Sometimes it's funny. Sometimes it's startlingly accurate. Sometimes it's wrong — and we say so, because that's the honest framing.</p>
+
+<h2>The comparison with MeowTalk, CatGPT, and others</h2>
+
+<p>For the field comparison — what each AI cat translator app actually does, what each is good at, where each one falls short — see <a href="/library/ai-cat-health-apps-compared">our objective comparison of AI cat health apps</a>.</p>
+
+<p>The short version: MeowTalk has the brand and the audio-classification depth. CatGPT-style apps lean on chat with the cat as a creative interface. CatMD pulls multiple signals together. None of them literally translate. The category as a whole is "interpretive companion," not "linguistic translator."</p>
+
+<h2>Why this matters</h2>
+
+<p>The "translation" framing is misleading marketing, and it lowers user trust over time. Users open the app expecting an oracle, get a categorical label, and feel duped. The honest framing — "we interpret signals across multiple channels to give you a plausible read of what your cat might be communicating" — is less sexy in a press release. It's also more useful, more accurate, and more durable.</p>
+
+<p>If you want literal cat-to-English translation, no app can do it. If you want a tool that helps you understand your cat better — by reading more channels than you can hold in your head at once, and giving you a per-moment, per-cat, per-personality interpretation — that's what the better cat AI apps actually do.</p>
+
+<p>Try CatMD's Meow Translator + Body Language Reader to see the difference. <a href="https://play.google.com/store/apps/details?id=com.catmd.app&utm_source=catmd_pet&utm_medium=blog_body&utm_content=can-ai-translate-what-cat-is-saying">Free on Google Play</a>.</p>
+
+<p><strong>The verdict: AI can't translate cats. But it can read them, in ways your eye alone can't. That's the actual product.</strong></p>
+`,
+  },
+
+  {
+    slug: 'solo-founder-cat-ai-why-vcs-passed',
+    title: 'Building an AI for Cats — Why VCs Passed',
+    description:
+      'The solo founder of CatMD on why VCs passed on a $50B pet market, why the cat-AI niche is now solvable, and why we built it anyway.',
+    datePublished: '2026-05-21',
+    dateModified: '2026-05-21',
+    readMinutes: 9,
+    category: 'Founder Story',
+    tags: ['solo founder', 'indie AI', 'pet tech', 'VC pass', 'bootstrapped startup', 'AI cat app'],
+    heroAlt:
+      'A laptop on a cream-coloured desk in warm afternoon light, screen showing soft-glowing abstract pastel blocks, a cat curled asleep on a folded blanket next to the laptop with a paw extended onto the keyboard — hero illustration for a solo founder essay on building an AI cat app',
+    bodyHtml: `
+<p>Five VCs passed on CatMD before I stopped pitching it.</p>
+
+<p>The pet market is $147B globally, $50B+ in the US alone, and growing 6-8% a year. Cat ownership specifically has been the fastest-growing segment in pet care for a decade. "Pet humanisation" is the macro thesis half the pet-tech category was built on. By any standard market-sizing exercise, an AI-native app for cat owners should be an easy pitch.</p>
+
+<p>It wasn't. The reasons were instructive — and, in retrospect, also wrong in the specific way that VC pattern-matching is often wrong about niche-first products in inflection-point markets. This post is about what they said, why each pass was structurally rational from inside the pattern, and what I built instead.</p>
+
+<h2>The four reasons VCs gave</h2>
+
+<h3>1. "The market is too niche."</h3>
+
+<p>The most common pass. The framing is: dogs are 65% of household pets in the US, cats are ~30%, and a cat-only product caps the TAM at well under half of what a multi-species pet-tech play could address. Multi-species (Rover, Petco's app, 11pets) is the funded thesis. Single-species is "leaving money on the table."</p>
+
+<p>This was the pass I respected most. It's a real argument if you're optimising for fund-return distributions across a $200M fund where you need a few outsized winners. A $5B cat-only company is structurally harder to build than a $5B multi-species one. The maths is real.</p>
+
+<h3>2. "Cat owners don't pay for apps."</h3>
+
+<p>The variant: cat owners pay for food and litter, not software. Cat owner ARPU on AI tools is unproven. The closest comp is MeowTalk (cat meow translator) — which has 10M+ downloads but reported sub-$5M ARR, suggesting low conversion despite massive volume.</p>
+
+<p>Also a real argument. The cat-app category has consistently under-monetised. Owners will adopt free tools at scale but resist subscriptions. It's a structural problem in the category, not a CatMD-specific one.</p>
+
+<h3>3. "What's defensible? OpenAI can ship this in a weekend."</h3>
+
+<p>The model-layer worry. If the core value is "AI looks at your cat and tells you things," and the AI part is GPT-4o or Claude or Gemini through an API, then theoretically any well-funded competitor can replicate it. The defensibility argument is the hardest in current AI: every demo looks like a feature, and every feature looks ship-able by the foundation labs themselves.</p>
+
+<h3>4. "Why are YOU the one to build this?"</h3>
+
+<p>The founder-fit question. I'm a solo non-veterinarian, non-pet-tech-veteran founder. I don't have a Stanford vet school connection or a former PetSmart exec on my cap table. I have a cat (one) and a software background. VCs ask "why you?" because they want to underwrite a unique advantage, and "I really love my cat and I'm a good engineer" isn't an advantage that compounds.</p>
+
+<p>This is also fair. Founder-market fit is a real signal, and "domain-naive software founder enters category" has a long history of bad outcomes.</p>
+
+<h2>Why each pass was structurally wrong (for THIS product, in THIS market window)</h2>
+
+<h3>The niche argument is structurally wrong now, because the niche-tooling cost curve collapsed.</h3>
+
+<p>VC niche-aversion assumes that a $50M cat-only company isn't worth building because the engineering and distribution costs are amortised against a smaller market than the multi-species competitor's. That math worked when building a category-defining cat app took a 15-person engineering team and 18 months.</p>
+
+<p>It doesn't work in 2026. I built CatMD as a solo founder in 14 days of dev time, with Claude as a pair programmer. The cost basis to ship cat-specific differentiation collapsed by 10-30x. A solo dev with Claude in 2026 is the engineering output of a 5-7 person team in 2022. The whole calculus of "is this niche big enough to justify the build" changes when the build is 10x cheaper.</p>
+
+<p>(For the engineering case study on this specifically, see <a href="/blog/shipped-catmd-in-14-days-with-claude">I shipped a cat AI app in 14 days with Claude as pair programmer</a>.)</p>
+
+<h3>The "cat owners don't pay" argument is wrong about the why.</h3>
+
+<p>Cat owners don't pay for the apps that have existed. They might pay for the app that doesn't exist yet — which is the one that actually understands their specific cat instead of giving them a generic categorical label.</p>
+
+<p>The MeowTalk problem isn't "cat owners are cheap." It's "owners won't pay for a categorical audio classifier that outputs the same 8 labels for every cat." Replace it with a multi-signal interpreter that learns a specific cat over weeks and references named family members in diary entries, and the value proposition shifts from "novelty" to "companion." The pricing model that doesn't work for novelty (subscription) works for companion (because the cat-in-the-app becomes irreplaceable).</p>
+
+<p>This is the bet. Whether it pays out is a Q3 question. The fact that pay-rate looks bad in the existing category is a feature-distance signal, not a category signal.</p>
+
+<h3>The defensibility argument is wrong about WHERE the moat lives.</h3>
+
+<p>If the moat were "the LLM does the cat-reading," I'd agree the foundation labs could replicate it. But that's not where the moat is. The moat is in the <em>thousands of small product decisions</em> that turn a foundation model into a believable cat AI:</p>
+
+<ul>
+<li>A 15-mood daily lottery that gives the cat a different mood every day (so the voice doesn't go stale)</li>
+<li>A 4-tier voice quality gate that rejects "your furry friend had a purr-fect day" texture and asks the model to retry</li>
+<li>A 3-tier depth-modulated voice that matures with the bond (warm-curious early days → intimate-comfort after months)</li>
+<li>A Feline Grimace Scale pain detector calibrated against published veterinary research</li>
+<li>A subject-detection pipeline that returns descriptive attributes (not biometric data) for household members the cat sees</li>
+<li>A 7-facet "becoming" identity score that turns engagement into a personality formation curve</li>
+<li>The peer-reviewed Litchfield Feline Five framework wired into chat + diary as voice modulators</li>
+</ul>
+
+<p>None of these are "the AI." They're product. Foundation labs don't ship products in narrow categories — they ship platforms, and they ship them slowly. The window to build the cat-specific product layer is right now, while the foundation labs are still busy with general-purpose chat. Defensibility is in the cat-specific opinionation, not the model.</p>
+
+<p>(For the AI-product craft side specifically, see <a href="/blog/cat-ai-is-going-to-be-slop">Cat AI is going to be slop. Here's how we tried not to be.</a>)</p>
+
+<h3>The "why you" argument is wrong about what founder-fit means in narrow consumer categories.</h3>
+
+<p>In B2B SaaS, "former enterprise sales VP at Snowflake founds a data-pipeline tool" is a defensible founder narrative. The category rewards Rolodex, distribution, and credentialed expertise.</p>
+
+<p>In consumer apps for emotional-relational products, the founder narrative that works is different. It's "this person uses the product daily and obsesses over the cat's voice register because she's the one who gave them the slow-blink that broke their afternoon." Founder-market fit in this category is <strong>care</strong> + <strong>craft</strong>, not Rolodex + experience.</p>
+
+<p>I have one cat (Lily, 7yr tortie, Curious-Introvert archetype). I have been told by family that my obsession with making her chat replies sound RIGHT is concerning. I've shipped 17 audit rounds on the voice model in 6 months. That's the founder-market fit. It doesn't underwrite a venture round; it underwrites a product.</p>
+
+<h2>Why solo + Claude was the right ratio</h2>
+
+<p>A multi-founder team funded by a VC is the correct structure for a SaaS company aiming at $50M ARR in 4 years. It is the wrong structure for a consumer companion product that needs taste, opinionation, and the ability to make 50 micro-decisions a day without negotiating each one with cofounders or investors.</p>
+
+<p>The cat-AI category is downstream of the same thesis Co-Star, Replika, Character.AI, and Calm exercised: <em>identity-as-product</em>, where the product's value is the specific feeling of using it. These products are not built by committee. They're built by one person with a strong taste signal, iterating until the voice lands.</p>
+
+<p>Adding Claude as a pair programmer changes the unit economics. The 14-day build was real. The 17-round audit was real. The fact that I can ship a new feature (the partner code system, vc 96), a new voice tier (vc 99), and an attribution pipeline (vc 95) within a single calendar week without breaking the product — that's the actual unlock. Not "AI replaces engineers." AI replaces the coordination overhead that turns 1 founder + 1 engineer into a 3-person team that ships at 1.5x the speed.</p>
+
+<p>The lean structure forces something else: I have to focus. There's no fund pressure to add a dog mode, a hamster mode, a corporate-vet B2B SKU. Every quarter I keep the product cat-only is a quarter of compounding cat-specific opinionation. That's the moat the VCs missed.</p>
+
+<h2>What changed when I stopped pitching</h2>
+
+<p>Three things, in order:</p>
+
+<ol>
+<li><strong>I stopped designing the app for the pitch and started designing it for Lily.</strong> Every feature decision is now "does this make the cat-in-the-app more believable" rather than "does this make the deck more impressive." The voice tightened. The diary got weird in the right way. The body-language reader started returning specifics instead of generalities. Removing the VC pressure removed the temptation to broaden the product.</li>
+<li><strong>The financial pressure became cleaner.</strong> $99/yr for an Apple Developer Program enrollment, $20/mo for Claude, $5/mo for Cloudflare Workers, $20/mo for Supabase, ~$300/mo for an OpenAI cost cap. ~$500/mo all-in. CatMD has to make ~$500/mo to not be a net loss. That's a meaningful but actually-achievable bar.</li>
+<li><strong>The category became a partner-game instead of a market-game.</strong> Instead of acquiring users through paid ads (which the unit economics don't support), the path is creator partnerships — micro-influencers in the cat-content space who get a free Pro for life + a 30% royalty on annual subscribers their code drives. The whole system shipped in vc 96. (See <a href="/library/ai-cat-health-apps-compared">the comparison of AI cat health apps</a> for where CatMD sits in the broader category.)</li>
+</ol>
+
+<h2>The verdict</h2>
+
+<p>VCs weren't wrong in their pattern. They were right about the rules of the game as the rules existed when the patterns were calibrated.</p>
+
+<p>What they missed — what I think a lot of investors will miss in 2026 specifically — is that the cost basis for niche-first AI consumer products has collapsed, and the moat lives in product opinionation, not model access. The right founder for a cat AI app isn't an ex-PetSmart exec with a Rolodex. It's someone who's spent enough afternoons watching their cat slow-blink at them that they CARE more about the voice than the deck.</p>
+
+<p>If you're an indie founder considering a niche-first AI consumer product right now, the meta-lesson is: <strong>the VC "this is too niche" pass is increasingly a signal that the category is solvable by one person.</strong> The math has flipped. Niche + AI tooling + solo founder + 12 months of taste-iteration is now a unit that ships durable products without the venture-capital amplifier.</p>
+
+<p>That's the bet I'm running.</p>
+
+<p>Try the product the VCs passed on: <a href="https://play.google.com/store/apps/details?id=com.catmd.app&utm_source=catmd_pet&utm_medium=blog_body&utm_content=solo-founder-cat-ai-why-vcs-passed">CatMD on Google Play</a>. 14-day Pro trial, no card.</p>
+
+<p><em>If you're working on a niche-first AI consumer product and want to compare notes on the solo-founder economics, find me at amit@catmd.pet.</em></p>
+`,
+  },
+
+  {
+    slug: '11pets-vs-catmd-comparison',
+    title: '11pets vs CatMD: Tracker or Health Intelligence?',
+    description:
+      '11pets organizes vet records. CatMD interprets behaviour, body language, and patterns. When to pick which — and why most owners need both.',
+    datePublished: '2026-05-21',
+    dateModified: '2026-05-21',
+    readMinutes: 8,
+    category: 'App Comparison',
+    tags: ['11pets vs catmd', 'best cat health app', 'pet tracker comparison', 'cat health intelligence', 'pet record keeping'],
+    heroAlt:
+      'A calm tabby cat between two softly-glowing phone outlines — left phone showing simple file-folder shapes (the tracker), right phone showing a richer abstract glow with pattern hints (the interpreter) — hero illustration for a comparison of 11pets and CatMD',
+    bodyHtml: `
+<p>Two apps frequently surface when cat owners search for pet-health tools: <strong>11pets</strong> and <strong>CatMD</strong>. They get compared a lot. They shouldn't.</p>
+
+<p>They do completely different things. One organises pet records (vaccines, vet visits, weights logged manually). The other interprets your cat's behaviour, body language, mood, and health patterns. Most cat owners actually need both. This post is the honest comparison so you know which is which — and what the gap between them really is.</p>
+
+<h2>What 11pets does well</h2>
+
+<p>11pets is a <strong>multi-pet organiser</strong>. It's been around since 2014, predates the AI wave, and has earned its place by being a clean, reliable place to keep records for one or many pets. The core surface:</p>
+
+<ul>
+<li><strong>Vaccination tracking</strong> — record dates, set reminders, share with vets</li>
+<li><strong>Vet visits and medications</strong> — log appointments, prescription schedules</li>
+<li><strong>Weight + grooming + appointment calendar</strong> — manual entry for owner-tracked values</li>
+<li><strong>Multi-pet support</strong> — designed for households with multiple animals (dogs, cats, even chickens and rabbits)</li>
+<li><strong>Cross-platform</strong> — iOS, Android, and web sync</li>
+<li><strong>Subscription</strong> — Pro tier with cloud sync + sharing</li>
+</ul>
+
+<p>If you have three cats, a dog, and a rabbit, and you need a single place to keep their vaccination history, vet appointments, medication schedules, and weight logs across the household — 11pets is genuinely useful. It does what it claims to do. It's the digital equivalent of a really good pet binder.</p>
+
+<p>What 11pets doesn't do: <strong>interpret what your cat is feeling, score her behaviour, read her body language, write her diary, detect health-pattern drift, or generate any AI-derived signal.</strong> It's by design — 11pets isn't an AI product. It's organisation.</p>
+
+<h2>What CatMD does</h2>
+
+<p>CatMD is cat-specific (not multi-species) and built around <strong>interpretation</strong>, not organisation. The features:</p>
+
+<ul>
+<li><strong>Triage Scan</strong> — describe a symptom, get an urgency tier in 60 seconds. Backed by a curated feline-medicine knowledge base.</li>
+<li><strong>Body Language Reader</strong> — 6-second video → AI reads tail, ears, eyes, posture, motion, vocalisations. Returns labelled-line interpretation. (See <a href="/library/how-body-language-readers-work">how body-language reader apps work</a>.)</li>
+<li><strong>Meow Translator</strong> — multimodal audio + body language + per-cat memory interpretation of vocalisations.</li>
+<li><strong>Health Rhythm</strong> — longitudinal trend view across mood, weight, water, litter, pain-face score. Catches slow drifts the daily eye misses.</li>
+<li><strong>Pain Check (Feline Grimace Scale)</strong> — face photo → clinical-grade pain score using the FGS framework.</li>
+<li><strong>Cat-voice diary + chat</strong> — your cat writes a daily diary in her own voice, references your home's named people and pets, and replies to you in chat.</li>
+<li><strong>Personality (Feline Five)</strong> — peer-reviewed personality framework, 9 archetypes, free interactive test.</li>
+<li><strong>Cat Studio</strong> — AI-generated themed artwork (48 variants across 6 themes, rotating weekly).</li>
+</ul>
+
+<p>What CatMD doesn't do: <strong>multi-pet record-keeping, manual vet-visit logging for multi-species households, web-based access (Android-only currently), shared family logins.</strong></p>
+
+<p>You can manually track weight, water, and litter in CatMD's check-in card. But it's not the primary surface — the focus is interpretation and pattern-detection, not paperwork.</p>
+
+<h2>Side-by-side: when to use which</h2>
+
+<table>
+<thead>
+<tr><th>Need</th><th>11pets</th><th>CatMD</th></tr>
+</thead>
+<tbody>
+<tr><td>"Log vaccination dates + share with my vet"</td><td>✅ Designed for this</td><td>⚠️ Possible but not the primary surface</td></tr>
+<tr><td>"Track health across 3 cats + a dog"</td><td>✅ Multi-pet from day 1</td><td>❌ Cat-only, multi-cat works but not multi-species</td></tr>
+<tr><td>"Schedule + remember vet appointments"</td><td>✅ Yes</td><td>⚠️ Light support</td></tr>
+<tr><td>"What is my cat trying to tell me right now?"</td><td>❌ Not in scope</td><td>✅ Body Language Reader + Meow Translator + chat</td></tr>
+<tr><td>"Is my cat actually OK?" (interpretive triage)</td><td>❌ Not in scope</td><td>✅ Triage Scan, Pain Check, Health Rhythm</td></tr>
+<tr><td>"Track subtle drift over weeks"</td><td>⚠️ You can chart weight manually</td><td>✅ Health Rhythm catches automated drift across mood/weight/litter/grooming</td></tr>
+<tr><td>"What's my cat's personality?"</td><td>❌ Not in scope</td><td>✅ Feline Five quiz + archetype</td></tr>
+<tr><td>"Daily journal of my cat's life"</td><td>❌ Not in scope</td><td>✅ Conscious Diary (writes in the cat's voice)</td></tr>
+<tr><td>"Share my pet binder with my partner"</td><td>✅ Family sharing</td><td>❌ Single-device currently (cloud sync exists for Pro but not multi-user)</td></tr>
+<tr><td>"Cross-platform (iOS + Android + web)"</td><td>✅ Yes</td><td>❌ Android only currently (iOS in development)</td></tr>
+</tbody>
+</table>
+
+<h2>The honest answer: most owners need both</h2>
+
+<p>This isn't a competitive review where one app "wins." 11pets and CatMD answer different questions.</p>
+
+<ul>
+<li>If you have ONE specific question — "where's my cat's last vaccination record?" or "when's her next appointment?" — that's an <strong>11pets</strong> question. It's an organisation question. (For urgent triage questions like <a href="/library/cat-ate-lily-emergency">toxic-plant ingestion</a>, <a href="/library/cat-straining-to-urinate">urinary obstruction</a>, or <a href="/library/cat-losing-weight">unexplained weight loss</a> — that's medical, not paperwork.)</li>
+<li>If you have a different question — "is something off with my cat?" or "what is she saying right now?" or "is the pattern this week different from last month?" — that's a <strong>CatMD</strong> question. It's an interpretation question.</li>
+</ul>
+
+<p>The owner who's most underserved by the current category is the one who's only using one or the other. 11pets-only owners have great records and no interpretive layer. CatMD-only owners have great interpretation and weak record-keeping. The honest answer is that the cat lives in both worlds — paper and signal.</p>
+
+<h2>What we'd build in 11pets (if we ran it)</h2>
+
+<p>The gap on 11pets isn't records — it's that the records don't generate insight. A 5-year vaccination history doesn't tell the owner anything about whether the cat is feeling OK today. A weight chart from manual entry doesn't auto-flag a 5% drift over 3 months. Records are inert without interpretation.</p>
+
+<p>If we were the 11pets team, we'd add lightweight pattern detection on the existing data — automatic alerts when weight drifts >5% in 3 months, calendar-aware reminders that flag overdue checkups based on age-cohort norms, and (longer term) an AI-driven "anything worth looking at?" summary view. That's the missing layer.</p>
+
+<h2>What we'd build in CatMD (if we ran it differently)</h2>
+
+<p>The gap on CatMD is the opposite — strong interpretive surfaces, weaker organisation. We've got vaccinations, medications, and appointments in the Triage tab, but they're not the lead. They should be more prominent and more feature-complete for owners who want a "single source of truth" view of their cat's medical history.</p>
+
+<p>Realistic plan: tighten the vaccination + medication + appointment surfaces in Q3, add iOS support so multi-platform households can use it, and stay focused on cat-only (we'd rather be the best cat app than a mediocre everything-pet app).</p>
+
+<h2>The category framing</h2>
+
+<p>Think of it this way:</p>
+
+<ul>
+<li><strong>11pets is your pet's filing cabinet.</strong> Where the paperwork lives. Reliable, organised, multi-pet, multi-platform. Has earned its place.</li>
+<li><strong>CatMD is your cat's MD.</strong> The interpretive layer. What your cat is feeling, saying, drifting toward. AI-native. Cat-only by design.</li>
+</ul>
+
+<p>You probably need both. They're not competitors. They're different shelves in the same cat-care toolkit. The pricing supports keeping both — 11pets has a free tier + $4.99/mo Pro; CatMD is free with a 14-day Pro trial then $9.99/mo or $79.99/yr.</p>
+
+<p>If you can only have one, the choice depends on what you're trying to solve. Vet paperwork problem → 11pets. Understanding-your-cat problem → CatMD.</p>
+
+<p>Try CatMD free on <a href="https://play.google.com/store/apps/details?id=com.catmd.app&utm_source=catmd_pet&utm_medium=blog_body&utm_content=11pets-vs-catmd-comparison">Google Play</a>. 14-day Pro trial, no card. See if the interpretation layer adds something your filing cabinet doesn't.</p>
+
+<p><strong>The verdict: 11pets organises. CatMD interprets. Most cat owners need both.</strong></p>
+`,
+  },
 ];

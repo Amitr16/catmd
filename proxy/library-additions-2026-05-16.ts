@@ -98,6 +98,8 @@ export const ADDITIONAL_ARTICLES_2026_05_16: Article[] = [
     bodyHtml: `
 <p>Cats can be in pain and still look almost normal.</p>
 
+<p>(For a founder's first-person story of missing exactly these signals for three weeks before a graph caught them, see our blog: <a href="/blog/cat-was-sick-3-weeks-health-rhythm-caught-it">My Cat Was Sick for 3 Weeks. I Had No Idea.</a>)</p>
+
 <p>That is the hard part. A cat may keep walking around the home, eating a little, grooming a little, and sleeping in her usual places. Nothing looks dramatic. Nothing looks like an emergency. But the pattern has shifted: she jumps less, hides more, eats slower, flinches when touched, or sleeps in a tighter position than she used to.</p>
 
 <p>Pain in cats is often quiet. The job is not to panic. The job is to notice the small changes early enough to document them, watch the pattern, and know when it is time to call your vet.</p>
